@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { PlatformBadge, ConditionBadge } from "@/components/ui/Badges";
+import { PlatformBadge, ConditionBadge, EditionBadge } from "@/components/ui/Badges";
 import { StarRating } from "@/components/ui/StarRating";
 import { MapPin, Clock, Package, Tag, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -88,13 +88,9 @@ export default async function ListingPage({ params }: { params: { id: string } }
             {/* Game info */}
             <div className="card p-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                <PlatformBadge platform={listing.platform} />
+                <PlatformBadge platform={listing.platform} showLogo={true} />
                 <ConditionBadge condition={listing.condition} />
-                {listing.edition && (
-                  <span className="badge bg-dark-600 text-gray-300 border border-dark-400">
-                    <Tag className="w-3 h-3" />{listing.edition}
-                  </span>
-                )}
+                <EditionBadge edition={listing.edition} />
               </div>
 
               <h1 className="font-display text-3xl font-bold text-white mb-3">{listing.title}</h1>
