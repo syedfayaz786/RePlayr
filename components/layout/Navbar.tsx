@@ -13,7 +13,6 @@ import {
   Menu,
   X,
   ChevronDown,
-  Bell,
 } from "lucide-react";
 import Image from "next/image";
 

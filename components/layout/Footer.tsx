@@ -39,7 +39,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-dark-600 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">© 2024 RePlayr. All rights reserved.</p>
+          <p className="text-sm text-gray-500">© 2025 RePlayr. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="https://github.com" className="text-gray-500 hover:text-white transition-colors">
               <Github className="w-5 h-5" />

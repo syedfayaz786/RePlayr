@@ -80,9 +80,12 @@ export default async function DashboardPage() {
                     )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    <form action="/api/offers" method="PATCH">
-                      <OfferAction offerId={offer.id} status="accepted" />
-                    </form>
+                    <a
+                      href={`/messages?with=${offer.buyer.name}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30 text-brand-400 hover:bg-brand-500/20 transition-colors"
+                    >
+                      Reply
+                    </a>
                   </div>
                 </div>
               ))}
@@ -144,7 +147,4 @@ export default async function DashboardPage() {
   );
 }
 
-// Simple client component for offer actions
-function OfferAction({ offerId, status }: { offerId: string; status: string }) {
-  return null; // Handled via messages in MVP
-}
+

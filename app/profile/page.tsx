@@ -28,7 +28,7 @@ export default function ProfilePage() {
           setBio(data.bio ?? "");
           setLocation(data.location ?? "");
           setListings(data.listings ?? []);
-          setReviews(data.reviews ?? []);
+          setReviews(data.reviewsReceived ?? []);
         });
     }
   }, [session]);
