@@ -12,14 +12,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
 import dynamic from "next/dynamic";
-const LocationMap = dynamic(
-  () => import("@/components/ui/LocationMap").then((m) => m.LocationMap),
-  { ssr: false, loading: () => (
+const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
+  ssr: false,
+  loading: () => (
     <div className="h-[300px] rounded-xl bg-dark-700 border border-dark-600 flex items-center justify-center text-gray-500 text-sm">
       Loading map…
     </div>
-  )}
-);
+  ),
+});
 
 export default async function ListingPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
