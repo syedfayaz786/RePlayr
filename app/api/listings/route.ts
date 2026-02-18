@@ -43,7 +43,11 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, description, price, platform, edition, condition, location, images } = body;
+    const {
+      title, description, price, platform, edition,
+      condition, location, images,
+      latitude, longitude,  // ← sent by the form when user picks a location result
+    } = body;
 
     if (!title || !price || !platform || !condition || !location) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -58,6 +62,8 @@ export async function POST(req: Request) {
         edition,
         condition,
         location,
+        latitude:  latitude  ? parseFloat(latitude)  : null,
+        longitude: longitude ? parseFloat(longitude) : null,
         images: JSON.stringify(images ?? []),
         sellerId: session.user.id,
       },

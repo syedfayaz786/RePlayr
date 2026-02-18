@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
-import { LocationInput } from "@/components/ui/LocationInput";
+import { LocationInput, LocationResult } from "@/components/ui/LocationInput";
 import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { PLATFORMS, CONDITIONS } from "@/lib/utils";
 import { Upload, X, DollarSign, Trash2, Gamepad2, Loader2 } from "lucide-react";
@@ -43,6 +43,8 @@ export default function EditListingPage() {
     edition: "",
     condition: "",
     location: "",
+    latitude: "",
+    longitude: "",
     listingStatus: "active",
   });
   const [images, setImages] = useState<string[]>([]);
@@ -62,6 +64,8 @@ export default function EditListingPage() {
           edition: data.edition ?? "",
           condition: data.condition ?? "",
           location: data.location ?? "",
+          latitude: data.latitude ? String(data.latitude) : "",
+          longitude: data.longitude ? String(data.longitude) : "",
           listingStatus: data.status ?? "active",
         });
         try { setImages(JSON.parse(data.images ?? "[]")); } catch { setImages([]); }
@@ -86,6 +90,15 @@ export default function EditListingPage() {
     router.push("/auth/login");
     return null;
   }
+
+  const handleLocationChange = (display: string, result?: LocationResult) => {
+    setForm((f) => ({
+      ...f,
+      location:  display,
+      latitude:  result ? String(result.lat) : f.latitude,
+      longitude: result ? String(result.lng) : f.longitude,
+    }));
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -330,9 +343,14 @@ export default function EditListingPage() {
                 <label className="label-base">Location *</label>
                 <LocationInput
                   value={form.location}
-                  onChange={(val) => setForm({ ...form, location: val })}
+                  onChange={handleLocationChange}
                   required
                 />
+                {form.latitude && (
+                  <p className="mt-1.5 text-xs text-green-400 flex items-center gap-1">
+                    ✓ Location pinned — buyers will see a map radius
+                  </p>
+                )}
               </div>
             </div>
 

@@ -5,23 +5,24 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Upload, X, DollarSign, Gamepad2 } from "lucide-react";
-import { PLATFORMS, CONDITIONS } from "@/lib/utils";
+import { PLATFORMS } from "@/lib/utils";
 import { PLATFORM_CONFIG } from "@/components/ui/Badges";
-import { LocationInput } from "@/components/ui/LocationInput";
+import { LocationInput, LocationResult } from "@/components/ui/LocationInput";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
 const EDITIONS = [
-  "Standard",
-  "Deluxe",
-  "Gold",
-  "Ultimate",
-  "Game of the Year (GOTY)",
-  "Anniversary",
-  "Limited",
-  "Collector's",
-  "Digital",
-  "Other",
+  "Standard","Deluxe","Gold","Ultimate",
+  "Game of the Year (GOTY)","Anniversary",
+  "Limited","Collector's","Digital","Other",
+];
+
+const CONDITIONS: [string, string][] = [
+  ["Brand New",  "Sealed, never opened"],
+  ["Like New",   "Opened but barely played, no marks"],
+  ["Very Good",  "Minor cosmetic wear, plays perfectly"],
+  ["Good",       "Normal use wear, fully functional"],
+  ["Acceptable", "Heavy wear but disc still plays fine"],
 ];
 
 export default function NewListingPage() {
@@ -29,23 +30,18 @@ export default function NewListingPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    platform: "",
-    edition: "",
-    condition: "",
-    location: "",
+    title: "", description: "", price: "",
+    platform: "", edition: "", condition: "",
+    location: "", latitude: "", longitude: "",
   });
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1|2|3>(1);
 
   if (status === "loading") return null;
   if (!session) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
+      <div className="min-h-screen flex flex-col"><Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Gamepad2 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
@@ -60,24 +56,28 @@ export default function NewListingPage() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (images.length + files.length > 6) {
-      toast.error("Maximum 6 images allowed");
-      return;
-    }
+    if (images.length + files.length > 6) { toast.error("Maximum 6 images allowed"); return; }
     files.forEach((file) => {
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        setImages((prev) => [...prev, ev.target?.result as string]);
-      };
+      reader.onload = (ev) => setImages((p) => [...p, ev.target?.result as string]);
       reader.readAsDataURL(file);
     });
   };
 
+  const handleLocationChange = (display: string, result?: LocationResult) => {
+    setForm((f) => ({
+      ...f,
+      location:  display,
+      latitude:  result ? String(result.lat) : "",
+      longitude: result ? String(result.lng) : "",
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.platform) { toast.error("Please select a platform"); return; }
-    if (!form.condition) { toast.error("Please select a condition"); return; }
-    if (!form.location)  { toast.error("Please enter a location");   return; }
+    if (!form.platform)  { toast.error("Please select a platform");  return; }
+    if (!form.condition) { toast.error("Please select a condition");  return; }
+    if (!form.location)  { toast.error("Please enter a location");    return; }
     setLoading(true);
     try {
       const res = await fetch("/api/listings", {
@@ -96,14 +96,12 @@ export default function NewListingPage() {
     }
   };
 
-  const selectedPlatformConfig = form.platform ? PLATFORM_CONFIG[form.platform] : null;
-  const PlatformLogo = selectedPlatformConfig?.Logo;
-
+  const platformConfig = form.platform ? PLATFORM_CONFIG[form.platform] : null;
+  const PlatformLogo   = platformConfig?.Logo;
   const steps = ["Game Info", "Condition & Photos", "Price & Location"];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <div className="min-h-screen flex flex-col"><Navbar />
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-white mb-2">Sell a Game</h1>
@@ -114,26 +112,18 @@ export default function NewListingPage() {
         <div className="flex items-center gap-2 mb-8 bg-dark-800 rounded-2xl p-4 border border-dark-600">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
-              <button
-                type="button"
-                onClick={() => i + 1 < step && setStep((i + 1) as 1 | 2 | 3)}
-                className="flex items-center gap-2 flex-1 text-left"
-              >
+              <button type="button"
+                onClick={() => i + 1 < step && setStep((i + 1) as 1|2|3)}
+                className="flex items-center gap-2 flex-1 text-left">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                  i + 1 < step
-                    ? "bg-green-500 text-white"
-                    : i + 1 === step
-                    ? "bg-brand-500 text-white"
-                    : "bg-dark-600 text-gray-500"
-                }`}>
-                  {i + 1 < step ? "✓" : i + 1}
-                </div>
+                  i+1 < step ? "bg-green-500 text-white" : i+1 === step ? "bg-brand-500 text-white" : "bg-dark-600 text-gray-500"
+                }`}>{i+1 < step ? "✓" : i+1}</div>
                 <span className={`text-sm font-medium hidden sm:block ${
-                  i + 1 === step ? "text-brand-400" : i + 1 < step ? "text-green-400" : "text-gray-500"
+                  i+1 === step ? "text-brand-400" : i+1 < step ? "text-green-400" : "text-gray-500"
                 }`}>{s}</span>
               </button>
               {i < steps.length - 1 && (
-                <div className={`h-px flex-1 hidden sm:block ${i + 1 < step ? "bg-green-500/40" : "bg-dark-600"}`} />
+                <div className={`h-px flex-1 hidden sm:block ${i+1 < step ? "bg-green-500/40" : "bg-dark-600"}`} />
               )}
             </div>
           ))}
@@ -141,276 +131,182 @@ export default function NewListingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* ── STEP 1: Game Info ──────────────────────────────────────────── */}
-          {step === 1 && (
-            <>
-              <div className="card p-6 space-y-5">
-                <h3 className="font-semibold text-white text-lg">Game Details</h3>
-
-                {/* Title */}
-                <div>
-                  <label className="label-base">Game Title *</label>
-                  <input
-                    type="text"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="e.g. Spider-Man 2"
-                    required
-                    className="input-base"
-                  />
+          {/* ── Step 1 ── */}
+          {step === 1 && (<>
+            <div className="card p-6 space-y-5">
+              <h3 className="font-semibold text-white text-lg">Game Details</h3>
+              <div>
+                <label className="label-base">Game Title *</label>
+                <input type="text" value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Spider-Man 2" required className="input-base" />
+              </div>
+              <div>
+                <label className="label-base">Platform *</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                  {PLATFORMS.map((p) => {
+                    const cfg = PLATFORM_CONFIG[p] ?? PLATFORM_CONFIG["Other"];
+                    const Logo = cfg.Logo;
+                    const sel  = form.platform === p;
+                    return (
+                      <button key={p} type="button" onClick={() => setForm({ ...form, platform: p })}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                          sel ? `${cfg.colorClass} border-current` : "bg-dark-700 border-dark-500 text-gray-400 hover:border-dark-400"
+                        }`}>
+                        <Logo className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{p}</span>
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+              <div>
+                <label className="label-base">Edition</label>
+                <select value={form.edition} onChange={(e) => setForm({ ...form, edition: e.target.value })} className="input-base">
+                  <option value="">Select edition (optional)</option>
+                  {EDITIONS.map((ed) => <option key={ed} value={ed}>{ed}</option>)}
+                </select>
+                {form.edition && <p className="mt-1.5 text-xs text-amber-400">🏷️ Will show <strong>{form.edition} Edition</strong> badge</p>}
+              </div>
+              <div>
+                <label className="label-base">Description</label>
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Describe condition, included DLC, reason for selling…" rows={4} className="input-base resize-none" />
+              </div>
+            </div>
+            <button type="button" onClick={() => {
+              if (!form.title) { toast.error("Please enter a game title"); return; }
+              if (!form.platform) { toast.error("Please select a platform"); return; }
+              setStep(2);
+            }} className="btn-primary w-full">Continue →</button>
+          </>)}
 
-                {/* Platform — cards with logos */}
+          {/* ── Step 2 ── */}
+          {step === 2 && (<>
+            <div className="card p-6 space-y-5">
+              <h3 className="font-semibold text-white text-lg">Condition & Photos</h3>
+              <div>
+                <label className="label-base">Condition *</label>
+                <div className="space-y-2 mt-1">
+                  {CONDITIONS.map(([cond, desc]) => (
+                    <button key={cond} type="button" onClick={() => setForm({ ...form, condition: cond })}
+                      className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border transition-all ${
+                        form.condition === cond ? "border-brand-500 bg-brand-500/10" : "border-dark-500 bg-dark-700 hover:border-dark-400"
+                      }`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                        form.condition === cond ? "border-brand-500 bg-brand-500" : "border-gray-600"
+                      }`} />
+                      <div>
+                        <div className={`text-sm font-semibold ${form.condition === cond ? "text-brand-400" : "text-white"}`}>{cond}</div>
+                        <div className="text-xs text-gray-500">{desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="label-base">Photos <span className="text-gray-500 font-normal">(up to 6)</span></label>
+                <div className="grid grid-cols-3 gap-3 mt-1">
+                  {images.map((img, i) => (
+                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-dark-700">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setImages(images.filter((_, j) => j !== i))}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                      {i === 0 && <div className="absolute bottom-2 left-2 bg-brand-500/90 rounded-md px-2 py-0.5 text-xs font-semibold text-white">Cover</div>}
+                    </div>
+                  ))}
+                  {images.length < 6 && (
+                    <label className="aspect-square rounded-xl border-2 border-dashed border-dark-500 hover:border-brand-500 flex flex-col items-center justify-center cursor-pointer transition-colors bg-dark-700/50">
+                      <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                      <span className="text-xs text-gray-400">Add Photo</span>
+                      <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">First photo will be the cover image shown in search.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">← Back</button>
+              <button type="button" onClick={() => {
+                if (!form.condition) { toast.error("Please select a condition"); return; }
+                setStep(3);
+              }} className="btn-primary flex-[2]">Continue →</button>
+            </div>
+          </>)}
+
+          {/* ── Step 3 ── */}
+          {step === 3 && (<>
+            <div className="card p-6 space-y-5">
+              <h3 className="font-semibold text-white text-lg">Price & Location</h3>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label-base">Platform *</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
-                    {PLATFORMS.map((p) => {
-                      const config = PLATFORM_CONFIG[p] ?? PLATFORM_CONFIG["Other"];
-                      const Logo = config.Logo;
-                      const selected = form.platform === p;
-                      return (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setForm({ ...form, platform: p })}
-                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                            selected
-                              ? `${config.colorClass} border-current`
-                              : "bg-dark-700 border-dark-500 text-gray-400 hover:border-dark-400"
-                          }`}
-                        >
-                          <Logo className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">{p}</span>
-                        </button>
-                      );
-                    })}
+                  <label className="label-base">Asking Price (CAD) *</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input type="number" value={form.price}
+                      onChange={(e) => setForm({ ...form, price: e.target.value })}
+                      placeholder="0.00" min="0" step="0.01" required className="input-base pl-11" />
                   </div>
                 </div>
-
-                {/* Edition */}
-                <div>
-                  <label className="label-base">Edition</label>
-                  <select
-                    value={form.edition}
-                    onChange={(e) => setForm({ ...form, edition: e.target.value })}
-                    className="input-base"
-                  >
-                    <option value="">Select edition (optional)</option>
-                    {EDITIONS.map((ed) => <option key={ed} value={ed}>{ed}</option>)}
-                  </select>
-                  {form.edition && (
-                    <p className="mt-1.5 text-xs text-amber-400">
-                      🏷️ This listing will show the <strong>{form.edition} Edition</strong> badge
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="label-base">
+                    Location *
+                    <span className="text-gray-500 font-normal ml-1 text-xs">(auto-detected or search)</span>
+                  </label>
+                  <LocationInput value={form.location} onChange={handleLocationChange} required />
+                  {form.latitude && (
+                    <p className="mt-1.5 text-xs text-green-400 flex items-center gap-1">
+                      ✓ Location pinned — buyers will see a map radius
                     </p>
                   )}
                 </div>
-
-                {/* Description */}
-                <div>
-                  <label className="label-base">Description</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Describe the game, any scratches, included DLC, reason for selling…"
-                    rows={4}
-                    className="input-base resize-none"
-                  />
-                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (!form.title) { toast.error("Please enter a game title"); return; }
-                  if (!form.platform) { toast.error("Please select a platform"); return; }
-                  setStep(2);
-                }}
-                className="btn-primary w-full"
-              >
-                Continue →
+              {/* Preview */}
+              {form.title && (
+                <div className="bg-dark-700/50 border border-dark-500 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Preview</p>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${platformConfig?.bgGlow ?? "bg-dark-600"}`}>
+                      {PlatformLogo
+                        ? <PlatformLogo className={`w-8 h-8 ${platformConfig?.colorClass.split(" ")[1] ?? "text-gray-400"}`} />
+                        : <span className="text-2xl">🎮</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold truncate">{form.title}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {form.platform && platformConfig && (
+                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${platformConfig.colorClass}`}>
+                            {PlatformLogo && <PlatformLogo className="w-2.5 h-2.5" />}{form.platform}
+                          </span>
+                        )}
+                        {form.condition && (
+                          <span className="text-xs px-2 py-0.5 rounded-full border bg-orange-500/10 text-orange-400 border-orange-500/25">{form.condition}</span>
+                        )}
+                        {form.edition && (
+                          <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/25">🏷️ {form.edition} Edition</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 text-sm">
+                        {form.price && <span className="font-bold text-brand-400">${form.price} CAD</span>}
+                        {form.location && <span className="text-gray-500 text-xs">📍 {form.location}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 pb-10">
+              <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
+              <button type="submit" disabled={loading || !form.price || !form.location} className="btn-primary flex-[2]">
+                {loading ? "Posting…" : "🚀 Post Listing"}
               </button>
-            </>
-          )}
-
-          {/* ── STEP 2: Condition & Photos ─────────────────────────────────── */}
-          {step === 2 && (
-            <>
-              <div className="card p-6 space-y-5">
-                <h3 className="font-semibold text-white text-lg">Condition & Photos</h3>
-
-                {/* Condition */}
-                <div>
-                  <label className="label-base">Condition *</label>
-                  <div className="space-y-2 mt-1">
-                    {([
-                      ["Brand New",  "Sealed, never opened"],
-                      ["Like New",   "Opened but barely played, no marks"],
-                      ["Very Good",  "Minor cosmetic wear, plays perfectly"],
-                      ["Good",       "Normal use wear, fully functional"],
-                      ["Acceptable", "Heavy wear but disc still plays fine"],
-                    ] as const).map(([cond, desc]) => (
-                      <button
-                        key={cond}
-                        type="button"
-                        onClick={() => setForm({ ...form, condition: cond })}
-                        className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border transition-all ${
-                          form.condition === cond
-                            ? "border-brand-500 bg-brand-500/10"
-                            : "border-dark-500 bg-dark-700 hover:border-dark-400"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                          form.condition === cond
-                            ? "border-brand-500 bg-brand-500"
-                            : "border-gray-600"
-                        }`} />
-                        <div>
-                          <div className={`text-sm font-semibold ${form.condition === cond ? "text-brand-400" : "text-white"}`}>
-                            {cond}
-                          </div>
-                          <div className="text-xs text-gray-500">{desc}</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Photos */}
-                <div>
-                  <label className="label-base">Photos <span className="text-gray-500 font-normal">(up to 6)</span></label>
-                  <div className="grid grid-cols-3 gap-3 mt-1">
-                    {images.map((img, i) => (
-                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-dark-700">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setImages(images.filter((_, j) => j !== i))}
-                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </button>
-                        {i === 0 && (
-                          <div className="absolute bottom-2 left-2 bg-brand-500/90 rounded-md px-2 py-0.5 text-xs font-semibold text-white">
-                            Cover
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {images.length < 6 && (
-                      <label className="aspect-square rounded-xl border-2 border-dashed border-dark-500 hover:border-brand-500 flex flex-col items-center justify-center cursor-pointer transition-colors bg-dark-700/50">
-                        <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                        <span className="text-xs text-gray-400">Add Photo</span>
-                        <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
-                      </label>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">First photo will be the cover image shown in search results.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">← Back</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!form.condition) { toast.error("Please select a condition"); return; }
-                    setStep(3);
-                  }}
-                  className="btn-primary flex-2 flex-[2]"
-                >
-                  Continue →
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* ── STEP 3: Price & Location ───────────────────────────────────── */}
-          {step === 3 && (
-            <>
-              <div className="card p-6 space-y-5">
-                <h3 className="font-semibold text-white text-lg">Price & Location</h3>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label-base">Asking Price (CAD) *</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="number"
-                        value={form.price}
-                        onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        placeholder="0.00"
-                        min="0"
-                        step="0.01"
-                        required
-                        className="input-base pl-11"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <label className="label-base">
-                      Location *
-                      <span className="text-gray-500 font-normal ml-1 text-xs">(auto-detected or type to search)</span>
-                    </label>
-                    <LocationInput
-                      value={form.location}
-                      onChange={(val) => setForm({ ...form, location: val })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Live preview */}
-                {(form.title || form.platform) && (
-                  <div className="bg-dark-700/50 border border-dark-500 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Listing Preview</p>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedPlatformConfig?.bgGlow ?? "bg-dark-600"}`}>
-                        {PlatformLogo ? (
-                          <PlatformLogo className={`w-8 h-8 ${selectedPlatformConfig?.colorClass.split(" ")[1] ?? "text-gray-400"}`} />
-                        ) : (
-                          <span className="text-2xl">🎮</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold truncate">{form.title || "Game Title"}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {form.platform && (
-                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${selectedPlatformConfig?.colorClass}`}>
-                              {PlatformLogo && <PlatformLogo className="w-2.5 h-2.5" />}
-                              {form.platform}
-                            </span>
-                          )}
-                          {form.condition && (
-                            <span className="text-xs px-2 py-0.5 rounded-full border bg-orange-500/10 text-orange-400 border-orange-500/25">
-                              {form.condition}
-                            </span>
-                          )}
-                          {form.edition && (
-                            <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/25">
-                              🏷️ {form.edition} Edition
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 mt-2 text-sm">
-                          {form.price && <span className="font-bold text-brand-400">${form.price} CAD</span>}
-                          {form.location && <span className="text-gray-500 text-xs">📍 {form.location}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
-                <button type="submit" disabled={loading || !form.price || !form.location} className="btn-primary flex-[2]">
-                  {loading ? "Posting..." : "🚀 Post Listing"}
-                </button>
-              </div>
-            </>
-          )}
+            </div>
+          </>)}
         </form>
       </main>
     </div>

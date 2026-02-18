@@ -5,12 +5,21 @@ import { notFound } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, EditionBadge } from "@/components/ui/Badges";
 import { StarRating } from "@/components/ui/StarRating";
-import { MapPin, Clock, Package, Tag, ChevronLeft } from "lucide-react";
+import { MapPin, Clock, Package, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
+import dynamic from "next/dynamic";
+const LocationMap = dynamic(
+  () => import("@/components/ui/LocationMap").then((m) => m.LocationMap),
+  { ssr: false, loading: () => (
+    <div className="h-[300px] rounded-xl bg-dark-700 border border-dark-600 flex items-center justify-center text-gray-500 text-sm">
+      Loading map…
+    </div>
+  )}
+);
 
 export default async function ListingPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -125,6 +134,16 @@ export default async function ListingPage({ params }: { params: { id: string } }
                 </div>
               </div>
             </div>
+
+            {/* Location map — only shown when lat/lng are stored */}
+            {listing.latitude && listing.longitude && (
+              <LocationMap
+                lat={listing.latitude}
+                lng={listing.longitude}
+                label={listing.location ?? undefined}
+                radiusKm={2}
+              />
+            )}
 
             {/* Seller reviews */}
             {listing.seller.reviewsReceived.length > 0 && (
