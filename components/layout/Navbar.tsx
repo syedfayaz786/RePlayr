@@ -29,15 +29,6 @@ function useUnreadCount(enabled: boolean) {
   return count;
 }
 
-function UnreadBadge({ count }: { count: number }) {
-  if (count === 0) return null;
-  return (
-    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
-
 export function Navbar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen]     = useState(false);
@@ -73,17 +64,16 @@ export function Navbar() {
                 </Link>
 
                 {/* Messages with unread badge */}
-                <Link href="/messages" className="btn-ghost flex items-center gap-2 relative">
-                  <span className="relative">
+                <Link href="/messages" className="btn-ghost flex items-center gap-2">
+                  <span className="relative inline-flex">
                     <MessageSquare className="w-4 h-4" />
-                    <UnreadBadge count={unread} />
+                    {unread > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
                   </span>
                   Messages
-                  {unread > 0 && (
-                    <span className="ml-1 min-w-[20px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">
-                      {unread > 99 ? "99+" : unread}
-                    </span>
-                  )}
                 </Link>
 
                 {/* User dropdown */}
@@ -172,7 +162,7 @@ export function Navbar() {
                   <MessageSquare className="w-4 h-4" />Messages
                 </span>
                 {unread > 0 && (
-                  <span className="min-w-[22px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">
+                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-[11px] font-bold flex items-center justify-center">
                     {unread > 99 ? "99+" : unread}
                   </span>
                 )}
