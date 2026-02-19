@@ -8,41 +8,50 @@ import { Gamepad2, TrendingUp, Users, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 async function getListings(searchParams: Record<string, string>) {
-  const where: any = { status: "active" };
+  try {
+    const where: any = { status: "active" };
 
-  if (searchParams.q) {
-    where.OR = [
-      { title: { contains: searchParams.q, mode: "insensitive" } },
-      { description: { contains: searchParams.q, mode: "insensitive" } },
-    ];
+    if (searchParams.q) {
+      where.OR = [
+        { title: { contains: searchParams.q, mode: "insensitive" } },
+        { description: { contains: searchParams.q, mode: "insensitive" } },
+      ];
+    }
+    if (searchParams.platform) where.platform = searchParams.platform;
+    if (searchParams.condition) where.condition = searchParams.condition;
+    if (searchParams.minPrice || searchParams.maxPrice) {
+      where.price = {};
+      if (searchParams.minPrice) where.price.gte = parseFloat(searchParams.minPrice);
+      if (searchParams.maxPrice) where.price.lte = parseFloat(searchParams.maxPrice);
+    }
+
+    const listings = await prisma.listing.findMany({
+      where,
+      include: {
+        seller: { select: { id: true, name: true, image: true } },
+        _count: { select: { wishlistedBy: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 48,
+    });
+
+    return listings;
+  } catch (err) {
+    console.error("Failed to fetch listings:", err);
+    return [];
   }
-  if (searchParams.platform) where.platform = searchParams.platform;
-  if (searchParams.condition) where.condition = searchParams.condition;
-  if (searchParams.minPrice || searchParams.maxPrice) {
-    where.price = {};
-    if (searchParams.minPrice) where.price.gte = parseFloat(searchParams.minPrice);
-    if (searchParams.maxPrice) where.price.lte = parseFloat(searchParams.maxPrice);
-  }
-
-  const listings = await prisma.listing.findMany({
-    where,
-    include: {
-      seller: { select: { id: true, name: true, image: true } },
-      _count: { select: { wishlistedBy: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 48,
-  });
-
-  return listings;
 }
 
 async function getStats() {
-  const [totalListings, totalUsers] = await Promise.all([
-    prisma.listing.count({ where: { status: "active" } }),
-    prisma.user.count(),
-  ]);
-  return { totalListings, totalUsers };
+  try {
+    const [totalListings, totalUsers] = await Promise.all([
+      prisma.listing.count({ where: { status: "active" } }),
+      prisma.user.count(),
+    ]);
+    return { totalListings, totalUsers };
+  } catch {
+    return { totalListings: 0, totalUsers: 0 };
+  }
 }
 
 export default async function HomePage({
