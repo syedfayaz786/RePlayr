@@ -97,7 +97,7 @@ export function Navbar() {
                       </Link>
                       <div className="border-t border-dark-500" />
                       <button
-                        onClick={() => signOut()}
+                        onClick={() => signOut({ callbackUrl: "/auth/login" })}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-600 text-red-400 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
@@ -147,7 +147,7 @@ export function Navbar() {
                 <User className="w-4 h-4" />Profile
               </Link>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: "/auth/login" })}
                 className="btn-ghost flex items-center gap-2 w-full text-red-400"
               >
                 <LogOut className="w-4 h-4" />Sign Out
