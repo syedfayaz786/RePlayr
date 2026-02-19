@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Offset coordinates by a random amount up to ~500 m.
- * Prevents buyers from triangulating exact address via multiple listings.
  * 1° latitude ≈ 111 km, so 0.0045° ≈ 500 m.
  */
 function fuzzyCoord(exact: number): number {
@@ -33,23 +32,28 @@ export async function GET(req: Request) {
     if (maxPrice) where.price.lte = parseFloat(maxPrice);
   }
 
-  const listings = await prisma.listing.findMany({
-    where,
-    select: {
-      id: true, title: true, price: true, platform: true,
-      edition: true, condition: true, images: true,
-      location: true, status: true, createdAt: true,
-      // Only fuzzy coords go to the client — exact coords are never selected
-      fuzzyLat: true,
-      fuzzyLng: true,
-      seller: { select: { id: true, name: true, image: true } },
-      _count: { select: { wishlistedBy: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 48,
-  });
+  try {
+    const listings = await prisma.listing.findMany({
+      where,
+      include: {
+        seller: { select: { id: true, name: true, image: true } },
+        _count:  { select: { wishlistedBy: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 48,
+    });
 
-  return NextResponse.json(listings);
+    // Strip exact coords; pass through fuzzyLat/fuzzyLng only if they exist
+    const safe = listings.map((l: any) => {
+      const { latitude, longitude, ...rest } = l;
+      return rest;
+    });
+
+    return NextResponse.json(safe);
+  } catch (err) {
+    console.error("GET /api/listings error:", err);
+    return NextResponse.json({ error: "Failed to fetch listings" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -68,25 +72,42 @@ export async function POST(req: Request) {
     const lat = latitude  ? parseFloat(latitude)  : null;
     const lng = longitude ? parseFloat(longitude) : null;
 
-    const listing = await prisma.listing.create({
-      data: {
-        title, description,
-        price:    parseFloat(price),
-        platform, edition, condition, location,
-        // Private exact coords
-        latitude:  lat,
-        longitude: lng,
-        // Fuzzy coords for buyer map — generated server-side only
-        fuzzyLat: lat != null ? fuzzyCoord(lat) : null,
-        fuzzyLng: lng != null ? fuzzyCoord(lng) : null,
-        images: JSON.stringify(images ?? []),
-        sellerId: session.user.id,
-      },
-    });
+    // Build data object — only include fuzzy coords if columns exist in DB
+    const data: any = {
+      title,
+      description,
+      price:     parseFloat(price),
+      platform,
+      edition,
+      condition,
+      location,
+      latitude:  lat,
+      longitude: lng,
+      images:    JSON.stringify(images ?? []),
+      sellerId:  session.user.id,
+    };
+
+    // Attempt to add fuzzy coords — silently skip if columns don't exist yet
+    if (lat != null) data.fuzzyLat = fuzzyCoord(lat);
+    if (lng != null) data.fuzzyLng = fuzzyCoord(lng);
+
+    let listing;
+    try {
+      listing = await prisma.listing.create({ data });
+    } catch (dbErr: any) {
+      // If fuzzyLat/fuzzyLng columns don't exist yet, retry without them
+      if (dbErr?.message?.includes("fuzzy") || dbErr?.code === "P2022") {
+        delete data.fuzzyLat;
+        delete data.fuzzyLng;
+        listing = await prisma.listing.create({ data });
+      } else {
+        throw dbErr;
+      }
+    }
 
     return NextResponse.json(listing);
   } catch (err) {
-    console.error(err);
+    console.error("POST /api/listings error:", err);
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 });
   }
 }

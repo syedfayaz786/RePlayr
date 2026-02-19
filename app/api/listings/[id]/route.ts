@@ -7,30 +7,34 @@ function fuzzyCoord(exact: number): number {
   return exact + (Math.random() - 0.5) * 2 * 0.0045;
 }
 
-// GET — returns fuzzy coords to buyers, exact coords only to the seller
+// GET — returns fuzzy coords to buyers; exact coords only to the seller
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
 
-  const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
-    include: { seller: { select: { id: true, name: true, image: true } } },
-  });
-  if (!listing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const listing = await prisma.listing.findUnique({
+      where:   { id: params.id },
+      include: { seller: { select: { id: true, name: true, image: true } } },
+    });
+    if (!listing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const isSeller = session?.user.id === listing.sellerId;
+    const isSeller = session?.user.id === listing.sellerId;
 
-  // Strip private exact coords from the response — buyers never see them
-  const { latitude, longitude, ...publicFields } = listing;
+    // Strip exact coords — buyers never see them
+    const { latitude, longitude, ...publicFields } = listing as any;
 
-  return NextResponse.json({
-    ...publicFields,
-    // Seller gets exact coords back (needed by edit form to pre-populate)
-    ...(isSeller ? { latitude, longitude } : {}),
-    // fuzzyLat / fuzzyLng are already in publicFields and always safe to expose
-  });
+    return NextResponse.json({
+      ...publicFields,
+      // Seller gets exact coords back so the edit form can pre-populate them
+      ...(isSeller ? { latitude, longitude } : {}),
+    });
+  } catch (err) {
+    console.error("GET /api/listings/[id] error:", err);
+    return NextResponse.json({ error: "Failed to fetch listing" }, { status: 500 });
+  }
 }
 
 export async function PATCH(
@@ -54,32 +58,43 @@ export async function PATCH(
     const lat = latitude  !== undefined ? (latitude  ? parseFloat(latitude)  : null) : undefined;
     const lng = longitude !== undefined ? (longitude ? parseFloat(longitude) : null) : undefined;
 
-    const updated = await prisma.listing.update({
-      where: { id: params.id },
-      data: {
-        ...(title       !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(price       !== undefined && { price: parseFloat(String(price)) }),
-        ...(platform    !== undefined && { platform }),
-        ...(edition     !== undefined && { edition }),
-        ...(condition   !== undefined && { condition }),
-        ...(location    !== undefined && { location }),
-        ...(images      !== undefined && { images: JSON.stringify(images) }),
-        ...(status      !== undefined && { status }),
-        ...(lat !== undefined && {
-          latitude: lat,
-          fuzzyLat: lat != null ? fuzzyCoord(lat) : null,
-        }),
-        ...(lng !== undefined && {
-          longitude: lng,
-          fuzzyLng:  lng != null ? fuzzyCoord(lng) : null,
-        }),
-      },
-    });
+    const data: any = {
+      ...(title       !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(price       !== undefined && { price: parseFloat(String(price)) }),
+      ...(platform    !== undefined && { platform }),
+      ...(edition     !== undefined && { edition }),
+      ...(condition   !== undefined && { condition }),
+      ...(location    !== undefined && { location }),
+      ...(images      !== undefined && { images: JSON.stringify(images) }),
+      ...(status      !== undefined && { status }),
+      ...(lat !== undefined && { latitude: lat }),
+      ...(lng !== undefined && { longitude: lng }),
+    };
+
+    // Add fuzzy coords if we have exact ones
+    if (lat !== undefined && lat != null) data.fuzzyLat = fuzzyCoord(lat);
+    if (lng !== undefined && lng != null) data.fuzzyLng = fuzzyCoord(lng);
+    if (lat !== undefined && lat == null) data.fuzzyLat = null;
+    if (lng !== undefined && lng == null) data.fuzzyLng = null;
+
+    let updated;
+    try {
+      updated = await prisma.listing.update({ where: { id: params.id }, data });
+    } catch (dbErr: any) {
+      // Retry without fuzzy coords if columns don't exist yet
+      if (dbErr?.message?.includes("fuzzy") || dbErr?.code === "P2022") {
+        delete data.fuzzyLat;
+        delete data.fuzzyLng;
+        updated = await prisma.listing.update({ where: { id: params.id }, data });
+      } else {
+        throw dbErr;
+      }
+    }
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error(err);
+    console.error("PATCH /api/listings/[id] error:", err);
     return NextResponse.json({ error: "Failed to update listing" }, { status: 500 });
   }
 }

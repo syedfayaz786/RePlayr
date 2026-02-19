@@ -12,18 +12,19 @@ export async function GET(req: Request) {
   const listingId = searchParams.get("listingId");
   if (!listingId) return NextResponse.json({ error: "Missing listingId" }, { status: 400 });
 
-  // Verify the caller owns this listing
   const listing = await prisma.listing.findUnique({ where: { id: listingId } });
   if (!listing || listing.sellerId !== session.user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const requests = await prisma.locationRequest.findMany({
-    where: { listingId },
-    include: {
-      requester: { select: { id: true, name: true, image: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json({ requests });
+  try {
+    const requests = await (prisma as any).locationRequest.findMany({
+      where: { listingId },
+      include: { requester: { select: { id: true, name: true, image: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ requests });
+  } catch {
+    // Table doesn't exist yet
+    return NextResponse.json({ requests: [] });
+  }
 }

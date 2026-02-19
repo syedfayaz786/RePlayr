@@ -136,10 +136,10 @@ export default async function ListingPage({ params }: { params: { id: string } }
             </div>
 
             {/* Location map — Facebook-style fuzzy area */}
-            {listing.fuzzyLat && listing.fuzzyLng && (
+            {(listing as any).fuzzyLat && (listing as any).fuzzyLng && (
               <LocationMap
-                fuzzyLat={listing.fuzzyLat}
-                fuzzyLng={listing.fuzzyLng}
+                fuzzyLat={(listing as any).fuzzyLat}
+                fuzzyLng={(listing as any).fuzzyLng}
                 label={listing.location ?? undefined}
                 radiusKm={3}
                 listingId={listing.id}
@@ -148,7 +148,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
             )}
 
             {/* Privacy shield — only shown to the seller */}
-            {isSeller && listing.fuzzyLat && (
+            {isSeller && (listing as any).fuzzyLat && (
               <div className="card p-5 border border-brand-500/20 bg-brand-500/5">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-xl bg-brand-500/15 flex items-center justify-center flex-shrink-0 text-lg">🔒</div>
