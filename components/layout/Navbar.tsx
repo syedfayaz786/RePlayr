@@ -2,29 +2,53 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Gamepad2,
-  Heart,
-  MessageSquare,
-  Plus,
-  User,
-  LogOut,
-  Menu,
-  X,
-  ChevronDown,
+  Gamepad2, Heart, MessageSquare, Plus,
+  User, LogOut, Menu, X, ChevronDown,
 } from "lucide-react";
 import Image from "next/image";
 
+function useUnreadCount(enabled: boolean) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const fetch_ = () =>
+      fetch("/api/messages/unread")
+        .then((r) => r.json())
+        .then((d) => setCount(d.count ?? 0))
+        .catch(() => {});
+
+    fetch_();
+    const interval = setInterval(fetch_, 30_000); // poll every 30 s
+    return () => clearInterval(interval);
+  }, [enabled]);
+
+  return count;
+}
+
+function UnreadBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 export function Navbar() {
   const { data: session } = useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const unread = useUnreadCount(!!session);
 
   return (
     <nav className="sticky top-0 z-50 glass border-b border-dark-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center group-hover:bg-brand-400 transition-colors">
@@ -47,9 +71,19 @@ export function Navbar() {
                   <Heart className="w-4 h-4" />
                   Wishlist
                 </Link>
-                <Link href="/messages" className="btn-ghost flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
+
+                {/* Messages with unread badge */}
+                <Link href="/messages" className="btn-ghost flex items-center gap-2 relative">
+                  <span className="relative">
+                    <MessageSquare className="w-4 h-4" />
+                    <UnreadBadge count={unread} />
+                  </span>
                   Messages
+                  {unread > 0 && (
+                    <span className="ml-1 min-w-[20px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
                 </Link>
 
                 {/* User dropdown */}
@@ -109,21 +143,14 @@ export function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/auth/login" className="btn-ghost">
-                  Sign In
-                </Link>
-                <Link href="/auth/signup" className="btn-primary py-2">
-                  Get Started
-                </Link>
+                <Link href="/auth/login" className="btn-ghost">Sign In</Link>
+                <Link href="/auth/signup" className="btn-primary py-2">Get Started</Link>
               </>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <button
-            className="md:hidden btn-ghost"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
+          <button className="md:hidden btn-ghost" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -134,16 +161,23 @@ export function Navbar() {
         <div className="md:hidden border-t border-dark-600 bg-dark-800 px-4 py-4 space-y-2">
           {session ? (
             <>
-              <Link href="/listings/new" className="btn-primary flex items-center gap-2 w-full justify-center">
+              <Link href="/listings/new" className="btn-primary flex items-center gap-2 w-full justify-center" onClick={() => setMenuOpen(false)}>
                 <Plus className="w-4 h-4" />Sell a Game
               </Link>
-              <Link href="/wishlist" className="btn-ghost flex items-center gap-2 w-full">
+              <Link href="/wishlist" className="btn-ghost flex items-center gap-2 w-full" onClick={() => setMenuOpen(false)}>
                 <Heart className="w-4 h-4" />Wishlist
               </Link>
-              <Link href="/messages" className="btn-ghost flex items-center gap-2 w-full">
-                <MessageSquare className="w-4 h-4" />Messages
+              <Link href="/messages" className="btn-ghost flex items-center justify-between w-full" onClick={() => setMenuOpen(false)}>
+                <span className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />Messages
+                </span>
+                {unread > 0 && (
+                  <span className="min-w-[22px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
               </Link>
-              <Link href="/profile" className="btn-ghost flex items-center gap-2 w-full">
+              <Link href="/profile" className="btn-ghost flex items-center gap-2 w-full" onClick={() => setMenuOpen(false)}>
                 <User className="w-4 h-4" />Profile
               </Link>
               <button

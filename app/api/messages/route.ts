@@ -19,13 +19,13 @@ export async function POST(req: Request) {
 
   const message = await prisma.message.create({
     data: {
-      content: content.trim(),
-      senderId: session.user.id,
+      content:    content.trim(),
+      senderId:   session.user.id,
       receiverId,
-      listingId: listingId ?? null,
+      listingId:  listingId ?? null,
     },
     include: {
-      sender: { select: { id: true, name: true, image: true } },
+      sender:  { select: { id: true, name: true, image: true } },
       listing: { select: { id: true, title: true } },
     },
   });
@@ -48,14 +48,24 @@ export async function GET(req: Request) {
     where: {
       OR: [
         { senderId: session.user.id, receiverId: partnerId },
-        { senderId: partnerId, receiverId: session.user.id },
+        { senderId: partnerId,       receiverId: session.user.id },
       ],
     },
     include: {
-      sender: { select: { id: true, name: true, image: true } },
+      sender:  { select: { id: true, name: true, image: true } },
       listing: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: "asc" },
+  });
+
+  // Mark all messages from the partner as read now that the user has opened the thread
+  await prisma.message.updateMany({
+    where: {
+      senderId:   partnerId,
+      receiverId: session.user.id,
+      read:       false,
+    },
+    data: { read: true },
   });
 
   return NextResponse.json(messages);
