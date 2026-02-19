@@ -129,8 +129,8 @@ export default function LocationMap({
       // Faint outer glow
       L.circle([fuzzyLat, fuzzyLng], {
         radius:      radiusKm * 1000 * 1.2,
-        color:       "#f97316",
-        fillColor:   "#f97316",
+        color:       "#06b6d4",
+        fillColor:   "#06b6d4",
         fillOpacity: 0.04,
         weight:      0,
         interactive: false,
@@ -139,8 +139,8 @@ export default function LocationMap({
       // Main dashed circle
       L.circle([fuzzyLat, fuzzyLng], {
         radius:      radiusKm * 1000,
-        color:       "#f97316",
-        fillColor:   "#f97316",
+        color:       "#06b6d4",
+        fillColor:   "#06b6d4",
         fillOpacity: 0.13,
         weight:      1.5,
         opacity:     0.55,
@@ -152,7 +152,7 @@ export default function LocationMap({
       L.circleMarker([fuzzyLat, fuzzyLng], {
         radius:      4,
         color:       "#fff",
-        fillColor:   "#f97316",
+        fillColor:   "#06b6d4",
         fillOpacity: 1,
         weight:      2,
         interactive: false,
@@ -285,7 +285,7 @@ export default function LocationMap({
     <div className="rounded-xl overflow-hidden border border-dark-600 bg-dark-800">
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 bg-dark-700 border-b border-dark-600">
-        <MapPin className="w-4 h-4 text-brand-500 flex-shrink-0" />
+        <MapPin className="w-4 h-4 text-brand-400 flex-shrink-0" />
         <div className="min-w-0">
           <p className="text-sm font-medium text-white truncate leading-tight">
             {label ?? "Pickup area"}

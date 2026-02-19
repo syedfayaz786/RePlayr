@@ -42,7 +42,7 @@ export function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center group-hover:bg-brand-400 transition-colors">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300" style={{background: "linear-gradient(135deg, #06b6d4, #6366f1)", boxShadow: "0 0 20px rgba(6,182,212,0.4))"}}>
               <Gamepad2 className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-white">
@@ -80,7 +80,7 @@ export function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 bg-dark-700 hover:bg-dark-600 rounded-xl px-3 py-2 transition-colors"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-200 hover:bg-dark-600/80" style={{background: "rgba(11,13,31,0.7)", border: "1px solid rgba(6,182,212,0.12)"}}
                   >
                     {session.user?.image ? (
                       <Image
@@ -91,7 +91,7 @@ export function Navbar() {
                         className="rounded-full"
                       />
                     ) : (
-                      <div className="w-7 h-7 bg-brand-500 rounded-full flex items-center justify-center text-xs font-bold">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{background: "linear-gradient(135deg, #06b6d4, #6366f1)"}}>
                         {session.user?.name?.[0]?.toUpperCase() ?? "U"}
                       </div>
                     )}
@@ -102,10 +102,10 @@ export function Navbar() {
                   </button>
 
                   {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-dark-700 border border-dark-500 rounded-xl shadow-xl overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl shadow-2xl overflow-hidden" style={{background: "rgba(11,13,31,0.98)", border: "1px solid rgba(6,182,212,0.15)", backdropFilter: "blur(16px)"}}>
                       <Link
                         href="/profile"
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600/80 transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <User className="w-4 h-4 text-gray-400" />
@@ -113,16 +113,16 @@ export function Navbar() {
                       </Link>
                       <Link
                         href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600/80 transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <Gamepad2 className="w-4 h-4 text-gray-400" />
                         <span className="text-sm">My Listings</span>
                       </Link>
-                      <div className="border-t border-dark-500" />
+                      <div className="border-t border-dark-500/50" />
                       <button
                         onClick={() => signOut({ callbackUrl: "/auth/login" })}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-600 text-red-400 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-rose-500/10 text-rose-400 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
                         <span className="text-sm">Sign Out</span>

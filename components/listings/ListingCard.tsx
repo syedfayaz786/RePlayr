@@ -91,8 +91,8 @@ export function ListingCard({ listing }: ListingCardProps) {
           disabled={loading}
           className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
             wishlisted
-              ? "bg-brand-500 text-white"
-              : "bg-dark-800/80 text-gray-300 hover:bg-brand-500/20 hover:text-brand-400"
+              ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
+              : "bg-dark-800/80 text-slate-300 hover:bg-brand-500/20 hover:text-brand-400 backdrop-blur-sm"
           }`}
         >
           <Heart className={`w-4 h-4 ${wishlisted ? "fill-current" : ""}`} />
@@ -117,7 +117,7 @@ export function ListingCard({ listing }: ListingCardProps) {
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-white truncate mb-2 group-hover:text-brand-400 transition-colors">
+        <h3 className="font-semibold text-white truncate mb-2 group-hover:text-brand-300 transition-colors">
           {listing.title}
         </h3>
 

@@ -12,7 +12,7 @@ export function Footer() {
                 <Gamepad2 className="w-5 h-5 text-white" />
               </div>
               <span className="font-display font-bold text-xl text-white">
-                Re<span className="text-brand-400">Playr</span>
+                Re<span className="gradient-text">Playr</span>
               </span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
@@ -22,19 +22,19 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Marketplace</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/?platform=PlayStation+5" className="hover:text-brand-400 transition-colors">PlayStation Games</Link></li>
-              <li><Link href="/?platform=Xbox+Series+X%2FS" className="hover:text-brand-400 transition-colors">Xbox Games</Link></li>
-              <li><Link href="/?platform=Nintendo+Switch" className="hover:text-brand-400 transition-colors">Nintendo Games</Link></li>
-              <li><Link href="/listings/new" className="hover:text-brand-400 transition-colors">Post a Listing</Link></li>
+              <li><Link href="/?platform=PlayStation+5" className="hover:gradient-text transition-colors">PlayStation Games</Link></li>
+              <li><Link href="/?platform=Xbox+Series+X%2FS" className="hover:gradient-text transition-colors">Xbox Games</Link></li>
+              <li><Link href="/?platform=Nintendo+Switch" className="hover:gradient-text transition-colors">Nintendo Games</Link></li>
+              <li><Link href="/listings/new" className="hover:gradient-text transition-colors">Post a Listing</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold text-white mb-4">Account</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/auth/signup" className="hover:text-brand-400 transition-colors">Sign Up</Link></li>
-              <li><Link href="/auth/login" className="hover:text-brand-400 transition-colors">Log In</Link></li>
-              <li><Link href="/profile" className="hover:text-brand-400 transition-colors">My Profile</Link></li>
-              <li><Link href="/wishlist" className="hover:text-brand-400 transition-colors">Wishlist</Link></li>
+              <li><Link href="/auth/signup" className="hover:gradient-text transition-colors">Sign Up</Link></li>
+              <li><Link href="/auth/login" className="hover:gradient-text transition-colors">Log In</Link></li>
+              <li><Link href="/profile" className="hover:gradient-text transition-colors">My Profile</Link></li>
+              <li><Link href="/wishlist" className="hover:gradient-text transition-colors">Wishlist</Link></li>
             </ul>
           </div>
         </div>

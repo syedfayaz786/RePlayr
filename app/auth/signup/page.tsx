@@ -60,7 +60,7 @@ export default function SignupPage() {
               <Gamepad2 className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-white">
-              Re<span className="text-brand-400">Playr</span>
+              Re<span className="gradient-text">Playr</span>
             </span>
           </Link>
         </div>

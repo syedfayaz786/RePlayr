@@ -57,7 +57,7 @@ export default function LoginPage() {
             <Gamepad2 className="w-10 h-10 text-white" />
           </div>
           <h1 className="font-display text-4xl font-bold text-white mb-4">
-            Re<span className="text-brand-400">Playr</span>
+            Re<span className="gradient-text">Playr</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-sm">
             The local marketplace for video game disc trading. Find deals near you.
@@ -88,7 +88,7 @@ export default function LoginPage() {
               <Gamepad2 className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-white">
-              Re<span className="text-brand-400">Playr</span>
+              Re<span className="gradient-text">Playr</span>
             </span>
           </div>
 
