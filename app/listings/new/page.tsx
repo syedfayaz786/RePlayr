@@ -10,6 +10,11 @@ import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { LocationInput, LocationResult } from "@/components/ui/LocationInput";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+const LocationMapPreview = dynamic(() => import("@/components/ui/LocationMap"), {
+  ssr: false,
+  loading: () => <div className="h-40 rounded-xl bg-dark-700 animate-pulse" />,
+});
 
 const EDITIONS = [
   "Standard","Deluxe","Gold","Ultimate",
@@ -32,7 +37,7 @@ export default function NewListingPage() {
   const [form, setForm] = useState({
     title: "", description: "", price: "",
     platform: "", edition: "", condition: "",
-    location: "", latitude: "", longitude: "",
+    location: "", latitude: "", longitude: "", fuzzyLat: "", fuzzyLng: "",
   });
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,11 +70,15 @@ export default function NewListingPage() {
   };
 
   const handleLocationChange = (display: string, result?: LocationResult) => {
+    // Apply same fuzzy offset as server does (±500m), purely for preview
+    const jitter = () => (Math.random() - 0.5) * 2 * 0.0045;
     setForm((f) => ({
       ...f,
       location:  display,
       latitude:  result ? String(result.lat) : "",
       longitude: result ? String(result.lng) : "",
+      fuzzyLat:  result ? String(result.lat + jitter()) : "",
+      fuzzyLng:  result ? String(result.lng + jitter()) : "",
     }));
   };
 
@@ -254,14 +263,22 @@ export default function NewListingPage() {
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="label-base">
-                    Location *
-                    <span className="text-gray-500 font-normal ml-1 text-xs">(auto-detected or search)</span>
+                    Your General Location *
+                    <span className="text-gray-500 font-normal ml-1 text-xs">(city or postal code only)</span>
                   </label>
                   <LocationInput value={form.location} onChange={handleLocationChange} required />
-                  {form.latitude && (
-                    <p className="mt-1.5 text-xs text-green-400 flex items-center gap-1">
-                      ✓ Location pinned — buyers will see a map radius
-                    </p>
+                  {form.fuzzyLat && (
+                    <div className="mt-3">
+                      <p className="text-xs text-green-400 flex items-center gap-1 mb-2">
+                        ✓ Location pinned — buyers will see this approximate area
+                      </p>
+                      <LocationMapPreview
+                        fuzzyLat={parseFloat(form.fuzzyLat)}
+                        fuzzyLng={parseFloat(form.fuzzyLng)}
+                        label={form.location}
+                        radiusKm={3}
+                      />
+                    </div>
                   )}
                 </div>
               </div>

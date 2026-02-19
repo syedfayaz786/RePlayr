@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
+import { LocationRequestPanel } from "@/components/listings/LocationRequestPanel";
 
 interface ListingActionsProps {
   listingId: string;
@@ -138,6 +139,14 @@ export function ListingActions({
         <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
           <Edit className="w-4 h-4" />Edit Listing
         </Link>
+
+        {/* Address requests from buyers */}
+        <div className="border-t border-dark-600 pt-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <span className="w-4 h-4 text-brand-400">📍</span> Address Requests
+          </p>
+          <LocationRequestPanel listingId={listingId} />
+        </div>
       </div>
     );
   }

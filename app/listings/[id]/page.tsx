@@ -135,14 +135,37 @@ export default async function ListingPage({ params }: { params: { id: string } }
               </div>
             </div>
 
-            {/* Location map — only shown when lat/lng are stored */}
-            {listing.latitude && listing.longitude && (
+            {/* Location map — Facebook-style fuzzy area */}
+            {listing.fuzzyLat && listing.fuzzyLng && (
               <LocationMap
-                lat={listing.latitude}
-                lng={listing.longitude}
+                fuzzyLat={listing.fuzzyLat}
+                fuzzyLng={listing.fuzzyLng}
                 label={listing.location ?? undefined}
-                radiusKm={2}
+                radiusKm={3}
+                listingId={listing.id}
+                isSeller={isSeller}
               />
+            )}
+
+            {/* Privacy shield — only shown to the seller */}
+            {isSeller && listing.fuzzyLat && (
+              <div className="card p-5 border border-brand-500/20 bg-brand-500/5">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-500/15 flex items-center justify-center flex-shrink-0 text-lg">🔒</div>
+                  <div>
+                    <h4 className="font-semibold text-white text-sm mb-1">Your location is protected</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Buyers see only a <strong className="text-white">fuzzy area</strong> (the circle on the map) —
+                      your exact address is never exposed. The centre point is randomised by ~500 m
+                      so it cannot be reverse-engineered from multiple listings.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      When a buyer requests your address, you decide whether to share it.
+                      The exact pickup spot is only sent via private message after your approval.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Seller reviews */}

@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -20,37 +17,36 @@ model User {
   password      String?
   bio           String?
   location      String?
-  latitude      Float?
-  longitude     Float?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  listings      Listing[]
-  wishlist      Wishlist[]
-  reviewsGiven  Review[]  @relation("ReviewAuthor")
-  reviewsReceived Review[] @relation("ReviewTarget")
-  messagesSent  Message[] @relation("MessageSender")
-  messagesReceived Message[] @relation("MessageReceiver")
-  offers        Offer[]   @relation("OfferBuyer")
-  listingOffers Offer[]   @relation("OfferSeller")
+  accounts         Account[]
+  sessions         Session[]
+  listings         Listing[]
+  wishlist         Wishlist[]
+  reviewsGiven     Review[]          @relation("ReviewAuthor")
+  reviewsReceived  Review[]          @relation("ReviewTarget")
+  messagesSent     Message[]         @relation("MessageSender")
+  messagesReceived Message[]         @relation("MessageReceiver")
+  offers           Offer[]           @relation("OfferBuyer")
+  listingOffers    Offer[]           @relation("OfferSeller")
+  locationRequests LocationRequest[] @relation("LocationRequester")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([provider, providerAccountId])
 }
 
@@ -70,25 +66,51 @@ model VerificationToken {
 }
 
 model Listing {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
   price       Float
   platform    String
   edition     String?
   condition   String
-  images      String   @default("[]")
-  location    String?
-  latitude    Float?
-  longitude   Float?
-  status      String   @default("active")
+  images      String  @default("[]")
+
+  // Human-readable label shown publicly e.g. "Chelsea, Manhattan, NY 10001"
+  location String?
+
+  // PRIVATE: exact geocoded coords — NEVER exposed to buyers via any API
+  latitude  Float?
+  longitude Float?
+
+  // FUZZY: ±500 m randomised offset — the ONLY coords ever sent to buyers for the map circle
+  fuzzyLat Float?
+  fuzzyLng Float?
+
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sellerId  String
+
+  seller           User              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  wishlistedBy     Wishlist[]
+  offers           Offer[]
+  messages         Message[]
+  locationRequests LocationRequest[]
+}
+
+// Buyer sends request → seller approves/denies → exact area shared via private message
+model LocationRequest {
+  id          String   @id @default(cuid())
+  listingId   String
+  requesterId String
+  status      String   @default("pending") // pending | approved | denied
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  sellerId    String
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  wishlistedBy Wishlist[]
-  offers      Offer[]
-  messages    Message[]
+
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  requester User    @relation("LocationRequester", fields: [requesterId], references: [id])
+
+  @@unique([listingId, requesterId])
 }
 
 model Wishlist {
@@ -102,29 +124,29 @@ model Wishlist {
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  rating     Int
-  comment    String?
-  authorId   String
-  targetId   String
-  createdAt  DateTime @default(now())
-  author     User     @relation("ReviewAuthor", fields: [authorId], references: [id])
-  target     User     @relation("ReviewTarget", fields: [targetId], references: [id])
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  authorId  String
+  targetId  String
+  createdAt DateTime @default(now())
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
 }
 
 model Offer {
-  id         String   @id @default(cuid())
-  amount     Float
-  message    String?
-  status     String   @default("pending")
-  listingId  String
-  buyerId    String
-  sellerId   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  buyer      User     @relation("OfferBuyer", fields: [buyerId], references: [id])
-  seller     User     @relation("OfferSeller", fields: [sellerId], references: [id])
+  id        String   @id @default(cuid())
+  amount    Float
+  message   String?
+  status    String   @default("pending")
+  listingId String
+  buyerId   String
+  sellerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer     User     @relation("OfferBuyer", fields: [buyerId], references: [id])
+  seller    User     @relation("OfferSeller", fields: [sellerId], references: [id])
 }
 
 model Message {

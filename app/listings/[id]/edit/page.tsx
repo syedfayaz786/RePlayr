@@ -340,15 +340,16 @@ export default function EditListingPage() {
               </div>
 
               <div className="col-span-2 sm:col-span-1">
-                <label className="label-base">Location *</label>
+                <label className="label-base">Your General Location *</label>
                 <LocationInput
                   value={form.location}
                   onChange={handleLocationChange}
                   required
                 />
                 {form.latitude && (
-                  <p className="mt-1.5 text-xs text-green-400 flex items-center gap-1">
-                    ✓ Location pinned — buyers will see a map radius
+                  <p className="mt-1.5 text-xs text-green-400 flex items-center gap-1.5">
+                    <span>🔒</span>
+                    <span>Pinned — buyers see only a <strong>fuzzy area</strong>, never your exact address</span>
                   </p>
                 )}
               </div>

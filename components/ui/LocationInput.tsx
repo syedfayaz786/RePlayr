@@ -280,6 +280,12 @@ export function LocationInput({ value, onChange, required, className }: Props) {
               </div>
             </button>
           ))}
+          {results.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-dark-900/50 border-t border-dark-700">
+              <span className="text-brand-400" style={{fontSize: 10}}>🔒</span>
+              <span className="text-xs text-gray-600">Only a fuzzy area shown to buyers — exact address never shared publicly</span>
+            </div>
+          )}
         </div>
       )}
     </div>
