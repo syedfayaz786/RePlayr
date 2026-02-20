@@ -17,7 +17,14 @@ async function getListings(searchParams: Record<string, string>) {
         { description: { contains: searchParams.q, mode: "insensitive" } },
       ];
     }
-    if (searchParams.platform) where.platform = searchParams.platform;
+    if (searchParams.platform) {
+      const platformList = searchParams.platform.split(",").map((p: string) => p.trim()).filter(Boolean);
+      if (platformList.length === 1) {
+        where.platform = platformList[0];
+      } else if (platformList.length > 1) {
+        where.platform = { in: platformList };
+      }
+    }
     if (searchParams.condition) where.condition = searchParams.condition;
     if (searchParams.minPrice || searchParams.maxPrice) {
       where.price = {};
