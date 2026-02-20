@@ -78,11 +78,11 @@ export default async function ListingPage({ params }: { params: { id: string } }
             <div className="card overflow-hidden">
               <div className="relative aspect-video bg-dark-700">
                 {images[0] ? (
-                  {images[0].startsWith("data:") ? (
+                  images[0].startsWith("data:") ? (
                     <img src={images[0]} alt={listing.title} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
                     <Image src={images[0]} alt={listing.title} fill quality={95} sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
-                  )}
+                  )
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-7xl">🎮</div>
                 )}
