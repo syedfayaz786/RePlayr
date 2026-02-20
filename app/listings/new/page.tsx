@@ -66,29 +66,38 @@ export default function NewListingPage() {
     if (images.length + files.length > 6) { toast.error("Maximum 6 images allowed"); return; }
 
     setUploadingImages(true);
+    const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
     try {
       for (const file of files) {
-        // Convert to base64 for upload
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve(ev.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-
-        // Upload to Cloudinary via our API
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: base64, filename: file.name }),
-        });
-
-        if (res.ok) {
-          const { url } = await res.json();
-          setImages((p) => [...p, url]);
+        if (cloudName && uploadPreset) {
+          // Upload directly from browser to Cloudinary — no server roundtrip, zero quality loss
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("upload_preset", uploadPreset);
+          fd.append("folder", "replayr/listings");
+          const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            { method: "POST", body: fd }
+          );
+          if (res.ok) {
+            const result = await res.json();
+            // q_auto:best = highest quality, f_auto = best format for browser
+            const url = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
+            setImages((p) => [...p, url]);
+          } else {
+            toast.error("Image upload failed");
+          }
         } else {
-          // Fallback: store base64 locally if Cloudinary not configured
+          // Fallback: base64 (lower quality, works without Cloudinary)
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target?.result as string);
+            reader.readAsDataURL(file);
+          });
           setImages((p) => [...p, base64]);
-          toast.error("Image upload service unavailable — stored locally");
+          toast.error("Cloudinary not configured — image stored locally (lower quality)");
         }
       }
     } catch {
