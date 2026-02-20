@@ -70,12 +70,25 @@ export function ListingCard({ listing }: ListingCardProps) {
       {/* Cover image / platform fallback */}
       <div className="relative aspect-[4/3] overflow-hidden">
         {images[0] ? (
-          <Image
-            src={images[0]}
-            alt={listing.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          // Use plain <img> for base64 data URIs to avoid Next.js recompression quality loss
+          // Use Next <Image> for real http URLs (CDN/remote images)
+          images[0].startsWith("data:") ? (
+            <img
+              src={images[0]}
+              alt={listing.title}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              style={{ imageRendering: "auto" }}
+            />
+          ) : (
+            <Image
+              src={images[0]}
+              alt={listing.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              quality={95}
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          )
         ) : (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${platformConfig.bgGlow}`}>
             <PlatformLogo className={`w-14 h-14 ${platformConfig.colorClass.split(" ")[1]}`} />

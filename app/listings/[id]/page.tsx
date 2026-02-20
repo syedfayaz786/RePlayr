@@ -78,7 +78,11 @@ export default async function ListingPage({ params }: { params: { id: string } }
             <div className="card overflow-hidden">
               <div className="relative aspect-video bg-dark-700">
                 {images[0] ? (
-                  <Image src={images[0]} alt={listing.title} fill className="object-cover" />
+                  {images[0].startsWith("data:") ? (
+                    <img src={images[0]} alt={listing.title} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <Image src={images[0]} alt={listing.title} fill quality={95} sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+                  )}
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-7xl">🎮</div>
                 )}
@@ -87,7 +91,11 @@ export default async function ListingPage({ params }: { params: { id: string } }
                 <div className="flex gap-2 p-3 overflow-x-auto">
                   {images.slice(1).map((img, i) => (
                     <div key={i} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                      <Image src={img} alt="" fill className="object-cover" />
+                      {img.startsWith("data:") ? (
+                        <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <Image src={img} alt="" fill quality={95} className="object-cover" />
+                      )}
                     </div>
                   ))}
                 </div>
