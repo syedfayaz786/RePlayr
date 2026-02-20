@@ -69,9 +69,13 @@ export default function NewListingPage() {
     });
   };
 
+  // true only when user picked a result from the dropdown (has real coords)
+  const [locationValid, setLocationValid] = useState(false);
+
   const handleLocationChange = (display: string, result?: LocationResult) => {
     // Apply same fuzzy offset as server does (±500m), purely for preview
     const jitter = () => (Math.random() - 0.5) * 2 * 0.0045;
+    setLocationValid(!!result); // only valid when a dropdown result was selected
     setForm((f) => ({
       ...f,
       location:  display,
@@ -86,7 +90,7 @@ export default function NewListingPage() {
     e.preventDefault();
     if (!form.platform)  { toast.error("Please select a platform");  return; }
     if (!form.condition) { toast.error("Please select a condition");  return; }
-    if (!form.location)  { toast.error("Please enter a location");    return; }
+    if (!form.location || !locationValid) { toast.error("Please select a valid location from the suggestions"); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/listings", {
@@ -266,7 +270,7 @@ export default function NewListingPage() {
                     Your General Location *
                     <span className="text-gray-500 font-normal ml-1 text-xs">(city or postal code only)</span>
                   </label>
-                  <LocationInput value={form.location} onChange={handleLocationChange} required />
+                  <LocationInput value={form.location} onChange={handleLocationChange} isValid={locationValid} required />
                   {form.fuzzyLat && (
                     <div className="mt-3">
                       <p className="text-xs text-green-400 flex items-center gap-1 mb-2">
@@ -319,7 +323,7 @@ export default function NewListingPage() {
             </div>
             <div className="flex gap-3 pb-10">
               <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
-              <button type="submit" disabled={loading || !form.price || !form.location} className="btn-primary flex-[2]">
+              <button type="submit" disabled={loading || !form.price || !form.location || !locationValid} className="btn-primary flex-[2]">
                 {loading ? "Posting…" : "🚀 Post Listing"}
               </button>
             </div>

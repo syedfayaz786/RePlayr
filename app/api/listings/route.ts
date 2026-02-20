@@ -24,7 +24,15 @@ export async function GET(req: Request) {
     { title:       { contains: q, mode: "insensitive" } },
     { description: { contains: q, mode: "insensitive" } },
   ];
-  if (platform)  where.platform  = platform;
+  if (platform) {
+    // Support comma-separated multi-platform filter e.g. "PS5,Xbox One"
+    const platformList = platform.split(",").map((p: string) => p.trim()).filter(Boolean);
+    if (platformList.length === 1) {
+      where.platform = platformList[0];
+    } else if (platformList.length > 1) {
+      where.platform = { in: platformList };
+    }
+  }
   if (condition) where.condition = condition;
   if (minPrice || maxPrice) {
     where.price = {};

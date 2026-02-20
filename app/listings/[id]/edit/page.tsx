@@ -91,7 +91,11 @@ export default function EditListingPage() {
     return null;
   }
 
+  // starts true for existing listings (they already have valid coords)
+  const [locationValid, setLocationValid] = useState(true);
+
   const handleLocationChange = (display: string, result?: LocationResult) => {
+    setLocationValid(!!result);
     setForm((f) => ({
       ...f,
       location:  display,
@@ -115,7 +119,7 @@ export default function EditListingPage() {
     e.preventDefault();
     if (!form.platform) { toast.error("Please select a platform"); return; }
     if (!form.condition) { toast.error("Please select a condition"); return; }
-    if (!form.location)  { toast.error("Please enter a location");   return; }
+    if (!form.location || !locationValid) { toast.error("Please select a valid location from the suggestions"); return; }
 
     setSaving(true);
     try {
@@ -344,6 +348,7 @@ export default function EditListingPage() {
                 <LocationInput
                   value={form.location}
                   onChange={handleLocationChange}
+                  isValid={locationValid}
                   required
                 />
                 {form.latitude && (
@@ -432,7 +437,7 @@ export default function EditListingPage() {
             </Link>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !locationValid}
               className="btn-primary flex-[2] flex items-center justify-center gap-2"
             >
               {saving ? (

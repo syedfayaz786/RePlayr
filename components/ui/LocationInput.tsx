@@ -24,6 +24,7 @@ interface Props {
   onChange: (display: string, result?: LocationResult) => void;
   required?: boolean;
   className?: string;
+  isValid?: boolean; // true when a real location has been confirmed from dropdown
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,13 +130,14 @@ async function reverseGeocode(lat: number, lng: number): Promise<LocationResult 
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function LocationInput({ value, onChange, required, className }: Props) {
+export function LocationInput({ value, onChange, required, className, isValid }: Props) {
   const [query, setQuery]     = useState(value);
   const [results, setResults] = useState<LocationResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
   const [open, setOpen]       = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false); // user typed but didn't pick
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapRef  = useRef<HTMLDivElement>(null);
 
@@ -167,7 +169,7 @@ export function LocationInput({ value, onChange, required, className }: Props) {
       async (pos) => {
         const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         setGeoLoading(false);
-        if (r) { setQuery(r.display); onChange(r.display, r); }
+        if (r) { setQuery(r.display); setTouched(false); onChange(r.display, r); }
       },
       (err) => {
         setGeoLoading(false);
@@ -198,6 +200,7 @@ export function LocationInput({ value, onChange, required, className }: Props) {
 
   const handleInput = (val: string) => {
     setQuery(val);
+    setTouched(true); // user is typing — no longer confirmed
     onChange(val);
     if (debounce.current) clearTimeout(debounce.current);
     if (!val.trim()) { setResults([]); setOpen(false); return; }
@@ -207,13 +210,14 @@ export function LocationInput({ value, onChange, required, className }: Props) {
 
   const select = (r: LocationResult) => {
     setQuery(r.display);
+    setTouched(false); // confirmed from dropdown
     onChange(r.display, r);
     setResults([]);
     setOpen(false);
   };
 
   const clear = () => {
-    setQuery(""); onChange(""); setResults([]); setOpen(false);
+    setQuery(""); setTouched(false); onChange(""); setResults([]); setOpen(false);
   };
 
   return (
@@ -228,7 +232,11 @@ export function LocationInput({ value, onChange, required, className }: Props) {
           placeholder="City, zip / postal code, or neighbourhood"
           required={required}
           autoComplete="off"
-          className={`input-base pl-11 pr-20 ${className ?? ""}`}
+          className={`input-base pl-11 pr-20 ${className ?? ""} ${
+            touched && query && isValid === false
+              ? "border-rose-500/60 ring-rose-500/30 focus:ring-rose-500/40 focus:border-rose-500/60"
+              : ""
+          }`}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {query && (
@@ -249,6 +257,16 @@ export function LocationInput({ value, onChange, required, className }: Props) {
 
       {geoError && (
         <p className="mt-1.5 text-xs text-amber-400">⚠️ {geoError}</p>
+      )}
+      {touched && query && isValid === false && (
+        <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1">
+          <span>⚠️</span> Pick a location from the suggestions to continue
+        </p>
+      )}
+      {isValid && query && (
+        <p className="mt-1.5 text-xs text-emerald-400 flex items-center gap-1">
+          <span>✓</span> Location confirmed
+        </p>
       )}
 
       {open && (
