@@ -59,14 +59,43 @@ export default function NewListingPage() {
     );
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadingImages, setUploadingImages] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (images.length + files.length > 6) { toast.error("Maximum 6 images allowed"); return; }
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => setImages((p) => [...p, ev.target?.result as string]);
-      reader.readAsDataURL(file);
-    });
+
+    setUploadingImages(true);
+    try {
+      for (const file of files) {
+        // Convert to base64 for upload
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        // Upload to Cloudinary via our API
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: base64, filename: file.name }),
+        });
+
+        if (res.ok) {
+          const { url } = await res.json();
+          setImages((p) => [...p, url]);
+        } else {
+          // Fallback: store base64 locally if Cloudinary not configured
+          setImages((p) => [...p, base64]);
+          toast.error("Image upload service unavailable — stored locally");
+        }
+      }
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
   // true only when user picked a result from the dropdown (has real coords)
@@ -231,7 +260,13 @@ export default function NewListingPage() {
                       {i === 0 && <div className="absolute bottom-2 left-2 bg-brand-500/90 rounded-md px-2 py-0.5 text-xs font-semibold text-white">Cover</div>}
                     </div>
                   ))}
-                  {images.length < 6 && (
+                  {uploadingImages && (
+                  <div className="w-full aspect-square rounded-xl bg-dark-700 border-2 border-dashed border-brand-500/50 flex flex-col items-center justify-center gap-2">
+                    <div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs text-brand-400">Uploading…</span>
+                  </div>
+                )}
+                {images.length < 6 && !uploadingImages && (
                     <label className="aspect-square rounded-xl border-2 border-dashed border-dark-500 hover:border-brand-500 flex flex-col items-center justify-center cursor-pointer transition-colors bg-dark-700/50">
                       <Upload className="w-6 h-6 text-gray-400 mb-2" />
                       <span className="text-xs text-gray-400">Add Photo</span>

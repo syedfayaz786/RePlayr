@@ -5,6 +5,8 @@ const nextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "graph.facebook.com" },
+      // Cloudinary CDN for listing images
+      { protocol: "https", hostname: "res.cloudinary.com" },
     ],
     dangerouslyAllowSVG: false,
     // base64 data URIs are rendered via plain <img> tags in components,

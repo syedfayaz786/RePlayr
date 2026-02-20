@@ -104,15 +104,38 @@ export default function EditListingPage() {
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadingImages, setUploadingImages] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (images.length + files.length > 6) { toast.error("Maximum 6 images"); return; }
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) =>
-        setImages((prev) => [...prev, ev.target?.result as string]);
-      reader.readAsDataURL(file);
-    });
+
+    setUploadingImages(true);
+    try {
+      for (const file of files) {
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: base64, filename: file.name }),
+        });
+        if (res.ok) {
+          const { url } = await res.json();
+          setImages((prev) => [...prev, url]);
+        } else {
+          setImages((prev) => [...prev, base64]);
+          toast.error("Image upload service unavailable — stored locally");
+        }
+      }
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -437,7 +460,7 @@ export default function EditListingPage() {
             </Link>
             <button
               type="submit"
-              disabled={saving || !locationValid}
+              disabled={saving || !locationValid || uploadingImages}
               className="btn-primary flex-[2] flex items-center justify-center gap-2"
             >
               {saving ? (
