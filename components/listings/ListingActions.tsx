@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -40,6 +40,8 @@ export function ListingActions({
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(status);
+  const [markingStatus, setMarkingStatus] = useState(false);
 
   const requireAuth = () => {
     if (!session) {
@@ -129,13 +131,67 @@ export function ListingActions({
     }
   };
 
+  const updateStatus = async (newStatus: string) => {
+    setMarkingStatus(true);
+    try {
+      const res = await fetch(`/api/listings/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setCurrentStatus(newStatus);
+        toast.success(newStatus === "sold" ? "🎉 Marked as sold!" : "Listing is now active");
+        router.refresh();
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setMarkingStatus(false);
+    }
+  };
+
   if (isSeller) {
     return (
       <div className="card p-6 space-y-3">
         <h3 className="font-semibold text-white text-sm">Your Listing</h3>
-        <p className="text-xs text-gray-400">
-          Status: <span className={`font-semibold ${status === "active" ? "text-green-400" : "text-gray-400"}`}>{status}</span>
-        </p>
+
+        {/* Status pill */}
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+            currentStatus === "active"
+              ? "bg-green-500/15 text-green-300 border-green-500/30"
+              : currentStatus === "sold"
+              ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+              : "bg-gray-500/15 text-gray-300 border-gray-500/30"
+          }`}>
+            {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
+          </span>
+        </div>
+
+        {/* Mark as sold / relist */}
+        {currentStatus === "active" ? (
+          <button
+            onClick={() => updateStatus("sold")}
+            disabled={markingStatus}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200 disabled:opacity-50"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {markingStatus ? "Updating…" : "Mark as Sold"}
+          </button>
+        ) : currentStatus === "sold" ? (
+          <button
+            onClick={() => updateStatus("active")}
+            disabled={markingStatus}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {markingStatus ? "Updating…" : "Relist (Mark Active)"}
+          </button>
+        ) : null}
+
         <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
           <Edit className="w-4 h-4" />Edit Listing
         </Link>
