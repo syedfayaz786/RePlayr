@@ -56,7 +56,6 @@ function PaginationBar({
       >
         <ChevronLeft className="w-4 h-4" /> Prev
       </button>
-
       <div className="flex items-center gap-1">
         {deduped.map((p, i) =>
           p === "…" ? (
@@ -76,7 +75,6 @@ function PaginationBar({
           )
         )}
       </div>
-
       <button
         onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dark-500 bg-dark-700 text-gray-300 hover:border-brand-500/60 hover:text-brand-300 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
@@ -91,13 +89,12 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   const searchParams = useSearchParams();
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const [page,     setPage]     = useState(1);
-  const [perPage,  setPerPage]  = useState(50);
-  const [data,     setData]     = useState<FetchResult | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [fadeKey,  setFadeKey]  = useState(0); // triggers fade animation on change
+  const [page,    setPage]    = useState(1);
+  const [perPage, setPerPage] = useState(50);
+  const [data,    setData]    = useState<FetchResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fadeKey, setFadeKey] = useState(0);
 
-  // Reset page when search params change (new filters)
   const paramStr = searchParams.toString();
   const prevParamStr = useRef(paramStr);
   useEffect(() => {
@@ -130,14 +127,12 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    // Scroll to top of grid only, not whole page
     gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handlePerPage = (size: number) => {
     setPerPage(size);
     setPage(1);
-    // No scroll — just update the list in place
   };
 
   const total      = data?.total      ?? 0;
@@ -171,7 +166,6 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
               <span>Updated live</span>
             </div>
           )}
-          {/* Per-page selector — buttons, not links */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 whitespace-nowrap">Per page:</span>
             <div className="flex gap-1">
@@ -214,19 +208,13 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
 
       {/* Grid */}
       {loading ? (
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-          style={{ minHeight: data ? undefined : "400px" }}
-        >
-          {Array.from({ length: perPage > 50 ? 12 : 8 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="card aspect-[3/4] animate-pulse bg-dark-700" />
           ))}
         </div>
       ) : listings.length > 0 ? (
-        <div
-          key={fadeKey}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in"
-        >
+        <div key={fadeKey} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in">
           {listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
@@ -242,7 +230,6 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         </div>
       )}
 
-      {/* Pagination */}
       {!loading && totalPages > 1 && (
         <PaginationBar page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       )}

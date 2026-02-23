@@ -177,7 +177,7 @@ export default function EditListingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8">
 
         <div className="flex items-center justify-between mb-8">
           <div>

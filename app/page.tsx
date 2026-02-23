@@ -5,7 +5,6 @@ import { SearchBar } from "@/components/listings/SearchBar";
 import { ListingsGrid } from "@/components/listings/ListingsGrid";
 import { prisma } from "@/lib/prisma";
 import { Gamepad2, Users, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 
 async function getStats() {
   try {
@@ -34,7 +33,7 @@ export default async function HomePage({
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {/* ── Compact hero ── */}
+      {/* ── Compact centred hero ── */}
       <section className="relative overflow-hidden bg-dark-800 border-b border-dark-600">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-48 bg-brand-600/20 rounded-full blur-3xl" />

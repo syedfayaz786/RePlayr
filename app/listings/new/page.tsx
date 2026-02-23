@@ -153,7 +153,7 @@ export default function NewListingPage() {
 
   return (
     <div className="min-h-screen flex flex-col"><Navbar />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-white mb-2">Sell a Game</h1>
           <p className="text-gray-400">List your game disc and find a local buyer in minutes</p>

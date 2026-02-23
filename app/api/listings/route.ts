@@ -3,12 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Offset coordinates by a random amount up to ~500 m.
- * 1° latitude ≈ 111 km, so 0.0045° ≈ 500 m.
- */
 function fuzzyCoord(exact: number): number {
-  return exact + (Math.random() - 0.5) * 2 * 0.0045;
+  const delta = (Math.random() - 0.5) * 0.009; // ~500m
+  return parseFloat((exact + delta).toFixed(6));
 }
 
 export async function GET(req: Request) {
@@ -17,12 +14,13 @@ export async function GET(req: Request) {
   const platform  = searchParams.get("platform");
   const condition = searchParams.get("condition");
   const minPrice  = searchParams.get("minPrice");
+  const maxPrice  = searchParams.get("maxPrice");
   const perPage   = Math.min(parseInt(searchParams.get("perPage") ?? "50") || 50, 200);
   const page      = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
   const skip      = (page - 1) * perPage;
-  const maxPrice  = searchParams.get("maxPrice");
 
-  // Use AND so every filter is required simultaneously — prevents OR(text) from swallowing platform/condition filters
+  // Use AND so every filter is required simultaneously —
+  // prevents OR(text search) from swallowing platform/condition filters
   const AND: any[] = [{ status: "active" }];
 
   if (q) AND.push({
@@ -34,8 +32,8 @@ export async function GET(req: Request) {
 
   if (platform) {
     const platformList = platform.split(",").map((p: string) => p.trim()).filter(Boolean);
-    if (platformList.length === 1)      AND.push({ platform: platformList[0] });
-    else if (platformList.length > 1)   AND.push({ platform: { in: platformList } });
+    if (platformList.length === 1)    AND.push({ platform: platformList[0] });
+    else if (platformList.length > 1) AND.push({ platform: { in: platformList } });
   }
 
   if (condition) AND.push({ condition });
@@ -64,7 +62,7 @@ export async function GET(req: Request) {
       prisma.listing.count({ where }),
     ]);
 
-    // Strip exact coords; pass through fuzzyLat/fuzzyLng only if they exist
+    // Strip exact coords; expose fuzzy only
     const safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
       return rest;
@@ -96,43 +94,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const lat = latitude  ? parseFloat(latitude)  : null;
-    const lng = longitude ? parseFloat(longitude) : null;
-
-    // Build data object — only include fuzzy coords if columns exist in DB
     const data: any = {
       title,
-      description,
-      price:     parseFloat(price),
+      description: description ?? "",
+      price:       parseFloat(price),
       platform,
-      edition,
+      edition:     edition ?? null,
       condition,
       location,
-      latitude:  lat,
-      longitude: lng,
-      images:    JSON.stringify(images ?? []),
-      sellerId:  session.user.id,
+      images:      JSON.stringify(images ?? []),
+      sellerId:    session.user.id,
     };
 
-    // Attempt to add fuzzy coords — silently skip if columns don't exist yet
-    if (lat != null) data.fuzzyLat = fuzzyCoord(lat);
-    if (lng != null) data.fuzzyLng = fuzzyCoord(lng);
-
-    let listing;
-    try {
-      listing = await prisma.listing.create({ data });
-    } catch (dbErr: any) {
-      // If fuzzyLat/fuzzyLng columns don't exist yet, retry without them
-      if (dbErr?.message?.includes("fuzzy") || dbErr?.code === "P2022") {
-        delete data.fuzzyLat;
-        delete data.fuzzyLng;
-        listing = await prisma.listing.create({ data });
-      } else {
-        throw dbErr;
-      }
+    if (latitude && longitude) {
+      try {
+        data.latitude  = parseFloat(latitude);
+        data.longitude = parseFloat(longitude);
+        data.fuzzyLat  = fuzzyCoord(data.latitude);
+        data.fuzzyLng  = fuzzyCoord(data.longitude);
+      } catch {}
     }
 
-    return NextResponse.json(listing);
+    const listing = await prisma.listing.create({ data });
+    return NextResponse.json(listing, { status: 201 });
   } catch (err) {
     console.error("POST /api/listings error:", err);
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 });
