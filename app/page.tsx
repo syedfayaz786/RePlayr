@@ -72,16 +72,7 @@ export default async function HomePage({
               </div>
             </div>
 
-            {/* Right: sell CTA + privacy note */}
-            <div className="flex flex-col items-start sm:items-end gap-2 flex-shrink-0">
-              <Link
-                href="/listings/new"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-300 hover:bg-brand-500/25 hover:text-brand-200 transition-all text-sm font-semibold"
-              >
-                <span className="text-lg leading-none">+</span> Sell a Game
-              </Link>
-              <span className="text-xs text-gray-600">Local pickup · Address stays private</span>
-            </div>
+
           </div>
         </div>
       </section>
