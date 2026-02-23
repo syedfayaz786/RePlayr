@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, X, AlertTriangle } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -41,23 +41,22 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
   if (confirming) {
     return (
       <div
-        className="flex items-center gap-1.5 bg-red-500/15 border border-red-500/40 rounded-lg px-2 py-1"
+        className="flex items-center gap-2 bg-dark-800 border border-red-500/50 rounded-xl px-3 py-2 shadow-lg shadow-red-500/10"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
       >
-        <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-        <span className="text-xs text-red-300 whitespace-nowrap">Delete chat?</span>
+        <span className="text-xs text-gray-300 whitespace-nowrap font-medium">Delete this chat?</span>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors px-1"
+          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
         >
-          {deleting ? "…" : "Yes"}
+          {deleting ? "…" : "Delete"}
         </button>
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirming(false); }}
-          className="text-gray-500 hover:text-gray-300 transition-colors"
+          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-dark-600 hover:bg-dark-500 text-gray-300 transition-colors"
         >
-          <X className="w-3.5 h-3.5" />
+          Cancel
         </button>
       </div>
     );
