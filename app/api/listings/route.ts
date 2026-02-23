@@ -44,15 +44,19 @@ export async function GET(req: Request) {
   }
 
   try {
-    const listings = await prisma.listing.findMany({
-      where,
-      include: {
-        seller: { select: { id: true, name: true, image: true } },
-        _count:  { select: { wishlistedBy: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 48,
-    });
+    const [listings, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        include: {
+          seller: { select: { id: true, name: true, image: true } },
+          _count:  { select: { wishlistedBy: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: perPage,
+        skip,
+      }),
+      prisma.listing.count({ where }),
+    ]);
 
     // Strip exact coords; pass through fuzzyLat/fuzzyLng only if they exist
     const safe = listings.map((l: any) => {
@@ -60,7 +64,13 @@ export async function GET(req: Request) {
       return rest;
     });
 
-    return NextResponse.json(safe);
+    return NextResponse.json({
+      listings: safe,
+      total,
+      page,
+      perPage,
+      totalPages: Math.ceil(total / perPage),
+    });
   } catch (err) {
     console.error("GET /api/listings error:", err);
     return NextResponse.json({ error: "Failed to fetch listings" }, { status: 500 });
