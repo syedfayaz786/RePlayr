@@ -187,24 +187,41 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         </div>
       </div>
 
-      {/* Platform quick filters */}
-      {!isSearching && (
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
-          {[
-            { label: "All",             href: "/" },
-            { label: "PS5",             href: "/?platform=PlayStation+5" },
-            { label: "PS4",             href: "/?platform=PlayStation+4" },
-            { label: "Xbox Series",     href: "/?platform=Xbox+Series+X%2FS" },
-            { label: "Nintendo Switch", href: "/?platform=Nintendo+Switch" },
-            { label: "PC",              href: "/?platform=PC" },
-          ].map(({ label, href }) => (
-            <Link key={label} href={href}
-              className="whitespace-nowrap px-4 py-2 rounded-full text-sm bg-dark-700 border border-dark-500 hover:border-brand-500 hover:text-brand-400 transition-all">
-              {label}
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Platform quick filters — always visible, active pill highlighted */}
+      {(() => {
+        const activePlatform = searchParams.get("platform") ?? "";
+        const pills = [
+          { label: "All",             value: "" },
+          { label: "PS5",             value: "PlayStation 5" },
+          { label: "PS4",             value: "PlayStation 4" },
+          { label: "Xbox Series",     value: "Xbox Series X/S" },
+          { label: "Nintendo Switch", value: "Nintendo Switch" },
+          { label: "PC",              value: "PC" },
+        ];
+        return (
+          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+            {pills.map(({ label, value }) => {
+              const isActive = activePlatform === value;
+              // Build href: preserve other params (q, condition, price) but set/clear platform
+              const params = new URLSearchParams(searchParams.toString());
+              if (value) params.set("platform", value);
+              else params.delete("platform");
+              params.delete("page"); // reset to page 1
+              const href = `/?${params.toString()}`;
+              return (
+                <Link key={label} href={href}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
+                    isActive
+                      ? "bg-brand-500 border-brand-500 text-white font-semibold"
+                      : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
+                  }`}>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Grid */}
       {loading ? (
