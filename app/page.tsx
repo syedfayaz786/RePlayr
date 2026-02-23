@@ -45,7 +45,7 @@ export default async function HomePage({
             Local Game Trading,{" "}
             <span className="gradient-text">Made Easy</span>
           </h1>
-          <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-500 mt-2 mb-4">
+          <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-400 mt-2 mb-4">
             Trade<span className="text-brand-500 mx-1.5">·</span>
             Play<span className="text-brand-500 mx-1.5">·</span>
             Repeat
@@ -59,7 +59,7 @@ export default async function HomePage({
               <div key={label} className="flex items-center gap-1.5">
                 <Icon className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
                 <span className="text-brand-300 font-bold text-sm">{value}</span>
-                <span className="text-gray-500 text-xs">{label}</span>
+                <span className="text-gray-300 text-xs">{label}</span>
               </div>
             ))}
           </div>

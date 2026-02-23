@@ -164,11 +164,11 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
           {!isSearching && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <TrendingUp className="w-4 h-4 text-brand-400" />
-              <span>Updated live</span>
+              <span className="text-slate-300">Updated live</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 whitespace-nowrap">Per page:</span>
+            <span className="text-xs text-slate-300 whitespace-nowrap">Per page:</span>
             <div className="flex gap-1">
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <button
@@ -177,7 +177,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                     perPage === size
                       ? "bg-brand-500 text-white"
-                      : "bg-dark-700 border border-dark-500 text-gray-400 hover:border-brand-500/50 hover:text-white"
+                      : "bg-dark-700 border border-dark-500 text-slate-300 hover:border-brand-500/50 hover:text-white"
                   }`}
                 >
                   {size}

@@ -138,12 +138,12 @@ export function ListingCard({ listing }: ListingCardProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-1 min-w-0">
             {listing.location && (
               <>
                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[80px]">{listing.location}</span>
+                <span className="truncate max-w-[110px] text-slate-300">{listing.location}</span>
               </>
             )}
           </div>
