@@ -225,6 +225,14 @@ export function SearchBar() {
     router.push(`/?${params.toString()}`);
   }, [query, platforms, condition, minPrice, maxPrice, radius, router]);
 
+  // Auto-apply when platform selection changes — no need to hit Search
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    applyFilters();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platforms]);
+
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
     setMinPrice(""); setMaxPrice(""); setRadius("50");
