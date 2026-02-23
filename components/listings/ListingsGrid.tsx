@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -87,6 +87,7 @@ function PaginationBar({
 
 export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const [page,    setPage]    = useState(1);
@@ -187,36 +188,69 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         </div>
       </div>
 
-      {/* Platform quick filters — always visible, active pill highlighted */}
+      {/* Platform quick filters — multiselect pills */}
       {(() => {
-        const activePlatform = searchParams.get("platform") ?? "";
+        const activePlatforms = (searchParams.get("platform") ?? "")
+          .split(",").map(s => s.trim()).filter(Boolean);
+
         const pills = [
-          { label: "All",             value: "" },
           { label: "PS5",             value: "PlayStation 5" },
           { label: "PS4",             value: "PlayStation 4" },
           { label: "Xbox Series",     value: "Xbox Series X/S" },
           { label: "Nintendo Switch", value: "Nintendo Switch" },
           { label: "PC",              value: "PC" },
         ];
+
+        const toggle = (value: string) => {
+          let next: string[];
+          if (activePlatforms.includes(value)) {
+            next = activePlatforms.filter(p => p !== value);
+          } else {
+            next = [...activePlatforms, value];
+          }
+          const params = new URLSearchParams(searchParams.toString());
+          if (next.length) params.set("platform", next.join(","));
+          else params.delete("platform");
+          params.delete("page");
+          // Use router push to update URL without full reload
+          router.push(`/?${params.toString()}`);
+        };
+
+        const clearAll = () => {
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("platform");
+          params.delete("page");
+          router.push(`/?${params.toString()}`);
+        };
+
         return (
           <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+            {/* All / Clear button */}
+            <button
+              onClick={clearAll}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
+                activePlatforms.length === 0
+                  ? "bg-brand-500 border-brand-500 text-white font-semibold"
+                  : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
+              }`}
+            >
+              All
+            </button>
+
             {pills.map(({ label, value }) => {
-              const isActive = activePlatform === value;
-              // Build href: preserve other params (q, condition, price) but set/clear platform
-              const params = new URLSearchParams(searchParams.toString());
-              if (value) params.set("platform", value);
-              else params.delete("platform");
-              params.delete("page"); // reset to page 1
-              const href = `/?${params.toString()}`;
+              const isActive = activePlatforms.includes(value);
               return (
-                <Link key={label} href={href}
+                <button
+                  key={label}
+                  onClick={() => toggle(value)}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
                     isActive
                       ? "bg-brand-500 border-brand-500 text-white font-semibold"
                       : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
-                  }`}>
+                  }`}
+                >
                   {label}
-                </Link>
+                </button>
               );
             })}
           </div>
