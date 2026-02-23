@@ -34,10 +34,21 @@ export default async function HomePage({
       <Navbar />
 
       {/* ── Compact centred hero ── */}
-      <section className="relative overflow-hidden bg-dark-800 border border-brand-500/70">
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-48 bg-brand-600/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-64 h-48 bg-blue-600/10 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden">
+        {/* Hero background — layered gradient + glows */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Base gradient */}
+          <div className="absolute inset-0" style={{background: "linear-gradient(135deg, #080a1a 0%, #0b0d24 50%, #0a1020 100%)"}} />
+          {/* Cyan glow left */}
+          <div className="absolute -top-10 left-1/4 w-[500px] h-[300px] rounded-full opacity-30" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(60px)"}} />
+          {/* Purple glow right */}
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] rounded-full opacity-20" style={{background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)", filter: "blur(60px)"}} />
+          {/* Subtle cyan glow centre-bottom */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[100px] opacity-15" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(40px)"}} />
+          {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: "linear-gradient(rgba(6,182,212,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.8) 1px, transparent 1px)", backgroundSize: "40px 40px"}} />
+          {/* Bottom fade to page bg */}
+          <div className="absolute bottom-0 left-0 right-0 h-12" style={{background: "linear-gradient(to bottom, transparent, #080a18)"}} />
         </div>
 
         <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-8 text-center">
