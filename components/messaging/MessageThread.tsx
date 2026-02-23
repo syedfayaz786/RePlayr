@@ -28,6 +28,7 @@ interface MessageThreadProps {
   thread: Message[];
   currentUserId: string;
   partnerId: string;
+  listingId?: string | null;
   partnerName: string;
   partnerImage?: string | null;
   pinnedListing?: PinnedListing | null;
@@ -37,6 +38,7 @@ export function MessageThread({
   thread: initialThread,
   currentUserId,
   partnerId,
+  listingId,
   partnerName,
   partnerImage,
   pinnedListing,
@@ -67,7 +69,7 @@ export function MessageThread({
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ receiverId: partnerId, content }),
+        body: JSON.stringify({ receiverId: partnerId, content, listingId: listingId ?? undefined }),
       });
       if (!res.ok) throw new Error();
       const saved = await res.json();

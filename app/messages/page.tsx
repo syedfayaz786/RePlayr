@@ -8,19 +8,6 @@ import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
-
-interface ThreadListing {
-  id: string;
-  title: string;
-  price: number;
-  images: string;
-  platform: string;
-  condition: string;
-  location?: string | null;
-  edition?: string | null;
-  description?: string | null;
-}
-
 import Link from "next/link";
 
 export default async function MessagesPage({
@@ -36,99 +23,90 @@ export default async function MessagesPage({
       OR: [{ senderId: session.user.id }, { receiverId: session.user.id }],
     },
     include: {
-      sender: { select: { id: true, name: true, image: true } },
+      sender:   { select: { id: true, name: true, image: true } },
       receiver: { select: { id: true, name: true, image: true } },
-      listing: { select: { id: true, title: true, price: true, images: true, platform: true, condition: true } },
+      listing:  { select: { id: true, title: true, price: true, images: true, platform: true, condition: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  // Group by conversation partner
+  // Group by partnerId + listingId so same person × different game = separate threads
+  type ConvKey = string; // `${partnerId}::${listingId ?? "none"}`
   const conversations = new Map<
-    string,
+    ConvKey,
     {
       partner: { id: string; name: string | null; image: string | null };
       lastMessage: (typeof messages)[0];
       unread: number;
       listing: { id: string; title: string; price: number; images: string; platform: string; condition: string } | null;
+      listingId: string | null;
     }
   >();
 
   for (const msg of messages) {
-    const partnerId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
-    const partner   = msg.senderId === session.user.id ? msg.receiver  : msg.sender;
+    const partnerId  = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
+    const partner    = msg.senderId === session.user.id ? msg.receiver   : msg.sender;
+    const listingId  = msg.listingId ?? null;
+    const key: ConvKey = `${partnerId}::${listingId ?? "none"}`;
 
-    if (!conversations.has(partnerId)) {
-      conversations.set(partnerId, {
+    if (!conversations.has(key)) {
+      conversations.set(key, {
         partner,
         lastMessage: msg,
         unread: 0,
         listing: msg.listing ?? null,
+        listingId,
       });
     }
     if (msg.receiverId === session.user.id && !msg.read) {
-      conversations.get(partnerId)!.unread++;
+      conversations.get(key)!.unread++;
     }
   }
 
-  const convList = Array.from(conversations.values());
+  const convList       = Array.from(conversations.values());
   const activePartnerId = searchParams.with;
+  const activeListingId = searchParams.listing ?? null;
+  const activeKey       = activePartnerId
+    ? `${activePartnerId}::${activeListingId ?? "none"}`
+    : null;
 
-  // Explicit type for the thread listing with all fields we select
-  type ThreadListing = {
-    id: string;
-    title: string;
-    price: number;
-    images: string;
-    platform: string;
-    condition: string;
-    location: string | null;
-    edition: string | null;
-    description: string | null;
-  };
-
-  type ThreadMessage = {
-    id: string;
-    content: string;
-    senderId: string;
-    receiverId: string;
-    createdAt: Date;
-    read: boolean;
-    sender: { id: string; name: string | null; image: string | null };
-    receiver: { id: string; name: string | null; image: string | null };
-    listing: ThreadListing | null;
-  };
-
-  let thread: ThreadMessage[] = [];
+  // Load active thread — scoped to partner + listing
+  let thread: typeof messages = [];
   if (activePartnerId) {
+    const listingFilter = activeListingId
+      ? { listingId: activeListingId }
+      : { listingId: null };
+
     thread = await prisma.message.findMany({
       where: {
         OR: [
-          { senderId: session.user.id, receiverId: activePartnerId },
-          { senderId: activePartnerId, receiverId: session.user.id },
+          { senderId: session.user.id, receiverId: activePartnerId, ...listingFilter },
+          { senderId: activePartnerId, receiverId: session.user.id, ...listingFilter },
         ],
       },
       include: {
-        sender: { select: { id: true, name: true, image: true } },
+        sender:   { select: { id: true, name: true, image: true } },
         receiver: { select: { id: true, name: true, image: true } },
-        listing: { select: { id: true, title: true, price: true, images: true, platform: true, condition: true, location: true, edition: true, description: true } },
+        listing:  { select: { id: true, title: true, price: true, images: true, platform: true, condition: true, location: true, edition: true, description: true } },
       },
       orderBy: { createdAt: "asc" },
-    }) as ThreadMessage[];
+    });
 
     await prisma.message.updateMany({
-      where: { senderId: activePartnerId, receiverId: session.user.id, read: false },
+      where: {
+        senderId:   activePartnerId,
+        receiverId: session.user.id,
+        read:       false,
+        ...(activeListingId ? { listingId: activeListingId } : { listingId: null }),
+      },
       data: { read: true },
     });
   }
 
-  const activeConv    = activePartnerId ? convList.find((c) => c.partner.id === activePartnerId) : null;
+  const activeConv    = activeKey ? conversations.get(activeKey) : null;
   const activePartner = activeConv?.partner ?? null;
+  const threadListing = thread.find((m) => m.listing)?.listing ?? null;
 
-  // Get the listing from the first message that has one
-  const threadListing: ThreadListing | null = thread.find((m) => m.listing)?.listing ?? null;
-
-  // Parse listing images
   let listingImages: string[] = [];
   if (threadListing?.images) {
     try { listingImages = JSON.parse(threadListing.images); } catch {}
@@ -152,44 +130,49 @@ export default async function MessagesPage({
                 <p className="text-xs text-gray-500 mt-1">Find a listing and message the seller</p>
               </div>
             ) : (
-              convList.map(({ partner, lastMessage, unread, listing }) => (
-                <a
-                  key={partner.id}
-                  href={`/messages?with=${partner.id}`}
-                  className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${
-                    activePartnerId === partner.id ? "bg-dark-700 border-l-2 border-l-brand-500" : ""
-                  }`}
-                >
-                  <div className="relative flex-shrink-0">
-                    {partner.image ? (
-                      <Image src={partner.image} alt={partner.name ?? ""} width={40} height={40} className="rounded-full" />
-                    ) : (
-                      <div className="w-10 h-10 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold">
-                        {partner.name?.[0]?.toUpperCase() ?? "?"}
-                      </div>
-                    )}
-                    {unread > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
-                        {unread}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium truncate ${unread > 0 ? "text-white" : "text-gray-300"}`}>
-                        {partner.name}
-                      </span>
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {formatRelativeTime(lastMessage.createdAt)}
-                      </span>
+              convList.map(({ partner, lastMessage, unread, listing, listingId }) => {
+                const href  = `/messages?with=${partner.id}${listingId ? `&listing=${listingId}` : ""}`;
+                const key   = `${partner.id}::${listingId ?? "none"}`;
+                const isActive = activeKey === key;
+                return (
+                  <a
+                    key={key}
+                    href={href}
+                    className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${
+                      isActive ? "bg-dark-700 border-l-2 border-l-brand-500" : ""
+                    }`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      {partner.image ? (
+                        <Image src={partner.image} alt={partner.name ?? ""} width={40} height={40} className="rounded-full" />
+                      ) : (
+                        <div className="w-10 h-10 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold">
+                          {partner.name?.[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      )}
+                      {unread > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
+                          {unread}
+                        </span>
+                      )}
                     </div>
-                    {listing && (
-                      <p className="text-xs text-brand-400 truncate mb-0.5">🎮 {listing.title}</p>
-                    )}
-                    <p className="text-xs text-gray-500 truncate">{lastMessage.content}</p>
-                  </div>
-                </a>
-              ))
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={`text-sm font-medium truncate ${unread > 0 ? "text-white" : "text-gray-300"}`}>
+                          {partner.name}
+                        </span>
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          {formatRelativeTime(lastMessage.createdAt)}
+                        </span>
+                      </div>
+                      {listing && (
+                        <p className="text-xs text-brand-400 truncate mb-0.5 font-medium">🎮 {listing.title}</p>
+                      )}
+                      <p className="text-xs text-gray-500 truncate">{lastMessage.content}</p>
+                    </div>
+                  </a>
+                );
+              })
             )}
           </div>
 
@@ -200,22 +183,20 @@ export default async function MessagesPage({
                 thread={thread.map((m) => ({
                   ...m,
                   createdAt: m.createdAt.toISOString(),
-                  listing: m.listing ? {
-                    ...m.listing,
-                    price: m.listing.price,
-                  } : null,
+                  listing: m.listing ? { ...m.listing, price: m.listing.price } : null,
                 }))}
                 currentUserId={session.user.id}
                 partnerId={activePartnerId}
+                listingId={activeListingId}
                 partnerName={activePartner.name ?? "User"}
                 partnerImage={activePartner.image}
                 pinnedListing={threadListing ? {
-                  id: threadListing.id,
-                  title: threadListing.title,
-                  price: threadListing.price,
-                  platform: threadListing.platform,
+                  id:        threadListing.id,
+                  title:     threadListing.title,
+                  price:     threadListing.price,
+                  platform:  threadListing.platform,
                   condition: threadListing.condition,
-                  images: listingImages,
+                  images:    listingImages,
                 } : null}
               />
             ) : (
@@ -233,7 +214,6 @@ export default async function MessagesPage({
               <div className="p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">About this listing</h3>
 
-                {/* Listing image */}
                 <Link href={`/listings/${threadListing.id}`} className="block group">
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-dark-700 border border-dark-600 group-hover:border-brand-500/50 transition-colors">
                     {listingImages[0] ? (
@@ -250,7 +230,6 @@ export default async function MessagesPage({
                   </div>
                 </Link>
 
-                {/* Title + price */}
                 <div>
                   <Link href={`/listings/${threadListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
                     {threadListing.title}
@@ -260,38 +239,34 @@ export default async function MessagesPage({
                   </p>
                 </div>
 
-                {/* Details */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <Tag className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <Tag     className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                     <span className="text-gray-400">Platform</span>
                     <span className="text-white ml-auto font-medium">{threadListing.platform}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Star className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <Star    className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                     <span className="text-gray-400">Condition</span>
                     <span className="text-white ml-auto font-medium">{threadListing.condition}</span>
                   </div>
-                  {threadListing.location && (
+                  {"location" in threadListing && threadListing.location && (
                     <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      <MapPin  className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                       <span className="text-gray-400">Location</span>
-                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location}</span>
+                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location as string}</span>
                     </div>
                   )}
                 </div>
 
-                {threadListing.description && (
+                {"description" in threadListing && threadListing.description && (
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description as string}</p>
                   </div>
                 )}
 
-                <Link
-                  href={`/listings/${threadListing.id}`}
-                  className="btn-primary text-center text-sm py-2.5"
-                >
+                <Link href={`/listings/${threadListing.id}`} className="btn-primary text-center text-sm py-2.5">
                   View Full Listing
                 </Link>
               </div>
