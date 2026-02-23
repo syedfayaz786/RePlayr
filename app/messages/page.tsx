@@ -10,6 +10,18 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
 import Link from "next/link";
 
+interface ThreadListing {
+  id: string;
+  title: string;
+  price: number;
+  platform: string;
+  condition: string;
+  images: string;
+  location?: string | null;
+  edition?: string | null;
+  description?: string | null;
+}
+
 export default async function MessagesPage({
   searchParams,
 }: {
@@ -113,7 +125,7 @@ export default async function MessagesPage({
 
   const activeConv    = activeKey ? conversations.get(activeKey) : null;
   const activePartner = activeConv?.partner ?? null;
-  const threadListing = thread.find((m) => m.listing)?.listing ?? null;
+  const threadListing: ThreadListing | null = (thread.find((m) => m.listing)?.listing ?? null) as ThreadListing | null;
 
   let listingImages: string[] = [];
   if (threadListing?.images) {
@@ -258,19 +270,19 @@ export default async function MessagesPage({
                     <span className="text-gray-400">Condition</span>
                     <span className="text-white ml-auto font-medium">{threadListing.condition}</span>
                   </div>
-                  {"location" in threadListing && threadListing.location && (
+                  {threadListing.location && (
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin  className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                       <span className="text-gray-400">Location</span>
-                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location as string}</span>
+                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location}</span>
                     </div>
                   )}
                 </div>
 
-                {"description" in threadListing && threadListing.description && (
+                {threadListing.description && (
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description as string}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description}</p>
                   </div>
                 )}
 
