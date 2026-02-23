@@ -92,7 +92,7 @@ export default async function MessagesPage({
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 w-full py-8">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <h1 className="font-display text-2xl font-bold text-white mb-6">Messages</h1>
 
         <div className="card flex h-[600px] overflow-hidden">

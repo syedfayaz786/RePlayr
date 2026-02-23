@@ -27,7 +27,7 @@ export default async function WishlistPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-10">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <div className="flex items-center gap-3 mb-8">
           <Heart className="w-6 h-6 text-brand-400 fill-brand-400" />
           <h1 className="font-display text-2xl font-bold text-white">My Wishlist</h1>

@@ -59,7 +59,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 w-full py-10">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile card */}
           <div className="space-y-4">

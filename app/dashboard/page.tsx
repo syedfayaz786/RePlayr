@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 w-full py-10">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

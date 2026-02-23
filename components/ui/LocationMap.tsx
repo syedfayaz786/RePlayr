@@ -110,7 +110,7 @@ export default function LocationMap({
 
       const map = L.map(divRef.current, {
         center:          [fuzzyLat, fuzzyLng],
-        zoom:            13,
+        zoom:            11,
         zoomControl:     true,
         scrollWheelZoom: false,
         attributionControl: false,
@@ -162,6 +162,9 @@ export default function LocationMap({
         .addAttribution('© <a href="https://openstreetmap.org">OSM</a>')
         .addTo(map);
 
+      // Fit map so the full circle is visible with padding
+      const circleBounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
+      map.fitBounds(circleBounds, { padding: [20, 20], maxZoom: 12 });
       setTimeout(() => map.invalidateSize(), 120);
     });
 

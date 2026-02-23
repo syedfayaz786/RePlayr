@@ -40,7 +40,7 @@ export default async function HomePage({
           <div className="absolute bottom-0 right-1/4 w-64 h-48 bg-blue-600/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center">
+        <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-8 text-center">
           <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
             Trade Game Discs{" "}
             <span className="gradient-text">Locally</span>
@@ -67,7 +67,7 @@ export default async function HomePage({
       </section>
 
       {/* ── Listings (client-side, dynamic) ── */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-5">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-5">
         <div className="mb-6">
           <Suspense><SearchBar /></Suspense>
         </div>
