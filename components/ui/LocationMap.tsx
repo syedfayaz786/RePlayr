@@ -119,42 +119,42 @@ export default function LocationMap({
       mapRef.current = map;
 
       // Dark CartoDB tiles
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         subdomains: "abcd",
         maxZoom:    19,
       }).addTo(map);
 
       // ── Facebook-style: soft fuzzy circle — NO precise pin marker ─────────
 
-      // Faint outer glow
+      // Outer glow ring
       L.circle([fuzzyLat, fuzzyLng], {
-        radius:      radiusKm * 1000 * 1.2,
+        radius:      radiusKm * 1000 * 1.25,
         color:       "#06b6d4",
         fillColor:   "#06b6d4",
-        fillOpacity: 0.04,
+        fillOpacity: 0.08,
         weight:      0,
         interactive: false,
       }).addTo(map);
 
-      // Main dashed circle
+      // Main filled circle
       L.circle([fuzzyLat, fuzzyLng], {
         radius:      radiusKm * 1000,
-        color:       "#06b6d4",
+        color:       "#0891b2",
         fillColor:   "#06b6d4",
-        fillOpacity: 0.13,
-        weight:      1.5,
-        opacity:     0.55,
-        dashArray:   "6 4",
+        fillOpacity: 0.22,
+        weight:      2.5,
+        opacity:     0.9,
+        dashArray:   "8 5",
         interactive: false,
       }).addTo(map);
 
       // Small centre dot (non-precise visual anchor)
       L.circleMarker([fuzzyLat, fuzzyLng], {
-        radius:      4,
+        radius:      8,
         color:       "#fff",
         fillColor:   "#06b6d4",
         fillOpacity: 1,
-        weight:      2,
+        weight:      2.5,
         interactive: false,
       }).addTo(map);
 
