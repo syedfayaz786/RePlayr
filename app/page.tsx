@@ -42,8 +42,8 @@ export default async function HomePage({
 
         <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-8 text-center">
           <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
-            Trade Game Discs{" "}
-            <span className="gradient-text">Locally</span>
+            Local Game Trading,{" "}
+            <span className="gradient-text">Made Easy</span>
           </h1>
           <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-500 mt-2 mb-4">
             Trade<span className="text-brand-500 mx-1.5">·</span>
