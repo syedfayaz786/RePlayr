@@ -34,7 +34,7 @@ export default async function HomePage({
       <Navbar />
 
       {/* ── Compact centred hero ── */}
-      <section className="relative overflow-hidden bg-dark-800 border-b border-dark-600">
+      <section className="relative overflow-hidden bg-dark-800 border border-brand-500/70">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-48 bg-brand-600/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-64 h-48 bg-blue-600/10 rounded-full blur-3xl" />
