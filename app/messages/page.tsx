@@ -7,6 +7,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -190,6 +191,7 @@ export default async function MessagesPage({
                       )}
                       <p className="text-xs text-gray-500 truncate">{lastMessage.content}</p>
                     </div>
+                    <DeleteChatButton partnerId={partner.id} listingId={listingId} variant="icon" />
                   </a>
                 );
               })
@@ -210,6 +212,7 @@ export default async function MessagesPage({
                 listingId={activeListingId}
                 partnerName={activePartner.name ?? "User"}
                 partnerImage={activePartner.image}
+                deleteButton={<DeleteChatButton partnerId={activePartnerId} listingId={activeListingId} variant="full" />}
                 pinnedListing={threadListing ? {
                   id:        threadListing.id,
                   title:     threadListing.title,

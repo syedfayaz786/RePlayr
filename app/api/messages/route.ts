@@ -70,3 +70,28 @@ export async function GET(req: Request) {
 
   return NextResponse.json(messages);
 }
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { partnerId, listingId } = await req.json();
+  if (!partnerId) return NextResponse.json({ error: "Missing partnerId" }, { status: 400 });
+
+  // Delete all messages between the two users for this listing (or all if no listingId)
+  await prisma.message.deleteMany({
+    where: {
+      AND: [
+        {
+          OR: [
+            { senderId: session.user.id, receiverId: partnerId },
+            { senderId: partnerId,       receiverId: session.user.id },
+          ],
+        },
+        listingId ? { listingId } : { listingId: null },
+      ],
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { Send, Package } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
@@ -32,6 +32,7 @@ interface MessageThreadProps {
   partnerName: string;
   partnerImage?: string | null;
   pinnedListing?: PinnedListing | null;
+  deleteButton?: ReactNode;
 }
 
 export function MessageThread({
@@ -42,6 +43,7 @@ export function MessageThread({
   partnerName,
   partnerImage,
   pinnedListing,
+  deleteButton,
 }: MessageThreadProps) {
   const [messages, setMessages] = useState(initialThread);
   const [input, setInput]       = useState("");
@@ -95,10 +97,11 @@ export function MessageThread({
             {partnerName[0].toUpperCase()}
           </div>
         )}
-        <div>
+        <div className="flex-1">
           <div className="font-semibold text-white text-sm">{partnerName}</div>
           <div className="text-xs text-gray-400">Active seller</div>
         </div>
+        {deleteButton && <div className="flex-shrink-0">{deleteButton}</div>}
       </div>
 
       {/* ── Pinned listing banner ── */}
