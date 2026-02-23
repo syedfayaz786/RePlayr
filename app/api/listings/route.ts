@@ -17,6 +17,9 @@ export async function GET(req: Request) {
   const platform  = searchParams.get("platform");
   const condition = searchParams.get("condition");
   const minPrice  = searchParams.get("minPrice");
+  const perPage   = Math.min(parseInt(searchParams.get("perPage") ?? "50") || 50, 200);
+  const page      = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
+  const skip      = (page - 1) * perPage;
   const maxPrice  = searchParams.get("maxPrice");
 
   const where: any = { status: "active" };
