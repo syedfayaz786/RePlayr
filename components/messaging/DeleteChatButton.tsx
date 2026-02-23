@@ -78,7 +78,7 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
   return (
     <button
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirming(true); }}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/15 text-gray-500 hover:text-red-400"
+      className="p-1.5 rounded-lg hover:bg-red-500/15 text-gray-500 hover:text-red-400 transition-colors flex-shrink-0"
       title="Delete conversation"
     >
       <Trash2 className="w-3.5 h-3.5" />
