@@ -8,6 +8,19 @@ import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
+
+interface ThreadListing {
+  id: string;
+  title: string;
+  price: number;
+  images: string;
+  platform: string;
+  condition: string;
+  location?: string | null;
+  edition?: string | null;
+  description?: string | null;
+}
+
 import Link from "next/link";
 
 export default async function MessagesPage({
@@ -61,8 +74,32 @@ export default async function MessagesPage({
   const convList = Array.from(conversations.values());
   const activePartnerId = searchParams.with;
 
-  // Load active thread
-  let thread: typeof messages = [];
+  // Explicit type for the thread listing with all fields we select
+  type ThreadListing = {
+    id: string;
+    title: string;
+    price: number;
+    images: string;
+    platform: string;
+    condition: string;
+    location: string | null;
+    edition: string | null;
+    description: string | null;
+  };
+
+  type ThreadMessage = {
+    id: string;
+    content: string;
+    senderId: string;
+    receiverId: string;
+    createdAt: Date;
+    read: boolean;
+    sender: { id: string; name: string | null; image: string | null };
+    receiver: { id: string; name: string | null; image: string | null };
+    listing: ThreadListing | null;
+  };
+
+  let thread: ThreadMessage[] = [];
   if (activePartnerId) {
     thread = await prisma.message.findMany({
       where: {
@@ -77,7 +114,7 @@ export default async function MessagesPage({
         listing: { select: { id: true, title: true, price: true, images: true, platform: true, condition: true, location: true, edition: true, description: true } },
       },
       orderBy: { createdAt: "asc" },
-    });
+    }) as ThreadMessage[];
 
     await prisma.message.updateMany({
       where: { senderId: activePartnerId, receiverId: session.user.id, read: false },
@@ -89,7 +126,7 @@ export default async function MessagesPage({
   const activePartner = activeConv?.partner ?? null;
 
   // Get the listing from the first message that has one
-  const threadListing = thread.find((m) => m.listing)?.listing ?? null;
+  const threadListing: ThreadListing | null = thread.find((m) => m.listing)?.listing ?? null;
 
   // Parse listing images
   let listingImages: string[] = [];
@@ -235,19 +272,19 @@ export default async function MessagesPage({
                     <span className="text-gray-400">Condition</span>
                     <span className="text-white ml-auto font-medium">{threadListing.condition}</span>
                   </div>
-                  {"location" in threadListing && threadListing.location && (
+                  {threadListing.location && (
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                       <span className="text-gray-400">Location</span>
-                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location as string}</span>
+                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location}</span>
                     </div>
                   )}
                 </div>
 
-                {"description" in threadListing && threadListing.description && (
+                {threadListing.description && (
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description as string}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description}</p>
                   </div>
                 )}
 
