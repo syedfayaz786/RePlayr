@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Heart } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
 
 export default async function WishlistPage() {
@@ -27,6 +28,7 @@ export default async function WishlistPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "My Wishlist" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <div className="flex items-center gap-3 mb-8">
           <Heart className="w-6 h-6 text-brand-400 fill-brand-400" />

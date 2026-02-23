@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus, Eye, DollarSign, Tag } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -41,6 +42,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "My Dashboard" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
 
         {/* Header */}

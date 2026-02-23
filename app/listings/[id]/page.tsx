@@ -11,6 +11,7 @@ import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
+import { PageHeader } from "@/components/layout/PageHeader";
 import dynamic from "next/dynamic";
 const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
   ssr: false,
@@ -64,12 +65,10 @@ export default async function ListingPage({ params }: { params: { id: string } }
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "Listing" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         {/* Breadcrumb */}
-        <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 text-sm">
-          <ChevronLeft className="w-4 h-4" />
-          Back to listings
-        </Link>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Images + Details */}

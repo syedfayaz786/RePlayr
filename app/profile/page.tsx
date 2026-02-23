@@ -7,6 +7,7 @@ import { User, MapPin, Save, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { StarRating } from "@/components/ui/StarRating";
+import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
 
 export default function ProfilePage() {
@@ -59,6 +60,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "My Profile" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile card */}

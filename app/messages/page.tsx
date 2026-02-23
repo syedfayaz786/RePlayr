@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { formatRelativeTime } from "@/lib/utils";
 import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
 
 export default async function MessagesPage({
@@ -92,6 +93,7 @@ export default async function MessagesPage({
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "Messages" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <h1 className="font-display text-2xl font-bold text-white mb-6">Messages</h1>
 

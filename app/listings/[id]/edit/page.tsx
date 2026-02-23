@@ -9,6 +9,7 @@ import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { PLATFORMS } from "@/lib/utils";
 import { Upload, X, DollarSign, Trash2, Gamepad2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
 
 const EDITIONS = [
@@ -177,6 +178,7 @@ export default function EditListingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <PageHeader crumbs={[{ label: "Edit Listing" }]} />
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-8 py-8">
 
         <div className="flex items-center justify-between mb-8">
