@@ -22,26 +22,32 @@ export async function GET(req: Request) {
   const skip      = (page - 1) * perPage;
   const maxPrice  = searchParams.get("maxPrice");
 
-  const where: any = { status: "active" };
-  if (q) where.OR = [
-    { title:       { contains: q, mode: "insensitive" } },
-    { description: { contains: q, mode: "insensitive" } },
-  ];
+  // Use AND so every filter is required simultaneously — prevents OR(text) from swallowing platform/condition filters
+  const AND: any[] = [{ status: "active" }];
+
+  if (q) AND.push({
+    OR: [
+      { title:       { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+    ],
+  });
+
   if (platform) {
-    // Support comma-separated multi-platform filter e.g. "PS5,Xbox One"
     const platformList = platform.split(",").map((p: string) => p.trim()).filter(Boolean);
-    if (platformList.length === 1) {
-      where.platform = platformList[0];
-    } else if (platformList.length > 1) {
-      where.platform = { in: platformList };
-    }
+    if (platformList.length === 1)      AND.push({ platform: platformList[0] });
+    else if (platformList.length > 1)   AND.push({ platform: { in: platformList } });
   }
-  if (condition) where.condition = condition;
+
+  if (condition) AND.push({ condition });
+
   if (minPrice || maxPrice) {
-    where.price = {};
-    if (minPrice) where.price.gte = parseFloat(minPrice);
-    if (maxPrice) where.price.lte = parseFloat(maxPrice);
+    const priceFilter: any = {};
+    if (minPrice) priceFilter.gte = parseFloat(minPrice);
+    if (maxPrice) priceFilter.lte = parseFloat(maxPrice);
+    AND.push({ price: priceFilter });
   }
+
+  const where: any = { AND };
 
   try {
     const [listings, total] = await Promise.all([
