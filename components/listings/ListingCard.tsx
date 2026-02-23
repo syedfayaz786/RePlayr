@@ -138,7 +138,7 @@ export function ListingCard({ listing }: ListingCardProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center gap-1 min-w-0">
             {listing.location && (
               <>
