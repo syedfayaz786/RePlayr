@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, MapPin, Clock } from "lucide-react";
 import { formatPrice, formatRelativeTime } from "@/lib/utils";
-import { PlatformBadge, ConditionBadge, EditionBadge, PLATFORM_CONFIG } from "@/components/ui/Badges";
+import { PlatformBadge, ConditionBadge, PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
@@ -68,30 +68,27 @@ export function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link href={`/listings/${listing.id}`} className="card-hover block group">
       {/* Cover image / platform fallback */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[3/2] overflow-hidden">
         {images[0] ? (
-          // Use plain <img> for base64 data URIs to avoid Next.js recompression quality loss
-          // Use Next <Image> for real http URLs (CDN/remote images)
           images[0].startsWith("data:") ? (
             <img
               src={images[0]}
               alt={listing.title}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              style={{ imageRendering: "auto" }}
             />
           ) : (
             <Image
               src={images[0]}
               alt={listing.title}
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 20vw"
               quality={95}
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           )
         ) : (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${platformConfig.bgGlow}`}>
-            <PlatformLogo className={`w-14 h-14 ${platformConfig.colorClass.split(" ")[1]}`} />
+            <PlatformLogo className={`w-10 h-10 ${platformConfig.colorClass.split(" ")[1]}`} />
           </div>
         )}
 
@@ -102,43 +99,42 @@ export function ListingCard({ listing }: ListingCardProps) {
         <button
           onClick={toggleWishlist}
           disabled={loading}
-          className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
             wishlisted
               ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
               : "bg-dark-800/80 text-slate-300 hover:bg-brand-500/20 hover:text-brand-400 backdrop-blur-sm"
           }`}
         >
-          <Heart className={`w-4 h-4 ${wishlisted ? "fill-current" : ""}`} />
+          <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
 
-        {/* Edition badge on image */}
+        {/* Edition badge — top left on image */}
         {listing.edition && (
-          <div className="absolute top-3 left-3">
-            <span className="text-xs font-semibold px-2 py-1 rounded-md bg-dark-900/90 text-amber-400 border border-amber-500/30">
+          <div className="absolute top-2 left-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-dark-900/90 text-amber-400 border border-amber-500/30 leading-tight">
               🏷️ {listing.edition}
             </span>
           </div>
         )}
 
         {/* Price */}
-        <div className="absolute bottom-3 left-3 bg-dark-900/90 rounded-lg px-3 py-1">
-          <span className="font-display font-bold text-brand-400 text-lg">
+        <div className="absolute bottom-2 left-2 bg-dark-900/90 rounded-md px-2 py-0.5">
+          <span className="font-display font-bold text-brand-400 text-base">
             {formatPrice(listing.price)}
           </span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-white truncate mb-2 group-hover:text-brand-300 transition-colors">
+      <div className="p-3">
+        <h3 className="font-semibold text-white text-sm truncate mb-1.5 group-hover:text-brand-300 transition-colors">
           {listing.title}
         </h3>
 
-        {/* Badges row */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+        {/* Badges row — platform + condition only (edition is on image) */}
+        <div className="flex items-center gap-1 flex-wrap mb-2">
           <PlatformBadge platform={listing.platform} showLogo={true} short={true} />
           <ConditionBadge condition={listing.condition} />
-          {listing.edition && <EditionBadge edition={listing.edition} />}
         </div>
 
         {/* Footer */}
@@ -147,14 +143,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             {listing.location && (
               <>
                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[90px]">{listing.location}</span>
-                {listing.distanceKm !== undefined && (
-                  <span className="text-brand-400 ml-1 flex-shrink-0">
-                    {listing.distanceKm < 1
-                      ? `${Math.round(listing.distanceKm * 1000)}m`
-                      : `${listing.distanceKm.toFixed(1)}km`}
-                  </span>
-                )}
+                <span className="truncate max-w-[80px]">{listing.location}</span>
               </>
             )}
           </div>
