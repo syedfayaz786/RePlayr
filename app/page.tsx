@@ -41,44 +41,34 @@ export default async function HomePage({
           <div className="absolute bottom-0 right-1/4 w-64 h-48 bg-blue-600/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-7 sm:py-9">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-            {/* Left: headline + tagline + stats */}
-            <div className="min-w-0">
-              <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
-                Trade Game Discs{" "}
-                <span className="gradient-text">Locally</span>
-              </h1>
-              {/* Brand tagline */}
-              <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-500 mt-1.5 mb-3">
-                Trade<span className="text-brand-500 mx-1">·</span>
-                Play<span className="text-brand-500 mx-1">·</span>
-                Repeat
-              </p>
-              {/* Stats inline */}
-              <div className="flex items-center gap-5">
-                {[
-                  { icon: Gamepad2,    label: "Active",  value: stats.totalListings },
-                  { icon: Users,       label: "Gamers",  value: stats.totalUsers },
-                  { icon: ShieldCheck, label: "Trusted", value: "100%" },
-                ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-1.5">
-                    <Icon className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
-                    <span className="text-brand-300 font-bold text-sm">{value}</span>
-                    <span className="text-gray-500 text-xs">{label}</span>
-                  </div>
-                ))}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
+            Trade Game Discs{" "}
+            <span className="gradient-text">Locally</span>
+          </h1>
+          <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-500 mt-2 mb-4">
+            Trade<span className="text-brand-500 mx-1.5">·</span>
+            Play<span className="text-brand-500 mx-1.5">·</span>
+            Repeat
+          </p>
+          <div className="flex items-center justify-center gap-6">
+            {[
+              { icon: Gamepad2,    label: "Active",  value: stats.totalListings },
+              { icon: Users,       label: "Gamers",  value: stats.totalUsers },
+              { icon: ShieldCheck, label: "Trusted", value: "100%" },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+                <span className="text-brand-300 font-bold text-sm">{value}</span>
+                <span className="text-gray-500 text-xs">{label}</span>
               </div>
-            </div>
-
-
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── Listings (client-side, dynamic) ── */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-5">
         {isSearching && (
           <div className="mb-6">
             <Suspense><SearchBar /></Suspense>
