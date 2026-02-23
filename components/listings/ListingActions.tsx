@@ -84,7 +84,7 @@ export function ListingActions({
         toast.success("Message sent!");
         setShowMessageModal(false);
         setMessageText("");
-        router.push("/messages");
+        router.push(`/messages?with=${sellerId}&listing=${listingId}`);
       }
     } catch {
       toast.error("Failed to send message");

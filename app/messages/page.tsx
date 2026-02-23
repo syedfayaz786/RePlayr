@@ -44,9 +44,11 @@ export default async function MessagesPage({
   >();
 
   for (const msg of messages) {
-    const partnerId  = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
-    const partner    = msg.senderId === session.user.id ? msg.receiver   : msg.sender;
-    const listingId  = msg.listingId ?? null;
+    const partnerId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
+    const partner   = msg.senderId === session.user.id ? msg.receiver   : msg.sender;
+    // Use listing.id as the canonical key — more reliable than msg.listingId
+    // which might be null on replies. Falls back to msg.listingId, then "none".
+    const listingId = msg.listing?.id ?? msg.listingId ?? null;
     const key: ConvKey = `${partnerId}::${listingId ?? "none"}`;
 
     if (!conversations.has(key)) {
@@ -57,6 +59,9 @@ export default async function MessagesPage({
         listing: msg.listing ?? null,
         listingId,
       });
+    } else {
+      // Update last message if this one is more recent (messages are ordered desc so first = latest)
+      // already set on first encounter
     }
     if (msg.receiverId === session.user.id && !msg.read) {
       conversations.get(key)!.unread++;
@@ -73,15 +78,18 @@ export default async function MessagesPage({
   // Load active thread — scoped to partner + listing
   let thread: typeof messages = [];
   if (activePartnerId) {
-    const listingFilter = activeListingId
-      ? { listingId: activeListingId }
-      : { listingId: null };
-
     thread = await prisma.message.findMany({
       where: {
-        OR: [
-          { senderId: session.user.id, receiverId: activePartnerId, ...listingFilter },
-          { senderId: activePartnerId, receiverId: session.user.id, ...listingFilter },
+        AND: [
+          {
+            OR: [
+              { senderId: session.user.id, receiverId: activePartnerId },
+              { senderId: activePartnerId, receiverId: session.user.id },
+            ],
+          },
+          activeListingId
+            ? { listingId: activeListingId }
+            : { listingId: null },
         ],
       },
       include: {
