@@ -42,16 +42,19 @@ export default async function HomePage({
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-7 sm:py-9">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-            {/* Left: headline + stats */}
+            {/* Left: headline + tagline + stats */}
             <div className="min-w-0">
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
                 Trade Game Discs{" "}
                 <span className="gradient-text">Locally</span>
               </h1>
-              <p className="text-gray-400 text-sm mt-1 mb-3">
-                Buy &amp; sell game discs with nearby gamers — no shipping, no subscriptions.
+              {/* Brand tagline */}
+              <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-500 mt-1.5 mb-3">
+                Trade<span className="text-brand-500 mx-1">·</span>
+                Play<span className="text-brand-500 mx-1">·</span>
+                Repeat
               </p>
               {/* Stats inline */}
               <div className="flex items-center gap-5">
@@ -69,24 +72,16 @@ export default async function HomePage({
               </div>
             </div>
 
-            {/* Right: search bar */}
-            <div className="w-full sm:w-[480px] flex-shrink-0">
-              <Suspense>
-                <SearchBar />
-              </Suspense>
+            {/* Right: sell CTA + privacy note */}
+            <div className="flex flex-col items-start sm:items-end gap-2 flex-shrink-0">
+              <Link
+                href="/listings/new"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-300 hover:bg-brand-500/25 hover:text-brand-200 transition-all text-sm font-semibold"
+              >
+                <span className="text-lg leading-none">+</span> Sell a Game
+              </Link>
+              <span className="text-xs text-gray-600">Local pickup · Address stays private</span>
             </div>
-          </div>
-
-          {/* CTA for new sellers */}
-          <div className="mt-4 flex items-center gap-3">
-            <Link
-              href="/listings/new"
-              className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-brand-300 transition-colors"
-            >
-              <span className="text-brand-400">+</span> Sell a game
-            </Link>
-            <span className="text-dark-500">·</span>
-            <span className="text-xs text-gray-500">Local pickup only · Your address stays private</span>
           </div>
         </div>
       </section>
