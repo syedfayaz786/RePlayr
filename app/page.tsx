@@ -69,11 +69,9 @@ export default async function HomePage({
 
       {/* ── Listings (client-side, dynamic) ── */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-5">
-        {isSearching && (
-          <div className="mb-6">
-            <Suspense><SearchBar /></Suspense>
-          </div>
-        )}
+        <div className="mb-6">
+          <Suspense><SearchBar /></Suspense>
+        </div>
         <Suspense fallback={
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 12 }).map((_, i) => (
