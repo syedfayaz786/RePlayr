@@ -129,41 +129,58 @@ export default async function MessagesPage({
   const activeConv    = activeKey ? conversations.get(activeKey) : null;
   const activePartner = activeConv?.partner ?? null;
 
-  // Fetch listing directly by activeListingId — more reliable than scanning thread messages
-  const threadListingRaw = activeListingId
-    ? await prisma.listing.findUnique({
+  // Fetch listing directly from DB — always reliable, avoids thread message nulls
+  let threadListing: ThreadListing | null = null;
+  let isSeller = false;
+
+  if (activeListingId) {
+    try {
+      const raw = await prisma.listing.findUnique({
         where: { id: activeListingId },
         select: { id: true, title: true, price: true, platform: true, condition: true, location: true, edition: true, description: true, images: true, sellerId: true },
-      })
-    : (thread.find((m) => m.listing)?.listing as { id: string; title: string; price: number; platform: string; condition: string; location?: string | null; edition?: string | null; description?: string | null; images: string; sellerId?: string } | null ?? null);
-
-  const threadListing: ThreadListing | null = threadListingRaw as ThreadListing | null;
+      });
+      if (raw) {
+        threadListing = raw as ThreadListing;
+        isSeller = raw.sellerId === session.user.id;
+      }
+    } catch { /* listing fetch failed — degrade gracefully */ }
+  } else {
+    // No listingId in URL — scan thread for a message with a listing attached
+    const msgWithListing = thread.find((m) => m.listing);
+    if (msgWithListing?.listing) {
+      threadListing = msgWithListing.listing as unknown as ThreadListing;
+    }
+  }
 
   let listingImages: string[] = [];
   if (threadListing?.images) {
     try { listingImages = JSON.parse(threadListing.images); } catch {}
   }
 
-  // isSeller: directly compare sellerId from DB fetch
-  const isSeller = !!(threadListingRaw && (threadListingRaw as { sellerId?: string }).sellerId === session.user.id);
-
   // Sale record — who bought this listing
-  const sale = threadListing
-    ? await prisma.sale.findUnique({
+  let sale: { listingId: string; sellerId: string; buyerId: string; seller: { id: string; name: string | null; image: string | null }; buyer: { id: string; name: string | null; image: string | null } } | null = null;
+  if (threadListing) {
+    try {
+      sale = await prisma.sale.findUnique({
         where: { listingId: threadListing.id },
         include: {
           buyer:  { select: { id: true, name: true, image: true } },
           seller: { select: { id: true, name: true, image: true } },
         },
-      })
-    : null;
+      }) as typeof sale;
+    } catch { /* sale fetch failed */ }
+  }
 
   // Existing review by current user
-  const existingReview = (threadListing && session)
-    ? await prisma.review.findUnique({
+  let existingReview: { rating: number; comment: string | null } | null = null;
+  if (threadListing) {
+    try {
+      existingReview = await prisma.review.findUnique({
         where: { authorId_listingId: { authorId: session.user.id, listingId: threadListing.id } },
-      })
-    : null;
+        select: { rating: true, comment: true },
+      });
+    } catch { /* review fetch failed */ }
+  }
 
   const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
