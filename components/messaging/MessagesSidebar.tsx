@@ -15,6 +15,7 @@ interface ConvEntry {
   unread: number;
   listingId: string | null;
   listingTitle: string | null;
+  allContents: string[];
 }
 
 interface MessagesSidebarProps {
@@ -53,13 +54,13 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
   const filtered = useMemo(() => {
     let list = [...conversations];
 
-    // Search — matches partner name or listing title or last message content
+    // Search — matches partner name, listing title, or ANY message in the conversation
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(c =>
         c.partnerName?.toLowerCase().includes(q) ||
         c.listingTitle?.toLowerCase().includes(q) ||
-        c.lastMessageContent.toLowerCase().includes(q)
+        c.allContents.some(msg => msg.toLowerCase().includes(q))
       );
     }
 

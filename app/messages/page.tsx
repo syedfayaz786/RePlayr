@@ -41,6 +41,7 @@ export default async function MessagesPage({
     unread:      number;
     listingId:   string | null;
     listing:     { id: string; title: string } | null;
+    allContents: string[];
   };
   const convMap = new Map<string, ConvEntry>();
 
@@ -51,8 +52,9 @@ export default async function MessagesPage({
     const key       = `${partnerId}::${listingId ?? "none"}`;
 
     if (!convMap.has(key)) {
-      convMap.set(key, { partner, lastMessage: msg, unread: 0, listingId, listing: msg.listing ? { id: msg.listing.id, title: msg.listing.title } : null });
+      convMap.set(key, { partner, lastMessage: msg, unread: 0, listingId, listing: msg.listing ? { id: msg.listing.id, title: msg.listing.title } : null, allContents: [] });
     }
+    convMap.get(key)!.allContents.push(msg.content);
     if (msg.receiverId === session.user.id && !msg.read) {
       convMap.get(key)!.unread++;
     }
@@ -171,7 +173,7 @@ export default async function MessagesPage({
           {/* ── Col 1: Sidebar ── */}
           <div className="w-72 border-r border-dark-600 flex-shrink-0 flex flex-col overflow-hidden">
             <MessagesSidebar
-              conversations={convList.map(({ partner, lastMessage, unread, listingId, listing }) => ({
+              conversations={convList.map(({ partner, lastMessage, unread, listingId, listing, allContents }) => ({
                 partnerId:          partner.id,
                 partnerName:        partner.name,
                 partnerImage:       partner.image,
@@ -180,6 +182,7 @@ export default async function MessagesPage({
                 unread,
                 listingId,
                 listingTitle:       listing?.title ?? null,
+                allContents,
               }))}
               activeKey={activeKey}
             />
