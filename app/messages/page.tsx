@@ -128,30 +128,44 @@ export default async function MessagesPage({
 
   const activeConv    = activeKey ? conversations.get(activeKey) : null;
   const activePartner = activeConv?.partner ?? null;
-  const threadListing: ThreadListing | null = (thread.find((m) => m.listing)?.listing ?? null) as ThreadListing | null;
+
+  // Fetch listing directly by activeListingId — more reliable than scanning thread messages
+  const threadListingRaw = activeListingId
+    ? await prisma.listing.findUnique({
+        where: { id: activeListingId },
+        select: { id: true, title: true, price: true, platform: true, condition: true, location: true, edition: true, description: true, images: true, sellerId: true },
+      })
+    : (thread.find((m) => m.listing)?.listing as { id: string; title: string; price: number; platform: string; condition: string; location?: string | null; edition?: string | null; description?: string | null; images: string; sellerId?: string } | null ?? null);
+
+  const threadListing: ThreadListing | null = threadListingRaw as ThreadListing | null;
 
   let listingImages: string[] = [];
   if (threadListing?.images) {
     try { listingImages = JSON.parse(threadListing.images); } catch {}
   }
 
-  // Fetch sale record for this listing (who bought it)
+  // isSeller: directly compare sellerId from DB fetch
+  const isSeller = !!(threadListingRaw && (threadListingRaw as { sellerId?: string }).sellerId === session.user.id);
+
+  // Sale record — who bought this listing
   const sale = threadListing
     ? await prisma.sale.findUnique({
         where: { listingId: threadListing.id },
-        include: { buyer: { select: { id: true, name: true, image: true } } },
+        include: {
+          buyer:  { select: { id: true, name: true, image: true } },
+          seller: { select: { id: true, name: true, image: true } },
+        },
       })
     : null;
 
-  // Fetch existing review by the current user for this listing
+  // Existing review by current user
   const existingReview = (threadListing && session)
     ? await prisma.review.findUnique({
         where: { authorId_listingId: { authorId: session.user.id, listingId: threadListing.id } },
       })
     : null;
 
-  const isSeller        = threadListing ? (await prisma.listing.findUnique({ where: { id: threadListing.id }, select: { sellerId: true } }))?.sellerId === session.user.id : false;
-  const isConfirmedBuyer = sale?.buyerId === session.user.id;
+  const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -327,8 +341,8 @@ export default async function MessagesPage({
                 {isConfirmedBuyer && sale && (
                   <RateSellerWidget
                     sellerId={sale.sellerId}
-                    sellerName={activePartner?.name ?? "Seller"}
-                    sellerImage={activePartner?.image}
+                    sellerName={(sale as { seller?: { name?: string | null } }).seller?.name ?? "Seller"}
+                    sellerImage={(sale as { seller?: { image?: string | null } }).seller?.image}
                     listingId={threadListing.id}
                     listingTitle={threadListing.title}
                     existingReview={existingReview ? { rating: existingReview.rating, comment: existingReview.comment } : null}
