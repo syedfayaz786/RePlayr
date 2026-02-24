@@ -8,6 +8,7 @@ import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
+import { MessagesSidebar } from "@/components/messaging/MessagesSidebar";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -168,47 +169,20 @@ export default async function MessagesPage({
         <div className="card flex h-[680px] overflow-hidden">
 
           {/* ── Col 1: Sidebar ── */}
-          <div className="w-72 border-r border-dark-600 flex-shrink-0 overflow-y-auto">
-            {convList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <MessageSquare className="w-10 h-10 text-gray-500 mb-3" />
-                <p className="text-sm text-gray-400">No messages yet</p>
-                <p className="text-xs text-gray-500 mt-1">Find a listing and message the seller</p>
-              </div>
-            ) : (
-              convList.map(({ partner, lastMessage, unread, listingId, listing }) => {
-                const href    = `/messages?with=${partner.id}${listingId ? `&listing=${listingId}` : ""}`;
-                const key     = `${partner.id}::${listingId ?? "none"}`;
-                const isActive = activeKey === key;
-                return (
-                  <a key={key} href={href}
-                    className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${isActive ? "bg-dark-700 border-l-2 border-l-brand-500" : ""}`}
-                  >
-                    <div className="relative flex-shrink-0">
-                      {partner.image ? (
-                        <Image src={partner.image} alt={partner.name ?? ""} width={40} height={40} className="rounded-full" />
-                      ) : (
-                        <div className="w-10 h-10 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold">
-                          {partner.name?.[0]?.toUpperCase() ?? "?"}
-                        </div>
-                      )}
-                      {unread > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">{unread}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className={`text-sm font-medium truncate ${unread > 0 ? "text-white" : "text-gray-300"}`}>{partner.name}</span>
-                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatRelativeTime(lastMessage.createdAt)}</span>
-                      </div>
-                      {listing && <p className="text-xs text-brand-400 truncate mb-0.5 font-medium">🎮 {listing.title}</p>}
-                      <p className="text-xs text-gray-500 truncate">{lastMessage.content}</p>
-                    </div>
-                    <DeleteChatButton partnerId={partner.id} listingId={listingId} variant="icon" />
-                  </a>
-                );
-              })
-            )}
+          <div className="w-72 border-r border-dark-600 flex-shrink-0 flex flex-col overflow-hidden">
+            <MessagesSidebar
+              conversations={convList.map(({ partner, lastMessage, unread, listingId, listing }) => ({
+                partnerId:          partner.id,
+                partnerName:        partner.name,
+                partnerImage:       partner.image,
+                lastMessageContent: lastMessage.content,
+                lastMessageAt:      lastMessage.createdAt.toISOString(),
+                unread,
+                listingId,
+                listingTitle:       listing?.title ?? null,
+              }))}
+              activeKey={activeKey}
+            />
           </div>
 
           {/* ── Col 2: Thread ── */}
