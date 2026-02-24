@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import { Send, Package, Check, CheckCheck } from "lucide-react";
+import { Send, Package, Check, CheckCheck , X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
