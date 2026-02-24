@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import { Send, Package, Check, CheckCheck , X } from "lucide-react";
+import { Send, Package, Check, CheckCheck, X, ChevronUp, ChevronDown } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -130,21 +130,29 @@ export function MessageThread({
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
-  const firstMatchRef = useRef<HTMLDivElement>(null);
+  const matchRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [currentMatch, setCurrentMatch] = useState(0);
 
   // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Scroll to first search match when query changes
+  // Reset to first match when query changes, scroll to it
   useEffect(() => {
-    if (searchQuery?.trim() && firstMatchRef.current) {
+    setCurrentMatch(0);
+    if (searchQuery?.trim()) {
       setTimeout(() => {
-        firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        matchRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
     }
   }, [searchQuery]);
+
+  // Scroll to current match when navigating
+  const scrollToMatch = (idx: number) => {
+    matchRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setCurrentMatch(idx);
+  };
 
   // Mark partner's messages as read when we open/focus the thread
   useEffect(() => {
@@ -268,18 +276,45 @@ export function MessageThread({
         </Link>
       )}
 
-      {/* ── Search banner ── */}
-      {searchQuery?.trim() && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/25 flex-shrink-0">
-          <span className="text-xs text-amber-300 flex-1">
-            🔍 Showing matches for <span className="font-semibold">"{searchQuery}"</span>
-          </span>
-          <a href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
-            className="text-xs text-amber-400 hover:text-amber-200 transition-colors flex items-center gap-1">
-            <X className="w-3 h-3" /> Clear
-          </a>
-        </div>
-      )}
+      {/* ── Search navigation banner ── */}
+      {searchQuery?.trim() && (() => {
+        const totalMatches = messages.filter(m =>
+          m.content.toLowerCase().includes(searchQuery!.toLowerCase())
+        ).length;
+        return (
+          <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border-b border-amber-500/25 flex-shrink-0">
+            <span className="text-xs text-amber-300 flex-1 truncate">
+              🔍 <span className="font-semibold">"{searchQuery}"</span>
+              {totalMatches > 0
+                ? <span className="text-amber-400/70"> — {totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>
+                : <span className="text-gray-500"> — no matches</span>}
+            </span>
+            {totalMatches > 1 && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => scrollToMatch((currentMatch - 1 + totalMatches) % totalMatches)}
+                  className="w-6 h-6 rounded flex items-center justify-center bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 transition-colors"
+                >
+                  <ChevronUp className="w-3 h-3" />
+                </button>
+                <span className="text-xs text-amber-300 font-mono w-10 text-center">
+                  {currentMatch + 1}/{totalMatches}
+                </span>
+                <button
+                  onClick={() => scrollToMatch((currentMatch + 1) % totalMatches)}
+                  className="w-6 h-6 rounded flex items-center justify-center bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 transition-colors"
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            <a href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
+              className="flex-shrink-0 text-xs text-amber-400/70 hover:text-amber-200 transition-colors flex items-center gap-0.5 ml-1">
+              <X className="w-3 h-3" /> Clear
+            </a>
+          </div>
+        );
+      })()}
 
       {/* ── Scrollable message list ── */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1">
@@ -287,12 +322,23 @@ export function MessageThread({
           <div className="text-center text-gray-500 text-sm py-8">Start the conversation!</div>
         )}
 
-        {messages.map((msg, idx) => {
+        {(() => {
+          // Pre-compute which message indices are matches, in order
+          const matchIndices = searchQuery?.trim()
+            ? messages.reduce<number[]>((acc, m, i) => {
+                if (m.content.toLowerCase().includes(searchQuery!.toLowerCase())) acc.push(i);
+                return acc;
+              }, [])
+            : [];
+          // Reset refs array length
+          matchRefs.current = new Array(matchIndices.length).fill(null);
+
+          return messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
           const isRating = msg.content.startsWith("⭐ Rating received");
-          // Any other rating message format — hide completely, only golden card shown to recipient
           const isOldRating = !isRating && msg.content.includes("rated you as a");
           const isSystem = msg.content.startsWith("🎉");
+          const matchPos = matchIndices.indexOf(idx); // -1 if not a match, else its position in matches
           // Parse encoded sale message: "🎉 SALE_CONFIRMED|seller:Name|buyer:Name"
           const salePayload = isSystem && msg.content.includes("SALE_CONFIRMED")
             ? Object.fromEntries(
@@ -403,15 +449,13 @@ export function MessageThread({
             );
           }
 
-          const msgMatches = searchQuery?.trim()
-            ? msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-            : false;
-          // We'll track first match via a counter in the map — use idx comparison below
+          const msgMatches = matchPos >= 0;
+          const isCurrentMatch = msgMatches && matchPos === currentMatch;
 
           return (
             <div key={msg.id}
-              ref={msgMatches && messages.filter((m, i) => i < idx && searchQuery?.trim() && m.content.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? firstMatchRef : undefined}
-              className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"} ${msgMatches ? "relative" : ""}`}>
+              ref={msgMatches ? (el) => { matchRefs.current[matchPos] = el; } : undefined}
+              className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
               {/* Sender label — only when sender changes */}
               {showLabel && (
                 <span className="text-xs text-gray-500 mb-1 px-1">
@@ -424,7 +468,7 @@ export function MessageThread({
                 isMe
                   ? "bg-brand-500 text-white rounded-br-sm"
                   : "bg-dark-700 text-gray-100 rounded-bl-sm"
-              } ${msgMatches ? "ring-2 ring-amber-400/60 ring-offset-1 ring-offset-dark-900" : ""}`}>
+              } ${isCurrentMatch ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-dark-900" : msgMatches ? "ring-1 ring-amber-400/40" : ""}`}>
                 <p className="whitespace-pre-wrap leading-relaxed">
                   <HighlightText text={msg.content} query={searchQuery} />
                 </p>
@@ -446,7 +490,8 @@ export function MessageThread({
               )}
             </div>
           );
-        })}
+          });
+        })()}
 
         <div ref={bottomRef} />
       </div>
