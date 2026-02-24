@@ -197,7 +197,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
           </div>
         ) : (
           filtered.map(conv => {
-            const href = `/messages?with=${conv.partnerId}${conv.listingId ? `&listing=${conv.listingId}` : ""}`;
+            const href = `/messages?with=${conv.partnerId}${conv.listingId ? `&listing=${conv.listingId}` : ""}${search.trim() ? `&q=${encodeURIComponent(search.trim())}` : ""}`;
             const key  = `${conv.partnerId}::${conv.listingId ?? "none"}`;
             const isActive = activeKey === key;
             const preview = previewContent(conv.lastMessageContent);

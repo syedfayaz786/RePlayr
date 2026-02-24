@@ -15,13 +15,14 @@ import Link from "next/link";
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: { with?: string; listing?: string };
+  searchParams: { with?: string; listing?: string; q?: string };
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/login");
 
   const activePartnerId = searchParams.with ?? null;
   const activeListingId = searchParams.listing ?? null;
+  const searchQuery     = searchParams.q ?? null;
 
   // ── 1. All messages involving the current user (for sidebar) ──────────────
   const allMessages = await prisma.message.findMany({
@@ -207,6 +208,7 @@ export default async function MessagesPage({
                 sellerImage={sale ? (isSeller ? undefined : activePartner.image) : undefined}
                 listingTitle={activeListing?.title}
                 myExistingReview={myExistingReview}
+                searchQuery={searchQuery}
                 soldToListingId={activeListing?.id}
                 soldToBuyerId={activePartnerId}
                 soldToBuyerName={activePartner.name ?? "this buyer"}

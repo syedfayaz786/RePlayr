@@ -9,6 +9,27 @@ import toast from "react-hot-toast";
 import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
 
+// Highlight matching text within a string
+function HighlightText({ text, query }: { text: string; query?: string | null }) {
+  if (!query?.trim()) return <>{text}</>;
+  const q = query.trim();
+  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  const parts = text.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-amber-400 text-dark-900 rounded px-0.5 not-italic font-semibold">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 interface Message {
   id: string;
   content: string;
@@ -52,6 +73,7 @@ interface MessageThreadProps {
   alreadySold?: boolean;
   sellerDisplayName?: string;
   buyerDisplayName?: string;
+  searchQuery?: string | null;
 }
 
 export function MessageThread({
@@ -77,6 +99,7 @@ export function MessageThread({
   alreadySold,
   sellerDisplayName,
   buyerDisplayName,
+  searchQuery,
 }: MessageThreadProps) {
   const [messages, setMessages]         = useState(initialThread);
   const [input, setInput]               = useState("");
@@ -107,10 +130,21 @@ export function MessageThread({
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
+  const firstMatchRef = useRef<HTMLDivElement>(null);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Scroll to first search match when query changes
+  useEffect(() => {
+    if (searchQuery?.trim() && firstMatchRef.current) {
+      setTimeout(() => {
+        firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [searchQuery]);
 
   // Mark partner's messages as read when we open/focus the thread
   useEffect(() => {
@@ -232,6 +266,19 @@ export function MessageThread({
           </div>
           <span className="text-xs text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">View →</span>
         </Link>
+      )}
+
+      {/* ── Search banner ── */}
+      {searchQuery?.trim() && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/25 flex-shrink-0">
+          <span className="text-xs text-amber-300 flex-1">
+            🔍 Showing matches for <span className="font-semibold">"{searchQuery}"</span>
+          </span>
+          <a href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
+            className="text-xs text-amber-400 hover:text-amber-200 transition-colors flex items-center gap-1">
+            <X className="w-3 h-3" /> Clear
+          </a>
+        </div>
       )}
 
       {/* ── Scrollable message list ── */}
@@ -356,8 +403,15 @@ export function MessageThread({
             );
           }
 
+          const msgMatches = searchQuery?.trim()
+            ? msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+            : false;
+          // We'll track first match via a counter in the map — use idx comparison below
+
           return (
-            <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
+            <div key={msg.id}
+              ref={msgMatches && messages.filter((m, i) => i < idx && searchQuery?.trim() && m.content.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? firstMatchRef : undefined}
+              className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"} ${msgMatches ? "relative" : ""}`}>
               {/* Sender label — only when sender changes */}
               {showLabel && (
                 <span className="text-xs text-gray-500 mb-1 px-1">
@@ -366,12 +420,14 @@ export function MessageThread({
               )}
 
               {/* Bubble */}
-              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
+              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm transition-all ${
                 isMe
                   ? "bg-brand-500 text-white rounded-br-sm"
                   : "bg-dark-700 text-gray-100 rounded-bl-sm"
-              }`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              } ${msgMatches ? "ring-2 ring-amber-400/60 ring-offset-1 ring-offset-dark-900" : ""}`}>
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  <HighlightText text={msg.content} query={searchQuery} />
+                </p>
                 <div className="text-xs mt-1 opacity-60 flex items-center gap-1 justify-end">
                   {formatRelativeTime(msg.createdAt)}
                   {isMe && (
