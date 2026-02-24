@@ -72,17 +72,10 @@ export function MessageThread({
   const [lastSeen, setLastSeen] = useState(false); // has partner seen my last message?
 
   // Called by MutualRatingCard after submission — adds the rating message to local thread
-  const handleRatingMessage = (msgContent: string) => {
-    const ratingMsg: Message = {
-      id: "rating-" + Date.now(),
-      content: msgContent,
-      senderId: currentUserId,
-      createdAt: new Date().toISOString(),
-      read: false,
-    };
-    setMessages(prev => [...prev, ratingMsg]);
-    setLastSeen(false);
-  };
+  // Rating message was sent to recipient via API — sender sees submitted state in rating card,
+  // not a chat bubble. So we don't append to local messages here.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRatingMessage = (_msgContent: string) => { /* no-op for sender */ };
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
@@ -230,35 +223,60 @@ export function MessageThread({
             );
           }
 
-          // Rating message (⭐⭐⭐ ... rated you ...)
+          // Rating message — only shown to the RECIPIENT (sender already sees it in rating card)
           if (isRating) {
-            const isMyRating = msg.senderId === currentUserId;
+            if (isMe) return null; // sender doesn't see their own rating as a chat bubble
             const lines = msg.content.split("\n");
-            const headline = lines[0];
-            const rest = lines.slice(1);
+            // lines[1] = "★★★★☆ Great — rated you as a seller"
+            const starLine = lines[1] ?? "";
+            const starMatch = starLine.match(/^(★+)(☆*) (.+?) — rated you as a (\w+)/);
+            const filledStars = starMatch ? starMatch[1].length : 0;
+            const ratingLabel = starMatch ? starMatch[3] : "";
+            const roleLabel   = starMatch ? starMatch[4] : "";
+            const strengthLine = lines.find(l => l.startsWith("✨")) ?? "";
+            const commentLine  = lines.find(l => l.startsWith('"')) ?? "";
+            const strengths = strengthLine.replace("✨ ", "").split(" · ").filter(Boolean);
+
             return (
-              <div key={msg.id} className={`flex flex-col ${isMyRating ? "items-end" : "items-start"} mt-3`}>
-                {showLabel && (
-                  <span className="text-xs text-gray-500 mb-1 px-1">
-                    {isMyRating ? "You" : partnerName}
-                  </span>
-                )}
-                <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm border ${
-                  isMyRating
-                    ? "bg-amber-500/15 border-amber-500/30 rounded-br-sm"
-                    : "bg-amber-500/10 border-amber-500/20 rounded-bl-sm"
-                }`}>
-                  <p className="font-semibold text-amber-300 text-sm">{headline}</p>
-                  {rest.map((line, i) => (
-                    <p key={i} className={`mt-1 text-xs ${line.startsWith("✨") ? "text-brand-300" : "text-gray-300 italic"}`}>{line}</p>
-                  ))}
-                  <div className="text-xs mt-1.5 opacity-50 text-right">{formatRelativeTime(msg.createdAt)}</div>
+              <div key={msg.id} className="flex justify-center py-2">
+                <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-amber-500/40 shadow-lg"
+                  style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))" }}>
+                  {/* Header */}
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-amber-500/25"
+                    style={{ background: "rgba(245,158,11,0.12)" }}>
+                    <span className="text-base">⭐</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-amber-300 truncate">
+                        Rating received from {roleLabel} {partnerName}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Stars */}
+                  <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => (
+                        <svg key={s} className={`w-5 h-5 ${s <= filledStars ? "text-amber-400" : "text-gray-600"}`}
+                          fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-amber-300">{ratingLabel}</span>
+                  </div>
+                  {/* Strengths */}
+                  {strengths.length > 0 && (
+                    <div className="px-4 pb-2 flex flex-wrap gap-1">
+                      {strengths.map(s => (
+                        <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  {/* Comment */}
+                  {commentLine && (
+                    <p className="px-4 pb-2 text-xs text-gray-300 italic">{commentLine}</p>
+                  )}
+                  <div className="px-4 pb-3 text-xs text-gray-500">{formatRelativeTime(msg.createdAt)}</div>
                 </div>
-                {isMyRating && isLastMine && lastSeen && (
-                  <span className="text-xs text-brand-300 mt-0.5 px-1 flex items-center gap-1">
-                    <CheckCheck className="w-3 h-3" /> Seen
-                  </span>
-                )}
               </div>
             );
           }
