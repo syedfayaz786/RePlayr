@@ -85,6 +85,8 @@ interface MutualRatingCardProps {
   sellerName: string;
   sellerImage?: string | null;
   myExistingReview: { rating: number; comment: string | null; strengths: string[] } | null;
+  /** Called with the formatted rating message content after successful submission */
+  onRatingMessage?: (msgContent: string) => void;
 }
 
 export function MutualRatingCard({
@@ -92,6 +94,7 @@ export function MutualRatingCard({
   partnerId, partnerName, partnerImage,
   sellerId, sellerName, sellerImage,
   myExistingReview,
+  onRatingMessage,
 }: MutualRatingCardProps) {
   const targetId    = isSeller ? partnerId   : sellerId;
   const targetName  = isSeller ? partnerName : sellerName;
@@ -110,14 +113,32 @@ export function MutualRatingCard({
     if (!rating) { toast.error("Please select a star rating"); return; }
     setSaving(true);
     try {
+      // 1. Save the review
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetId, listingId, rating, comment: comment.trim() || null, strengths: selected, role: myRole }),
       });
       if (!res.ok) throw new Error();
+
+      // 2. Build a human-readable message to send to the other party
+      const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+      const roleLabel = isSeller ? "buyer" : "seller";
+      const strengthLine = selected.length > 0 ? `\n✨ ${selected.join(" · ")}` : "";
+      const commentLine  = comment.trim() ? `\n"${comment.trim()}"` : "";
+      const msgContent = `⭐ Rating received\n${stars} ${LABELS[rating]} — rated you as a ${roleLabel}${strengthLine}${commentLine}`;
+
+      // 3. Send as a real message so it shows in chat + triggers navbar badge
+      await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receiverId: targetId, content: msgContent, listingId }),
+      });
+
       toast.success("Review submitted!");
       setSubmitted(true);
+      // Notify parent (MessageThread) to append the message locally without reload
+      onRatingMessage?.(msgContent);
     } catch {
       toast.error("Failed to submit review");
     } finally {

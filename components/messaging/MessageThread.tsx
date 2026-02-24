@@ -70,6 +70,19 @@ export function MessageThread({
   const [input, setInput]       = useState("");
   const [sending, setSending]   = useState(false);
   const [lastSeen, setLastSeen] = useState(false); // has partner seen my last message?
+
+  // Called by MutualRatingCard after submission — adds the rating message to local thread
+  const handleRatingMessage = (msgContent: string) => {
+    const ratingMsg: Message = {
+      id: "rating-" + Date.now(),
+      content: msgContent,
+      senderId: currentUserId,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    setMessages(prev => [...prev, ratingMsg]);
+    setLastSeen(false);
+  };
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
@@ -199,12 +212,13 @@ export function MessageThread({
 
         {messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
-          const isSystem = msg.content.startsWith("🎉") && msg.senderId !== currentUserId;
+          const isRating = msg.content.startsWith("⭐ Rating received");
+          const isSystem = (msg.content.startsWith("🎉") && msg.senderId !== currentUserId) || false;
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
           const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
           const isLastMine = msg.id === lastMyMsgId;
 
-          // System/notification messages (sale confirmed)
+          // System: sale notification
           if (isSystem) {
             return (
               <div key={msg.id} className="flex justify-center py-2">
@@ -212,6 +226,39 @@ export function MessageThread({
                   {msg.content}
                   <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
                 </div>
+              </div>
+            );
+          }
+
+          // Rating message (⭐⭐⭐ ... rated you ...)
+          if (isRating) {
+            const isMyRating = msg.senderId === currentUserId;
+            const lines = msg.content.split("\n");
+            const headline = lines[0];
+            const rest = lines.slice(1);
+            return (
+              <div key={msg.id} className={`flex flex-col ${isMyRating ? "items-end" : "items-start"} mt-3`}>
+                {showLabel && (
+                  <span className="text-xs text-gray-500 mb-1 px-1">
+                    {isMyRating ? "You" : partnerName}
+                  </span>
+                )}
+                <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm border ${
+                  isMyRating
+                    ? "bg-amber-500/15 border-amber-500/30 rounded-br-sm"
+                    : "bg-amber-500/10 border-amber-500/20 rounded-bl-sm"
+                }`}>
+                  <p className="font-semibold text-amber-300 text-sm">{headline}</p>
+                  {rest.map((line, i) => (
+                    <p key={i} className={`mt-1 text-xs ${line.startsWith("✨") ? "text-brand-300" : "text-gray-300 italic"}`}>{line}</p>
+                  ))}
+                  <div className="text-xs mt-1.5 opacity-50 text-right">{formatRelativeTime(msg.createdAt)}</div>
+                </div>
+                {isMyRating && isLastMine && lastSeen && (
+                  <span className="text-xs text-brand-300 mt-0.5 px-1 flex items-center gap-1">
+                    <CheckCheck className="w-3 h-3" /> Seen
+                  </span>
+                )}
               </div>
             );
           }
@@ -267,6 +314,7 @@ export function MessageThread({
             sellerName={sellerName ?? partnerName}
             sellerImage={sellerImage}
             myExistingReview={myExistingReview ?? null}
+            onRatingMessage={handleRatingMessage}
           />
         )}
 

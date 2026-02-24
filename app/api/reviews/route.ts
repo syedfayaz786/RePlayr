@@ -59,7 +59,28 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json(review);
+    // Build a star string and message to send to the reviewed party
+    const stars = "⭐".repeat(rating);
+    const strengthsList = Array.isArray(strengths) && strengths.length > 0
+      ? `\n✨ ${strengths.join(" · ")}`
+      : "";
+    const commentPart = comment ? `\n"${comment}"` : "";
+    const authorName  = session.user.name ?? "Someone";
+    const roleLabel   = roleVal === "seller" ? "seller" : "buyer";
+
+    const msgContent = `${stars} ${authorName} rated you as a ${roleLabel}!${strengthsList}${commentPart}`;
+
+    // Send as a message to targetId so it shows up in their chatbox and triggers navbar badge
+    await prisma.message.create({
+      data: {
+        content:    msgContent,
+        senderId:   session.user.id,
+        receiverId: targetId,
+        listingId:  listingId ?? null,
+      },
+    }).catch(() => {});
+
+    return NextResponse.json({ review, msgContent });
   } catch (err) {
     console.error("Review POST error:", err);
     return NextResponse.json({ error: "Failed to save review", detail: String(err) }, { status: 500 });
