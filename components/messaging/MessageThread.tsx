@@ -216,14 +216,33 @@ export function MessageThread({
           // Hide old-format rating messages entirely (legacy format before golden card)
           if (isOldRating) return null;
 
-          // System: sale notification
+          // System: sale notification — also render the rating card immediately after it
           if (isSystem) {
             return (
-              <div key={msg.id} className="flex justify-center py-2">
-                <div className="bg-dark-700/80 border border-brand-500/20 rounded-xl px-4 py-2 text-xs text-gray-300 text-center max-w-xs">
-                  {msg.content}
-                  <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
+              <div key={msg.id}>
+                <div className="flex justify-center py-2">
+                  <div className="bg-dark-700/80 border border-brand-500/20 rounded-xl px-4 py-2 text-xs text-gray-300 text-center max-w-xs">
+                    {msg.content}
+                    <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
+                  </div>
                 </div>
+                {saleConfirmed && listingId && sellerId && (
+                  <MutualRatingCard
+                    listingId={listingId}
+                    listingTitle={listingTitle ?? "this listing"}
+                    currentUserId={currentUserId}
+                    isSeller={isSeller ?? false}
+                    partnerId={partnerId}
+                    partnerName={partnerName}
+                    partnerImage={partnerImage}
+                    currentUserName={currentUserName ?? "You"}
+                    sellerId={sellerId}
+                    sellerName={sellerName ?? partnerName}
+                    sellerImage={sellerImage}
+                    myExistingReview={myExistingReview ?? null}
+                    onRatingMessage={handleRatingMessage}
+                  />
+                )}
               </div>
             );
           }
@@ -323,25 +342,6 @@ export function MessageThread({
             </div>
           );
         })}
-
-        {/* Mutual rating card — inside scroll so it doesn't block messages */}
-        {saleConfirmed && listingId && sellerId && (
-          <MutualRatingCard
-            listingId={listingId}
-            listingTitle={listingTitle ?? "this listing"}
-            currentUserId={currentUserId}
-            isSeller={isSeller ?? false}
-            partnerId={partnerId}
-            partnerName={partnerName}
-            partnerImage={partnerImage}
-            currentUserName={currentUserName ?? "You"}
-            sellerId={sellerId}
-            sellerName={sellerName ?? partnerName}
-            sellerImage={sellerImage}
-            myExistingReview={myExistingReview ?? null}
-            onRatingMessage={handleRatingMessage}
-          />
-        )}
 
         <div ref={bottomRef} />
       </div>
