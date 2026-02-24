@@ -11,6 +11,7 @@ import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
+import { ImageGallery } from "@/components/listings/ImageGallery";
 import { PageHeader } from "@/components/layout/PageHeader";
 import dynamic from "next/dynamic";
 const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
@@ -73,46 +74,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Images + Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Image gallery — FB Marketplace style: contain main, cover thumbnails */}
-            <div className="card overflow-hidden">
-              {/* Main viewer: object-contain so portrait/landscape both show fully, no stretch */}
-              <div className="relative w-full bg-dark-900" style={{ minHeight: "320px", maxHeight: "560px", height: "56vw" }}>
-                {images[0] ? (
-                  images[0].startsWith("data:") ? (
-                    <img
-                      src={images[0]}
-                      alt={listing.title}
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  ) : (
-                    <Image
-                      src={images[0]}
-                      alt={listing.title}
-                      fill
-                      quality={95}
-                      sizes="(max-width: 768px) 100vw, 60vw"
-                      className="object-contain"
-                    />
-                  )
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-7xl">🎮</div>
-                )}
-              </div>
-              {images.length > 1 && (
-                <div className="flex gap-2 p-3 overflow-x-auto border-t border-dark-600">
-                  {images.slice(1).map((img, i) => (
-                    <div key={i} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-dark-600">
-                      {/* Thumbnails: object-cover is fine — small crop acceptable */}
-                      {img.startsWith("data:") ? (
-                        <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <Image src={img} alt="" fill quality={85} className="object-cover" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ImageGallery images={images} title={listing.title} />
 
             {/* Game info */}
             <div className="card p-6">
