@@ -68,13 +68,13 @@ export function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link href={`/listings/${listing.id}`} className="card-hover block group">
       {/* Cover image / platform fallback */}
-      <div className="relative aspect-[3/2] overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden">
         {images[0] ? (
           images[0].startsWith("data:") ? (
             <img
               src={images[0]}
               alt={listing.title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <Image
@@ -83,7 +83,7 @@ export function ListingCard({ listing }: ListingCardProps) {
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 20vw"
               quality={95}
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
             />
           )
         ) : (

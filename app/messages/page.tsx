@@ -241,9 +241,9 @@ export default async function MessagesPage({
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-dark-700 border border-dark-600 group-hover:border-brand-500/50 transition-colors">
                     {listingImages[0] ? (
                       listingImages[0].startsWith("data:") ? (
-                        <img src={listingImages[0]} alt={threadListing.title} className="w-full h-full object-cover" />
+                        <img src={listingImages[0]} alt={threadListing.title} className="w-full h-full object-contain" />
                       ) : (
-                        <Image src={listingImages[0]} alt={threadListing.title} fill className="object-cover" quality={90} />
+                        <Image src={listingImages[0]} alt={threadListing.title} fill className="object-contain" quality={90} />
                       )
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">

@@ -73,27 +73,40 @@ export default async function ListingPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Images + Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Image gallery */}
+            {/* Image gallery — FB Marketplace style: contain main, cover thumbnails */}
             <div className="card overflow-hidden">
-              <div className="relative aspect-video bg-dark-700">
+              {/* Main viewer: object-contain so portrait/landscape both show fully, no stretch */}
+              <div className="relative w-full bg-dark-900" style={{ minHeight: "320px", maxHeight: "560px", height: "56vw" }}>
                 {images[0] ? (
                   images[0].startsWith("data:") ? (
-                    <img src={images[0]} alt={listing.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <img
+                      src={images[0]}
+                      alt={listing.title}
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
                   ) : (
-                    <Image src={images[0]} alt={listing.title} fill quality={95} sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+                    <Image
+                      src={images[0]}
+                      alt={listing.title}
+                      fill
+                      quality={95}
+                      sizes="(max-width: 768px) 100vw, 60vw"
+                      className="object-contain"
+                    />
                   )
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-7xl">🎮</div>
                 )}
               </div>
               {images.length > 1 && (
-                <div className="flex gap-2 p-3 overflow-x-auto">
+                <div className="flex gap-2 p-3 overflow-x-auto border-t border-dark-600">
                   {images.slice(1).map((img, i) => (
-                    <div key={i} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                    <div key={i} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-dark-600">
+                      {/* Thumbnails: object-cover is fine — small crop acceptable */}
                       {img.startsWith("data:") ? (
                         <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       ) : (
-                        <Image src={img} alt="" fill quality={95} className="object-cover" />
+                        <Image src={img} alt="" fill quality={85} className="object-cover" />
                       )}
                     </div>
                   ))}
