@@ -208,7 +208,7 @@ export function MessageThread({
           const isRating = msg.content.startsWith("⭐ Rating received");
           // Any other rating message format — hide completely, only golden card shown to recipient
           const isOldRating = !isRating && msg.content.includes("rated you as a");
-          const isSystem = (msg.content.startsWith("🎉") && msg.senderId !== currentUserId) || false;
+          const isSystem = msg.content.startsWith("🎉");
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
           const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
           const isLastMine = msg.id === lastMyMsgId;
