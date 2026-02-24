@@ -1,5 +1,7 @@
 "use client";
 
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
+
 import { Navbar } from "@/components/layout/Navbar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -61,10 +63,20 @@ export default function NewListingPage() {
   }
 
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState<string | null>(null); // raw file data URI pending edit
 
+  // Opens the photo editor for the first file; uploads happen after editing
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (images.length + files.length > 6) { toast.error("Maximum 6 images allowed"); return; }
+    // Load first file into editor; queue the rest for sequential editing
+    if (files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setEditingPhoto(ev.target?.result as string);
+      reader.readAsDataURL(files[0]);
+      e.target.value = ""; // reset input
+      return;
+    }
 
     setUploadingImages(true);
     const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -151,6 +163,36 @@ export default function NewListingPage() {
   const platformConfig = form.platform ? PLATFORM_CONFIG[form.platform] : null;
   const PlatformLogo   = platformConfig?.Logo;
   const steps = ["Game Info", "Condition & Photos", "Price & Location"];
+
+  // Called when editor saves — uploads the cropped image
+  const uploadEditedPhoto = async (dataUrl: string) => {
+    setEditingPhoto(null);
+    setUploadingImages(true);
+    try {
+      const cloudName   = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      if (cloudName && uploadPreset) {
+        const blob = await fetch(dataUrl).then((r) => r.blob());
+        const fd   = new FormData();
+        fd.append("file", blob, "photo.jpg");
+        fd.append("upload_preset", uploadPreset);
+        const res  = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: fd });
+        if (res.ok) {
+          const result = await res.json();
+          const url    = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
+          setImages((prev) => [...prev, url]);
+        } else {
+          toast.error("Image upload failed");
+        }
+      } else {
+        setImages((prev) => [...prev, dataUrl]);
+      }
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col"><Navbar />

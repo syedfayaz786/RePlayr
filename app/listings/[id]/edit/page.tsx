@@ -1,5 +1,7 @@
 "use client";
 
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
@@ -30,6 +32,7 @@ export default function EditListingPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [locationValid,     setLocationValid]     = useState(true);
   const [uploadingImages,   setUploadingImages]   = useState(false);
+  const [editingPhoto,      setEditingPhoto]      = useState<string | null>(null);
   const [images,            setImages]            = useState<string[]>([]);
   const [form, setForm] = useState({
     title: "", description: "", price: "", platform: "",
@@ -88,8 +91,44 @@ export default function EditListingPage() {
     }));
   };
 
+  const uploadEditedPhoto = async (dataUrl: string) => {
+    setEditingPhoto(null);
+    setUploadingImages(true);
+    try {
+      const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      if (cloudName && uploadPreset) {
+        const blob = await fetch(dataUrl).then((r) => r.blob());
+        const fd   = new FormData();
+        fd.append("file", blob, "photo.jpg");
+        fd.append("upload_preset", uploadPreset);
+        const res  = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: fd });
+        if (res.ok) {
+          const result = await res.json();
+          const url    = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
+          setImages((prev) => [...prev, url]);
+        } else {
+          toast.error("Image upload failed");
+        }
+      } else {
+        setImages((prev) => [...prev, dataUrl]);
+      }
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setEditingPhoto(ev.target?.result as string);
+      reader.readAsDataURL(files[0]);
+      e.target.value = "";
+      return;
+    }
     if (images.length + files.length > 6) { toast.error("Maximum 6 images"); return; }
 
     setUploadingImages(true);
@@ -177,6 +216,13 @@ export default function EditListingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {editingPhoto && (
+        <PhotoEditor
+          src={editingPhoto}
+          onSave={uploadEditedPhoto}
+          onCancel={() => setEditingPhoto(null)}
+        />
+      )}
       <Navbar />
       <PageHeader crumbs={[{ label: "Edit Listing" }]} />
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-8 py-8">
