@@ -158,7 +158,8 @@ export default async function MessagesPage({
   }
 
   // Sale record — who bought this listing
-  let sale: { listingId: string; sellerId: string; buyerId: string; seller: { id: string; name: string | null; image: string | null }; buyer: { id: string; name: string | null; image: string | null } } | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let sale: any = null;
   if (threadListing) {
     try {
       sale = await prisma.sale.findUnique({
@@ -167,7 +168,7 @@ export default async function MessagesPage({
           buyer:  { select: { id: true, name: true, image: true } },
           seller: { select: { id: true, name: true, image: true } },
         },
-      }) as typeof sale;
+      });
     } catch { /* sale fetch failed */ }
   }
 
