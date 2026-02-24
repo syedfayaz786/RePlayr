@@ -13,18 +13,6 @@ import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import Image from "next/image";
 import Link from "next/link";
 
-interface ThreadListing {
-  id: string;
-  title: string;
-  price: number;
-  platform: string;
-  condition: string;
-  images: string;
-  location?: string | null;
-  edition?: string | null;
-  description?: string | null;
-}
-
 export default async function MessagesPage({
   searchParams,
 }: {
@@ -33,10 +21,12 @@ export default async function MessagesPage({
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/login");
 
-  const messages = await prisma.message.findMany({
-    where: {
-      OR: [{ senderId: session.user.id }, { receiverId: session.user.id }],
-    },
+  const activePartnerId = searchParams.with ?? null;
+  const activeListingId = searchParams.listing ?? null;
+
+  // ── 1. All messages involving the current user (for sidebar) ──────────────
+  const allMessages = await prisma.message.findMany({
+    where: { OR: [{ senderId: session.user.id }, { receiverId: session.user.id }] },
     include: {
       sender:   { select: { id: true, name: true, image: true } },
       receiver: { select: { id: true, name: true, image: true } },
@@ -45,65 +35,47 @@ export default async function MessagesPage({
     orderBy: { createdAt: "desc" },
   });
 
-  // Group by partnerId + listingId so same person × different game = separate threads
-  type ConvKey = string; // `${partnerId}::${listingId ?? "none"}`
-  const conversations = new Map<
-    ConvKey,
-    {
-      partner: { id: string; name: string | null; image: string | null };
-      lastMessage: (typeof messages)[0];
-      unread: number;
-      listing: { id: string; title: string; price: number; images: string; platform: string; condition: string } | null;
-      listingId: string | null;
-    }
-  >();
+  // ── 2. Group sidebar by partnerId + listingId ─────────────────────────────
+  type ConvEntry = {
+    partner:     { id: string; name: string | null; image: string | null };
+    lastMessage: typeof allMessages[0];
+    unread:      number;
+    listingId:   string | null;
+    listing:     { id: string; title: string } | null;
+  };
+  const convMap = new Map<string, ConvEntry>();
 
-  for (const msg of messages) {
+  for (const msg of allMessages) {
     const partnerId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
     const partner   = msg.senderId === session.user.id ? msg.receiver   : msg.sender;
-    // Use listing.id as the canonical key — more reliable than msg.listingId
-    // which might be null on replies. Falls back to msg.listingId, then "none".
     const listingId = msg.listing?.id ?? msg.listingId ?? null;
-    const key: ConvKey = `${partnerId}::${listingId ?? "none"}`;
+    const key       = `${partnerId}::${listingId ?? "none"}`;
 
-    if (!conversations.has(key)) {
-      conversations.set(key, {
-        partner,
-        lastMessage: msg,
-        unread: 0,
-        listing: msg.listing ?? null,
-        listingId,
-      });
-    } else {
-      // Update last message if this one is more recent (messages are ordered desc so first = latest)
-      // already set on first encounter
+    if (!convMap.has(key)) {
+      convMap.set(key, { partner, lastMessage: msg, unread: 0, listingId, listing: msg.listing ? { id: msg.listing.id, title: msg.listing.title } : null });
     }
     if (msg.receiverId === session.user.id && !msg.read) {
-      conversations.get(key)!.unread++;
+      convMap.get(key)!.unread++;
     }
   }
+  const convList = Array.from(convMap.values());
+  const activeKey = activePartnerId ? `${activePartnerId}::${activeListingId ?? "none"}` : null;
+  const activeConv = activeKey ? convMap.get(activeKey) : null;
+  const activePartner = activeConv?.partner ?? null;
 
-  const convList       = Array.from(conversations.values());
-  const activePartnerId = searchParams.with;
-  const activeListingId = searchParams.listing ?? null;
-  const activeKey       = activePartnerId
-    ? `${activePartnerId}::${activeListingId ?? "none"}`
-    : null;
-
-  // Load active thread — scoped to partner + listing
-  let thread: typeof messages = [];
+  // ── 3. Thread messages (all between the pair, scoped to listing) ──────────
+  let thread: typeof allMessages = [];
   if (activePartnerId) {
     thread = await prisma.message.findMany({
       where: {
         AND: [
-          {
-            OR: [
-              { senderId: session.user.id, receiverId: activePartnerId },
-              { senderId: activePartnerId, receiverId: session.user.id },
-            ],
-          },
+          { OR: [
+            { senderId: session.user.id, receiverId: activePartnerId },
+            { senderId: activePartnerId, receiverId: session.user.id },
+          ]},
+          // Include messages with this listingId OR null listingId (seller replies)
           activeListingId
-            ? { listingId: activeListingId }
+            ? { OR: [{ listingId: activeListingId }, { listingId: null }] }
             : { listingId: null },
         ],
       },
@@ -115,76 +87,55 @@ export default async function MessagesPage({
       orderBy: { createdAt: "asc" },
     });
 
+    // Mark as read
     await prisma.message.updateMany({
       where: {
-        senderId:   activePartnerId,
-        receiverId: session.user.id,
-        read:       false,
-        ...(activeListingId ? { listingId: activeListingId } : { listingId: null }),
+        senderId: activePartnerId, receiverId: session.user.id, read: false,
+        ...(activeListingId ? { OR: [{ listingId: activeListingId }, { listingId: null }] } : { listingId: null }),
       },
       data: { read: true },
     });
   }
 
-  const activeConv    = activeKey ? conversations.get(activeKey) : null;
-  const activePartner = activeConv?.partner ?? null;
-
-  // Fetch listing directly from DB — always reliable, avoids thread message nulls
-  let threadListing: ThreadListing | null = null;
-  let isSeller = false;
-
-  if (activeListingId) {
-    try {
-      const raw = await prisma.listing.findUnique({
+  // ── 4. Active listing details (fetch direct from DB) ─────────────────────
+  const activeListing = activeListingId
+    ? await prisma.listing.findUnique({
         where: { id: activeListingId },
         select: { id: true, title: true, price: true, platform: true, condition: true, location: true, edition: true, description: true, images: true, sellerId: true },
-      });
-      if (raw) {
-        threadListing = raw as ThreadListing;
-        isSeller = raw.sellerId === session.user.id;
-      }
-    } catch { /* listing fetch failed — degrade gracefully */ }
-  } else {
-    // No listingId in URL — scan thread for a message with a listing attached
-    const msgWithListing = thread.find((m) => m.listing);
-    if (msgWithListing?.listing) {
-      threadListing = msgWithListing.listing as unknown as ThreadListing;
-    }
-  }
+      })
+    : null;
 
-  let listingImages: string[] = [];
-  if (threadListing?.images) {
-    try { listingImages = JSON.parse(threadListing.images); } catch {}
-  }
+  const listingImages: string[] = (() => {
+    try { return activeListing ? JSON.parse(activeListing.images) : []; } catch { return []; }
+  })();
 
-  // Sale record — who bought this listing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let sale: any = null;
-  if (threadListing) {
-    try {
-      sale = await prisma.sale.findUnique({
-        where: { listingId: threadListing.id },
+  const isSeller         = !!(activeListing && activeListing.sellerId === session.user.id);
+  const pinnedListing    = activeListing ? {
+    id: activeListing.id, title: activeListing.title, price: activeListing.price,
+    platform: activeListing.platform, condition: activeListing.condition, images: listingImages,
+  } : null;
+
+  // ── 5. Sale + review ──────────────────────────────────────────────────────
+  const sale = activeListing
+    ? await prisma.sale.findUnique({
+        where: { listingId: activeListing.id },
         include: {
           buyer:  { select: { id: true, name: true, image: true } },
           seller: { select: { id: true, name: true, image: true } },
         },
-      });
-    } catch { /* sale fetch failed */ }
-  }
-
-  // Existing review by current user
-  let existingReview: { rating: number; comment: string | null } | null = null;
-  if (threadListing) {
-    try {
-      existingReview = await prisma.review.findUnique({
-        where: { authorId_listingId: { authorId: session.user.id, listingId: threadListing.id } },
-        select: { rating: true, comment: true },
-      });
-    } catch { /* review fetch failed */ }
-  }
+      })
+    : null;
 
   const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
+  const existingReview = isConfirmedBuyer && activeListing
+    ? await prisma.review.findUnique({
+        where: { authorId_listingId: { authorId: session.user.id, listingId: activeListing.id } },
+        select: { rating: true, comment: true },
+      })
+    : null;
+
+  // ── 6. Render ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -194,7 +145,7 @@ export default async function MessagesPage({
 
         <div className="card flex h-[680px] overflow-hidden">
 
-          {/* ── Col 1: Conversation list ── */}
+          {/* ── Col 1: Sidebar ── */}
           <div className="w-72 border-r border-dark-600 flex-shrink-0 overflow-y-auto">
             {convList.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">
@@ -203,17 +154,13 @@ export default async function MessagesPage({
                 <p className="text-xs text-gray-500 mt-1">Find a listing and message the seller</p>
               </div>
             ) : (
-              convList.map(({ partner, lastMessage, unread, listing, listingId }) => {
-                const href  = `/messages?with=${partner.id}${listingId ? `&listing=${listingId}` : ""}`;
-                const key   = `${partner.id}::${listingId ?? "none"}`;
+              convList.map(({ partner, lastMessage, unread, listingId, listing }) => {
+                const href    = `/messages?with=${partner.id}${listingId ? `&listing=${listingId}` : ""}`;
+                const key     = `${partner.id}::${listingId ?? "none"}`;
                 const isActive = activeKey === key;
                 return (
-                  <a
-                    key={key}
-                    href={href}
-                    className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${
-                      isActive ? "bg-dark-700 border-l-2 border-l-brand-500" : ""
-                    }`}
+                  <a key={key} href={href}
+                    className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${isActive ? "bg-dark-700 border-l-2 border-l-brand-500" : ""}`}
                   >
                     <div className="relative flex-shrink-0">
                       {partner.image ? (
@@ -224,23 +171,15 @@ export default async function MessagesPage({
                         </div>
                       )}
                       {unread > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
-                          {unread}
-                        </span>
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">{unread}</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className={`text-sm font-medium truncate ${unread > 0 ? "text-white" : "text-gray-300"}`}>
-                          {partner.name}
-                        </span>
-                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                          {formatRelativeTime(lastMessage.createdAt)}
-                        </span>
+                        <span className={`text-sm font-medium truncate ${unread > 0 ? "text-white" : "text-gray-300"}`}>{partner.name}</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatRelativeTime(lastMessage.createdAt)}</span>
                       </div>
-                      {listing && (
-                        <p className="text-xs text-brand-400 truncate mb-0.5 font-medium">🎮 {listing.title}</p>
-                      )}
+                      {listing && <p className="text-xs text-brand-400 truncate mb-0.5 font-medium">🎮 {listing.title}</p>}
                       <p className="text-xs text-gray-500 truncate">{lastMessage.content}</p>
                     </div>
                     <DeleteChatButton partnerId={partner.id} listingId={listingId} variant="icon" />
@@ -250,29 +189,18 @@ export default async function MessagesPage({
             )}
           </div>
 
-          {/* ── Col 2: Message thread ── */}
+          {/* ── Col 2: Thread ── */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             {activePartnerId && activePartner ? (
               <MessageThread
-                thread={thread.map((m) => ({
-                  ...m,
-                  createdAt: m.createdAt.toISOString(),
-                  listing: m.listing ? { ...m.listing, price: m.listing.price } : null,
-                }))}
+                thread={thread.map((m) => ({ ...m, createdAt: m.createdAt.toISOString(), listing: m.listing ? { ...m.listing, price: m.listing.price } : null }))}
                 currentUserId={session.user.id}
                 partnerId={activePartnerId}
                 listingId={activeListingId}
                 partnerName={activePartner.name ?? "User"}
                 partnerImage={activePartner.image}
                 deleteButton={<DeleteChatButton partnerId={activePartnerId} listingId={activeListingId} variant="full" />}
-                pinnedListing={threadListing ? {
-                  id:        threadListing.id,
-                  title:     threadListing.title,
-                  price:     threadListing.price,
-                  platform:  threadListing.platform,
-                  condition: threadListing.condition,
-                  images:    listingImages,
-                } : null}
+                pinnedListing={pinnedListing}
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
@@ -283,87 +211,83 @@ export default async function MessagesPage({
             )}
           </div>
 
-          {/* ── Col 3: Listing info panel ── */}
+          {/* ── Col 3: Listing info ── */}
           <div className="w-72 border-l border-dark-600 flex-shrink-0 overflow-y-auto bg-dark-800/50">
-            {threadListing ? (
+            {activeListing ? (
               <div className="p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">About this listing</h3>
 
-                <Link href={`/listings/${threadListing.id}`} className="block group">
+                <Link href={`/listings/${activeListing.id}`} className="block group">
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-dark-700 border border-dark-600 group-hover:border-brand-500/50 transition-colors">
                     {listingImages[0] ? (
                       listingImages[0].startsWith("data:") ? (
-                        <img src={listingImages[0]} alt={threadListing.title} className="w-full h-full object-contain" />
+                        <img src={listingImages[0]} alt={activeListing.title} className="w-full h-full object-contain" />
                       ) : (
-                        <Image src={listingImages[0]} alt={threadListing.title} fill className="object-contain" quality={90} />
+                        <Image src={listingImages[0]} alt={activeListing.title} fill className="object-contain" quality={90} />
                       )
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Package className="w-10 h-10 text-gray-600" />
-                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center"><Package className="w-10 h-10 text-gray-600" /></div>
                     )}
                   </div>
                 </Link>
 
                 <div>
-                  <Link href={`/listings/${threadListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
-                    {threadListing.title}
+                  <Link href={`/listings/${activeListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
+                    {activeListing.title}
                   </Link>
-                  <p className="text-2xl font-bold text-brand-400 mt-1">
-                    ${Number(threadListing.price).toFixed(2)}
-                  </p>
+                  <p className="text-2xl font-bold text-brand-400 mt-1">${Number(activeListing.price).toFixed(2)}</p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <Tag     className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <Tag  className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                     <span className="text-gray-400">Platform</span>
-                    <span className="text-white ml-auto font-medium">{threadListing.platform}</span>
+                    <span className="text-white ml-auto font-medium">{activeListing.platform}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Star    className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <Star className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                     <span className="text-gray-400">Condition</span>
-                    <span className="text-white ml-auto font-medium">{threadListing.condition}</span>
+                    <span className="text-white ml-auto font-medium">{activeListing.condition}</span>
                   </div>
-                  {threadListing.location && (
+                  {activeListing.location && (
                     <div className="flex items-center gap-2 text-sm">
-                      <MapPin  className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                       <span className="text-gray-400">Location</span>
-                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{threadListing.location}</span>
+                      <span className="text-white ml-auto font-medium text-right max-w-[120px] truncate">{activeListing.location}</span>
                     </div>
                   )}
                 </div>
 
-                {threadListing.description && (
+                {activeListing.description && (
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{threadListing.description}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{activeListing.description}</p>
                   </div>
                 )}
 
-                <Link href={`/listings/${threadListing.id}`} className="btn-primary text-center text-sm py-2.5">
+                <Link href={`/listings/${activeListing.id}`} className="btn-primary text-center text-sm py-2.5">
                   View Full Listing
                 </Link>
 
-                {/* Seller: mark as sold to this buyer */}
+                {/* Seller: mark sold to this buyer */}
                 {isSeller && activePartnerId && (
                   <SoldToBuyerButton
-                    listingId={threadListing.id}
+                    listingId={activeListing.id}
                     buyerId={activePartnerId}
                     buyerName={activePartner?.name ?? "this buyer"}
                     alreadySold={sale?.buyerId === activePartnerId}
                   />
                 )}
 
-                {/* Buyer: rate the seller (only if confirmed buyer) */}
+                {/* Buyer: rate the seller */}
                 {isConfirmedBuyer && sale && (
                   <RateSellerWidget
                     sellerId={sale.sellerId}
-                    sellerName={(sale as { seller?: { name?: string | null } }).seller?.name ?? "Seller"}
-                    sellerImage={(sale as { seller?: { image?: string | null } }).seller?.image}
-                    listingId={threadListing.id}
-                    listingTitle={threadListing.title}
-                    existingReview={existingReview ? { rating: existingReview.rating, comment: existingReview.comment } : null}
+                    sellerName={sale.seller?.name ?? "Seller"}
+                    sellerImage={sale.seller?.image}
+                    listingId={activeListing.id}
+                    listingTitle={activeListing.title}
+                    existingReview={existingReview ?? null}
                   />
                 )}
               </div>
