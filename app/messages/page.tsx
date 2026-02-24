@@ -8,6 +8,8 @@ import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
+import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
+import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -132,6 +134,24 @@ export default async function MessagesPage({
   if (threadListing?.images) {
     try { listingImages = JSON.parse(threadListing.images); } catch {}
   }
+
+  // Fetch sale record for this listing (who bought it)
+  const sale = threadListing
+    ? await prisma.sale.findUnique({
+        where: { listingId: threadListing.id },
+        include: { buyer: { select: { id: true, name: true, image: true } } },
+      })
+    : null;
+
+  // Fetch existing review by the current user for this listing
+  const existingReview = (threadListing && session)
+    ? await prisma.review.findUnique({
+        where: { authorId_listingId: { authorId: session.user.id, listingId: threadListing.id } },
+      })
+    : null;
+
+  const isSeller        = threadListing ? (await prisma.listing.findUnique({ where: { id: threadListing.id }, select: { sellerId: true } }))?.sellerId === session.user.id : false;
+  const isConfirmedBuyer = sale?.buyerId === session.user.id;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -292,6 +312,28 @@ export default async function MessagesPage({
                 <Link href={`/listings/${threadListing.id}`} className="btn-primary text-center text-sm py-2.5">
                   View Full Listing
                 </Link>
+
+                {/* Seller: mark as sold to this buyer */}
+                {isSeller && activePartnerId && (
+                  <SoldToBuyerButton
+                    listingId={threadListing.id}
+                    buyerId={activePartnerId}
+                    buyerName={activePartner?.name ?? "this buyer"}
+                    alreadySold={sale?.buyerId === activePartnerId}
+                  />
+                )}
+
+                {/* Buyer: rate the seller (only if confirmed buyer) */}
+                {isConfirmedBuyer && sale && (
+                  <RateSellerWidget
+                    sellerId={sale.sellerId}
+                    sellerName={activePartner?.name ?? "Seller"}
+                    sellerImage={activePartner?.image}
+                    listingId={threadListing.id}
+                    listingTitle={threadListing.title}
+                    existingReview={existingReview ? { rating: existingReview.rating, comment: existingReview.comment } : null}
+                  />
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">

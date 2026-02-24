@@ -218,6 +218,18 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isSeller={isSeller}
               status={listing.status}
             />
+
+            {/* Rate seller — only visible to the confirmed buyer */}
+            {isConfirmedBuyer && (
+              <RateSellerWidget
+                sellerId={listing.sellerId}
+                sellerName={listing.seller.name ?? "Seller"}
+                sellerImage={listing.seller.image}
+                listingId={listing.id}
+                listingTitle={listing.title}
+                existingReview={existingReview ? { rating: existingReview.rating, comment: existingReview.comment } : null}
+              />
+            )}
           </div>
         </div>
       </main>

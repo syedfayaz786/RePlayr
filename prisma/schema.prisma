@@ -32,6 +32,8 @@ model User {
   offers           Offer[]           @relation("OfferBuyer")
   listingOffers    Offer[]           @relation("OfferSeller")
   locationRequests LocationRequest[] @relation("LocationRequester")
+  salesAsSeller    Sale[]            @relation("SaleSeller")
+  salesAsBuyer     Sale[]            @relation("SaleBuyer")
 }
 
 model Account {
@@ -97,6 +99,8 @@ model Listing {
   offers           Offer[]
   messages         Message[]
   locationRequests LocationRequest[]
+  sale             Sale?
+  reviews          Review[]
 }
 
 // Buyer sends request → seller approves/denies → exact area shared via private message
@@ -130,9 +134,13 @@ model Review {
   comment   String?
   authorId  String
   targetId  String
+  listingId String?
   createdAt DateTime @default(now())
   author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
   target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
+  listing   Listing? @relation(fields: [listingId], references: [id])
+
+  @@unique([authorId, listingId])  // one review per buyer per listing
 }
 
 model Offer {
@@ -161,4 +169,17 @@ model Message {
   sender     User     @relation("MessageSender", fields: [senderId], references: [id])
   receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id])
   listing    Listing? @relation(fields: [listingId], references: [id])
+}
+
+// Records the confirmed buyer for a listing — created when seller clicks "Sold to this buyer"
+model Sale {
+  id        String   @id @default(cuid())
+  listingId String   @unique  // one sale per listing
+  sellerId  String
+  buyerId   String
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller  User    @relation("SaleSeller", fields: [sellerId], references: [id])
+  buyer   User    @relation("SaleBuyer",  fields: [buyerId],  references: [id])
 }
