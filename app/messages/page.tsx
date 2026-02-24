@@ -9,7 +9,6 @@ import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
 import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
-import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -140,13 +139,22 @@ export default async function MessagesPage({
 
   const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
-  let existingReview: { rating: number; comment: string | null } | null = null;
+  // Fetch my own review for this listing (buyer OR seller) — includes strengths
+  let myExistingReview: { rating: number; comment: string | null; strengths: string[] } | null = null;
+  const saleConfirmed = !!(sale && (sale.buyerId === session.user.id || sale.sellerId === session.user.id));
   try {
-    if (isConfirmedBuyer && activeListing) {
-      existingReview = await prisma.review.findUnique({
+    if (saleConfirmed && activeListing) {
+      const r = await prisma.review.findUnique({
         where: { authorId_listingId: { authorId: session.user.id, listingId: activeListing.id } },
-        select: { rating: true, comment: true },
+        select: { rating: true, comment: true, strengths: true },
       });
+      if (r) {
+        myExistingReview = {
+          rating: r.rating,
+          comment: r.comment,
+          strengths: (() => { try { return JSON.parse(r.strengths ?? "[]"); } catch { return []; } })(),
+        };
+      }
     }
   } catch { /* Review table may not exist yet */ }
 
@@ -226,6 +234,13 @@ export default async function MessagesPage({
                     />
                   ) : undefined
                 }
+                saleConfirmed={saleConfirmed}
+                isSeller={isSeller}
+                sellerId={sale?.sellerId ?? activeListing?.sellerId}
+                sellerName={sale ? (isSeller ? session.user.name ?? "You" : activePartner.name ?? "Seller") : undefined}
+                sellerImage={sale ? (isSeller ? undefined : activePartner.image) : undefined}
+                listingTitle={activeListing?.title}
+                myExistingReview={myExistingReview}
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
@@ -287,17 +302,7 @@ export default async function MessagesPage({
                   View Full Listing
                 </Link>
 
-                {/* Buyer: rate the seller */}
-                {isConfirmedBuyer && sale && (
-                  <RateSellerWidget
-                    sellerId={sale.sellerId}
-                    sellerName={sale.seller?.name ?? "Seller"}
-                    sellerImage={sale.seller?.image}
-                    listingId={activeListing.id}
-                    listingTitle={activeListing.title}
-                    existingReview={existingReview ?? null}
-                  />
-                )}
+
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">

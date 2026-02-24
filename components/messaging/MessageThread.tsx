@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
+import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 import { Send, Package } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
@@ -34,6 +35,15 @@ interface MessageThreadProps {
   pinnedListing?: PinnedListing | null;
   deleteButton?: ReactNode;
   soldToBuyerButton?: ReactNode;
+  // Mutual rating props — shown inline in Col 2 after sale confirmed
+  saleConfirmed?: boolean;
+  sellerId?: string;
+  sellerName?: string;
+  sellerImage?: string | null;
+  currentUserName?: string;
+  isSeller?: boolean;
+  listingTitle?: string;
+  myExistingReview?: { rating: number; comment: string | null; strengths: string[] } | null;
 }
 
 export function MessageThread({
@@ -46,6 +56,14 @@ export function MessageThread({
   pinnedListing,
   deleteButton,
   soldToBuyerButton,
+  saleConfirmed,
+  sellerId,
+  sellerName,
+  sellerImage,
+  currentUserName,
+  isSeller,
+  listingTitle,
+  myExistingReview,
 }: MessageThreadProps) {
   const [messages, setMessages] = useState(initialThread);
   const [input, setInput]       = useState("");
@@ -173,6 +191,24 @@ export function MessageThread({
         })}
         <div ref={bottomRef} />
       </div>
+
+      {/* ── Mutual rating card — shown inline after sale confirmed ── */}
+      {saleConfirmed && listingId && sellerId && (
+        <MutualRatingCard
+          listingId={listingId}
+          listingTitle={listingTitle ?? "this listing"}
+          currentUserId={currentUserId}
+          isSeller={isSeller ?? false}
+          partnerId={partnerId}
+          partnerName={partnerName}
+          partnerImage={partnerImage}
+          currentUserName={currentUserName ?? "You"}
+          sellerId={sellerId}
+          sellerName={sellerName ?? partnerName}
+          sellerImage={sellerImage}
+          myExistingReview={myExistingReview ?? null}
+        />
+      )}
 
       {/* ── Input ── */}
       <div className="p-4 border-t border-dark-600">

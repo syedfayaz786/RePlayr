@@ -27,3 +27,7 @@ ALTER TABLE "Sale" ADD CONSTRAINT "Sale_sellerId_fkey"
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_buyerId_fkey"
   FOREIGN KEY ("buyerId")   REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE
   DEFERRABLE INITIALLY DEFERRED;
+
+-- 3. Add strengths and role columns to Review (if not already there)
+ALTER TABLE "Review" ADD COLUMN IF NOT EXISTS "strengths" TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE "Review" ADD COLUMN IF NOT EXISTS "role" TEXT NOT NULL DEFAULT 'buyer';

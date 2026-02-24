@@ -132,15 +132,17 @@ model Review {
   id        String   @id @default(cuid())
   rating    Int
   comment   String?
+  strengths String   @default("[]")  // JSON array of preset phrase strings
   authorId  String
   targetId  String
   listingId String?
+  role      String   @default("buyer")  // "buyer" | "seller" — role of the AUTHOR when reviewing
   createdAt DateTime @default(now())
   author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
   target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
   listing   Listing? @relation(fields: [listingId], references: [id])
 
-  @@unique([authorId, listingId])  // one review per buyer per listing
+  @@unique([authorId, listingId])  // one review per user per listing
 }
 
 model Offer {
