@@ -63,6 +63,15 @@ export default async function ListingPage({ params }: { params: { id: string } }
 
   const isSeller = session?.user.id === listing.sellerId;
 
+  // Sale + review data for confirmed-buyer rating feature
+  const sale = await prisma.sale.findUnique({ where: { listingId: listing.id } });
+  const isConfirmedBuyer = !!(session && sale?.buyerId === session.user.id);
+  const existingReview = isConfirmedBuyer
+    ? await prisma.review.findUnique({
+        where: { authorId_listingId: { authorId: session!.user.id, listingId: listing.id } },
+      })
+    : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
