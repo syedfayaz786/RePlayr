@@ -26,12 +26,14 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  // Send a system notification message to the buyer so the navbar badge fires
-  // This appears as a real unread message, triggering the Messages count
+  // Send a system notification message so the navbar badge fires for the buyer.
+  // Encode seller+buyer names so the client can show the right text per viewer.
   const sellerName = session.user.name ?? "The seller";
+  const buyer = await prisma.user.findUnique({ where: { id: buyerId }, select: { name: true } }).catch(() => null);
+  const buyerName = buyer?.name ?? "the buyer";
   await prisma.message.create({
     data: {
-      content:    `🎉 ${sellerName} has marked this listing as sold to you! You can now rate each other.`,
+      content:    `🎉 SALE_CONFIRMED|seller:${sellerName}|buyer:${buyerName}`,
       senderId:   session.user.id,
       receiverId: buyerId,
       listingId:  listingId,

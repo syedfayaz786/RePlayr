@@ -209,6 +209,20 @@ export function MessageThread({
           // Any other rating message format — hide completely, only golden card shown to recipient
           const isOldRating = !isRating && msg.content.includes("rated you as a");
           const isSystem = msg.content.startsWith("🎉");
+          // Parse encoded sale message: "🎉 SALE_CONFIRMED|seller:Name|buyer:Name"
+          const salePayload = isSystem && msg.content.includes("SALE_CONFIRMED")
+            ? Object.fromEntries(
+                msg.content.replace("🎉 SALE_CONFIRMED|", "").split("|")
+                  .map(p => p.split(":") as [string, string])
+              )
+            : null;
+          const systemText = salePayload
+            ? (isMe
+                // Seller sees: "You marked this listing as sold to [buyer]"
+                ? `🎉 You marked this listing as sold to ${salePayload.buyer}!`
+                // Buyer sees: "[seller] marked this listing as sold to you!"
+                : `🎉 ${salePayload.seller} marked this listing as sold to you!`)
+            : msg.content; // fallback for old messages
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
           const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
           const isLastMine = msg.id === lastMyMsgId;
@@ -222,7 +236,7 @@ export function MessageThread({
               <div key={msg.id}>
                 <div className="flex justify-center py-2">
                   <div className="bg-dark-700/80 border border-brand-500/20 rounded-xl px-4 py-2 text-xs text-gray-300 text-center max-w-xs">
-                    {msg.content}
+                    {systemText}
                     <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
                   </div>
                 </div>
