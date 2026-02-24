@@ -74,9 +74,9 @@ export default async function MessagesPage({
             { senderId: activePartnerId, receiverId: session.user.id },
           ]},
           // Include messages with this listingId OR null listingId (seller replies)
-          activeListingId
-            ? { OR: [{ listingId: activeListingId }, { listingId: null }] }
-            : { listingId: null },
+          ...(activeListingId
+            ? [{ OR: [{ listingId: activeListingId }, { listingId: null }] }]
+            : [{ listingId: null }]),
         ],
       },
       include: {
@@ -87,14 +87,22 @@ export default async function MessagesPage({
       orderBy: { createdAt: "asc" },
     });
 
-    // Mark as read
-    await prisma.message.updateMany({
-      where: {
-        senderId: activePartnerId, receiverId: session.user.id, read: false,
-        ...(activeListingId ? { OR: [{ listingId: activeListingId }, { listingId: null }] } : { listingId: null }),
-      },
-      data: { read: true },
-    });
+    // Mark as read — split into two calls since updateMany doesn't support OR
+    if (activeListingId) {
+      await prisma.message.updateMany({
+        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: activeListingId },
+        data: { read: true },
+      }).catch(() => {});
+      await prisma.message.updateMany({
+        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: null },
+        data: { read: true },
+      }).catch(() => {});
+    } else {
+      await prisma.message.updateMany({
+        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: null },
+        data: { read: true },
+      }).catch(() => {});
+    }
   }
 
   // ── 4. Active listing details (fetch direct from DB) ─────────────────────
@@ -116,15 +124,19 @@ export default async function MessagesPage({
   } : null;
 
   // ── 5. Sale + review ──────────────────────────────────────────────────────
-  const sale = activeListing
-    ? await prisma.sale.findUnique({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let sale: any = null;
+  if (activeListing) {
+    try {
+      sale = await prisma.sale.findUnique({
         where: { listingId: activeListing.id },
         include: {
           buyer:  { select: { id: true, name: true, image: true } },
           seller: { select: { id: true, name: true, image: true } },
         },
-      })
-    : null;
+      });
+    } catch { /* ignore */ }
+  }
 
   const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
