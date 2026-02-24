@@ -206,10 +206,15 @@ export function MessageThread({
         {messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
           const isRating = msg.content.startsWith("⭐ Rating received");
+          // Old-format rating messages (★★★ ...) — hide completely, replaced by new golden card format
+          const isOldRating = msg.content.match(/^★+☆* .+— rated you as/);
           const isSystem = (msg.content.startsWith("🎉") && msg.senderId !== currentUserId) || false;
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
           const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
           const isLastMine = msg.id === lastMyMsgId;
+
+          // Hide old-format rating messages entirely (legacy format before golden card)
+          if (isOldRating) return null;
 
           // System: sale notification
           if (isSystem) {
@@ -232,7 +237,9 @@ export function MessageThread({
             const starMatch = starLine.match(/^(★+)(☆*) (.+?) — rated you as a (\w+)/);
             const filledStars = starMatch ? starMatch[1].length : 0;
             const ratingLabel = starMatch ? starMatch[3] : "";
-            const roleLabel   = starMatch ? starMatch[4] : "";
+            const recipientRole = starMatch ? starMatch[4] : "";
+            // Sender's role is opposite of recipient's role
+            const roleLabel = recipientRole === "buyer" ? "seller" : recipientRole === "seller" ? "buyer" : recipientRole;
             const strengthLine = lines.find(l => l.startsWith("✨")) ?? "";
             const commentLine  = lines.find(l => l.startsWith('"')) ?? "";
             const strengths = strengthLine.replace("✨ ", "").split(" · ").filter(Boolean);
