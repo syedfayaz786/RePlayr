@@ -12,6 +12,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
 import { ImageGallery } from "@/components/listings/ImageGallery";
+import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import { PageHeader } from "@/components/layout/PageHeader";
 import dynamic from "next/dynamic";
 const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
