@@ -189,26 +189,26 @@ export function MessageThread({
             </div>
           );
         })}
+        {/* Mutual rating card lives inside the scroll container so it doesn't block messages */}
+        {saleConfirmed && listingId && sellerId && (
+          <MutualRatingCard
+            listingId={listingId}
+            listingTitle={listingTitle ?? "this listing"}
+            currentUserId={currentUserId}
+            isSeller={isSeller ?? false}
+            partnerId={partnerId}
+            partnerName={partnerName}
+            partnerImage={partnerImage}
+            currentUserName={currentUserName ?? "You"}
+            sellerId={sellerId}
+            sellerName={sellerName ?? partnerName}
+            sellerImage={sellerImage}
+            myExistingReview={myExistingReview ?? null}
+          />
+        )}
+
         <div ref={bottomRef} />
       </div>
-
-      {/* ── Mutual rating card — shown inline after sale confirmed ── */}
-      {saleConfirmed && listingId && sellerId && (
-        <MutualRatingCard
-          listingId={listingId}
-          listingTitle={listingTitle ?? "this listing"}
-          currentUserId={currentUserId}
-          isSeller={isSeller ?? false}
-          partnerId={partnerId}
-          partnerName={partnerName}
-          partnerImage={partnerImage}
-          currentUserName={currentUserName ?? "You"}
-          sellerId={sellerId}
-          sellerName={sellerName ?? partnerName}
-          sellerImage={sellerImage}
-          myExistingReview={myExistingReview ?? null}
-        />
-      )}
 
       {/* ── Input ── */}
       <div className="p-4 border-t border-dark-600">
