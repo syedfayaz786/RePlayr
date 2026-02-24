@@ -1,18 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
-import { Send, Package } from "lucide-react";
+import { Send, Package, Check, CheckCheck } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 
 interface Message {
   id: string;
   content: string;
   senderId: string;
   createdAt: string;
+  read?: boolean;
   listing?: { id: string; title: string; price?: number } | null;
 }
 
@@ -35,13 +36,13 @@ interface MessageThreadProps {
   pinnedListing?: PinnedListing | null;
   deleteButton?: ReactNode;
   soldToBuyerButton?: ReactNode;
-  // Mutual rating props — shown inline in Col 2 after sale confirmed
+  // Mutual rating
   saleConfirmed?: boolean;
+  isSeller?: boolean;
   sellerId?: string;
   sellerName?: string;
   sellerImage?: string | null;
   currentUserName?: string;
-  isSeller?: boolean;
   listingTitle?: string;
   myExistingReview?: { rating: number; comment: string | null; strengths: string[] } | null;
 }
@@ -57,35 +58,65 @@ export function MessageThread({
   deleteButton,
   soldToBuyerButton,
   saleConfirmed,
+  isSeller,
   sellerId,
   sellerName,
   sellerImage,
   currentUserName,
-  isSeller,
   listingTitle,
   myExistingReview,
 }: MessageThreadProps) {
   const [messages, setMessages] = useState(initialThread);
   const [input, setInput]       = useState("");
   const [sending, setSending]   = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [lastSeen, setLastSeen] = useState(false); // has partner seen my last message?
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
 
+  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Mark partner's messages as read when we open/focus the thread
+  useEffect(() => {
+    fetch("/api/messages/read-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ partnerId, listingId }),
+    }).catch(() => {});
+  }, [partnerId, listingId]);
+
+  // Poll for "Seen" status on my last message every 5s
+  useEffect(() => {
+    const poll = () => {
+      const params = new URLSearchParams({ partnerId });
+      if (listingId) params.set("listingId", listingId);
+      fetch(`/api/messages/read-status?${params}`)
+        .then(r => r.json())
+        .then(d => setLastSeen(d.seen ?? false))
+        .catch(() => {});
+    };
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => clearInterval(id);
+  }, [partnerId, listingId, messages]);
 
   const sendMessage = async () => {
     if (!input.trim() || sending) return;
     const content = input.trim();
     setInput("");
     setSending(true);
+    setLastSeen(false); // reset seen when new message sent
+
     const tempMsg: Message = {
       id: "temp-" + Date.now(),
       content,
       senderId: currentUserId,
       createdAt: new Date().toISOString(),
+      read: false,
     };
-    setMessages((prev) => [...prev, tempMsg]);
+    setMessages(prev => [...prev, tempMsg]);
 
     try {
       const res = await fetch("/api/messages", {
@@ -95,31 +126,33 @@ export function MessageThread({
       });
       if (!res.ok) throw new Error();
       const saved = await res.json();
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempMsg.id ? { ...saved, createdAt: saved.createdAt } : m))
-      );
+      setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...saved, createdAt: saved.createdAt } : m));
     } catch {
       toast.error("Failed to send");
-      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
     } finally {
       setSending(false);
     }
   };
 
+  // Find the last message I sent — to show Seen below it
+  const myMessages = messages.filter(m => m.senderId === currentUserId);
+  const lastMyMsgId = myMessages[myMessages.length - 1]?.id ?? null;
+
   return (
     <>
-      {/* ── Partner header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-600 bg-dark-800/60">
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-600 bg-dark-800/60 flex-shrink-0">
         {partnerImage ? (
           <Image src={partnerImage} alt={partnerName} width={36} height={36} className="rounded-full" />
         ) : (
-          <div className="w-9 h-9 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-sm">
+          <div className="w-9 h-9 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-sm flex-shrink-0">
             {partnerName[0].toUpperCase()}
           </div>
         )}
-        <div className="flex-1">
-          <div className="font-semibold text-white text-sm">{partnerName}</div>
-          <div className="text-xs text-gray-400">Active seller</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-white text-sm truncate">{partnerName}</div>
+          <div className="text-xs text-gray-400">{saleConfirmed ? "Sale confirmed ✓" : "Active seller"}</div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {soldToBuyerButton}
@@ -129,11 +162,9 @@ export function MessageThread({
 
       {/* ── Pinned listing banner ── */}
       {pinnedListing && (
-        <Link
-          href={`/listings/${pinnedListing.id}`}
-          className="flex items-center gap-3 px-4 py-2.5 bg-brand-500/8 border-b border-brand-500/20 hover:bg-brand-500/15 transition-colors group"
+        <Link href={`/listings/${pinnedListing.id}`}
+          className="flex items-center gap-3 px-4 py-2.5 bg-brand-500/8 border-b border-brand-500/20 hover:bg-brand-500/15 transition-colors group flex-shrink-0"
         >
-          {/* Thumbnail */}
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-dark-700 flex-shrink-0 border border-dark-500">
             {pinnedListing.images[0] ? (
               pinnedListing.images[0].startsWith("data:") ? (
@@ -142,17 +173,12 @@ export function MessageThread({
                 <Image src={pinnedListing.images[0]} alt={pinnedListing.title} width={48} height={48} className="object-cover w-full h-full" />
               )
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-5 h-5 text-gray-500" />
-              </div>
+              <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-gray-500" /></div>
             )}
           </div>
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-xs text-brand-400 font-semibold uppercase tracking-wider mb-0.5">About this listing</p>
-            <p className="text-sm font-medium text-white truncate group-hover:text-brand-300 transition-colors">
-              {pinnedListing.title}
-            </p>
+            <p className="text-sm font-medium text-white truncate group-hover:text-brand-300 transition-colors">{pinnedListing.title}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-brand-400 font-bold text-sm">${Number(pinnedListing.price).toFixed(2)}</span>
               <span className="text-xs text-gray-500">·</span>
@@ -165,31 +191,68 @@ export function MessageThread({
         </Link>
       )}
 
-      {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* ── Scrollable message list ── */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-1">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 text-sm py-8">Start the conversation!</div>
         )}
-        {messages.map((msg) => {
+
+        {messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
-          return (
-            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm ${
-                  isMe
-                    ? "bg-brand-500 text-white rounded-br-sm"
-                    : "bg-dark-700 text-gray-100 rounded-bl-sm"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                <div className="text-xs mt-1 opacity-60">
-                  {formatRelativeTime(msg.createdAt)}
+          const isSystem = msg.content.startsWith("🎉") && msg.senderId !== currentUserId;
+          const prevMsg = idx > 0 ? messages[idx - 1] : null;
+          const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
+          const isLastMine = msg.id === lastMyMsgId;
+
+          // System/notification messages (sale confirmed)
+          if (isSystem) {
+            return (
+              <div key={msg.id} className="flex justify-center py-2">
+                <div className="bg-dark-700/80 border border-brand-500/20 rounded-xl px-4 py-2 text-xs text-gray-300 text-center max-w-xs">
+                  {msg.content}
+                  <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
                 </div>
               </div>
+            );
+          }
+
+          return (
+            <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
+              {/* Sender label — only when sender changes */}
+              {showLabel && (
+                <span className="text-xs text-gray-500 mb-1 px-1">
+                  {isMe ? "You" : partnerName}
+                </span>
+              )}
+
+              {/* Bubble */}
+              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
+                isMe
+                  ? "bg-brand-500 text-white rounded-br-sm"
+                  : "bg-dark-700 text-gray-100 rounded-bl-sm"
+              }`}>
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                <div className="text-xs mt-1 opacity-60 flex items-center gap-1 justify-end">
+                  {formatRelativeTime(msg.createdAt)}
+                  {isMe && (
+                    isLastMine && lastSeen
+                      ? <CheckCheck className="w-3 h-3 text-brand-200" />
+                      : <Check className="w-3 h-3 opacity-60" />
+                  )}
+                </div>
+              </div>
+
+              {/* Seen label under my last message */}
+              {isMe && isLastMine && lastSeen && (
+                <span className="text-xs text-brand-300 mt-0.5 px-1 flex items-center gap-1">
+                  <CheckCheck className="w-3 h-3" /> Seen
+                </span>
+              )}
             </div>
           );
         })}
-        {/* Mutual rating card lives inside the scroll container so it doesn't block messages */}
+
+        {/* Mutual rating card — inside scroll so it doesn't block messages */}
         {saleConfirmed && listingId && sellerId && (
           <MutualRatingCard
             listingId={listingId}
@@ -211,13 +274,14 @@ export function MessageThread({
       </div>
 
       {/* ── Input ── */}
-      <div className="p-4 border-t border-dark-600">
+      <div className="p-4 border-t border-dark-600 flex-shrink-0">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
             placeholder="Type a message..."
             className="input-base flex-1"
           />
