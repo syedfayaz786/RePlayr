@@ -64,14 +64,20 @@ export default async function ListingPage({ params }: { params: { id: string } }
 
   const isSeller = session?.user.id === listing.sellerId;
 
-  // Sale + review data for confirmed-buyer rating feature
-  const sale = await prisma.sale.findUnique({ where: { listingId: listing.id } });
+  // Sale + review data (wrapped in try/catch in case migration hasn't run yet)
+  let sale: { buyerId: string } | null = null;
+  let existingReview: { rating: number; comment: string | null } | null = null;
+  try {
+    sale = await prisma.sale.findUnique({ where: { listingId: listing.id }, select: { buyerId: true } });
+    const isConfirmedBuyerCheck = !!(session && sale?.buyerId === session.user.id);
+    if (isConfirmedBuyerCheck && session) {
+      existingReview = await prisma.review.findUnique({
+        where: { authorId_listingId: { authorId: session.user.id, listingId: listing.id } },
+        select: { rating: true, comment: true },
+      });
+    }
+  } catch { /* Sale table may not exist yet — degrade gracefully */ }
   const isConfirmedBuyer = !!(session && sale?.buyerId === session.user.id);
-  const existingReview = isConfirmedBuyer
-    ? await prisma.review.findUnique({
-        where: { authorId_listingId: { authorId: session!.user.id, listingId: listing.id } },
-      })
-    : null;
 
   return (
     <div className="min-h-screen flex flex-col">

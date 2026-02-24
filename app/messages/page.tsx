@@ -140,12 +140,15 @@ export default async function MessagesPage({
 
   const isConfirmedBuyer = !!(sale && sale.buyerId === session.user.id);
 
-  const existingReview = isConfirmedBuyer && activeListing
-    ? await prisma.review.findUnique({
+  let existingReview: { rating: number; comment: string | null } | null = null;
+  try {
+    if (isConfirmedBuyer && activeListing) {
+      existingReview = await prisma.review.findUnique({
         where: { authorId_listingId: { authorId: session.user.id, listingId: activeListing.id } },
         select: { rating: true, comment: true },
-      })
-    : null;
+      });
+    }
+  } catch { /* Review table may not exist yet */ }
 
   // ── 6. Render ─────────────────────────────────────────────────────────────
   return (
