@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X, ChevronDown, MessageSquare, Bell } from "lucide-react";
 import Image from "next/image";
 import { formatRelativeTime } from "@/lib/utils";
@@ -39,6 +40,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
   const [sort,   setSort]     = useState<SortType>("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
+  const router  = useRouter();
 
   // Close sort dropdown on outside click
   useEffect(() => {
@@ -48,6 +50,13 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // When search becomes active, deselect the current conversation so Col 2+3 go blank
+  useEffect(() => {
+    if (search.trim()) {
+      router.push("/messages", { scroll: false });
+    }
+  }, [search]);
 
   const totalUnread = conversations.reduce((s, c) => s + c.unread, 0);
 
@@ -100,7 +109,18 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
             className="w-full bg-dark-700 border border-dark-600 rounded-lg pl-8 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors"
           />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+            <button
+              onClick={() => {
+                setSearch("");
+                // Restore active conv if one was selected before search
+                if (activeKey) {
+                  const [pid, lid] = activeKey.split("::");
+                  const url = `/messages?with=${pid}${lid !== "none" ? `&listing=${lid}` : ""}`;
+                  router.push(url, { scroll: false });
+                }
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+            >
               <X className="w-3 h-3" />
             </button>
           )}
