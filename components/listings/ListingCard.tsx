@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MapPin, Clock } from "lucide-react";
+import { Heart, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice, formatRelativeTime } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { useState } from "react";
@@ -31,18 +31,37 @@ interface ListingCardProps {
   };
 }
 
+function CardImage({ src, alt }: { src: string; alt: string }) {
+  if (src.startsWith("data:")) {
+    return <img src={src} alt={alt} className="absolute inset-0 w-full h-full object-cover object-top" />;
+  }
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 20vw"
+      quality={90}
+      className="object-cover object-top"
+    />
+  );
+}
+
 export function ListingCard({ listing }: ListingCardProps) {
   const { data: session } = useSession();
   const [wishlisted, setWishlisted] = useState(listing.isWishlisted ?? false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [imgIndex, setImgIndex]     = useState(0);
 
   const images = (() => {
     try { return JSON.parse(listing.images) as string[]; }
     catch { return []; }
   })();
 
+  const hasMultiple = images.length > 1;
+
   const platformConfig = PLATFORM_CONFIG[listing.platform] ?? PLATFORM_CONFIG["Other"];
-  const PlatformLogo = platformConfig.Logo;
+  const PlatformLogo   = platformConfig.Logo;
 
   const toggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,27 +84,42 @@ export function ListingCard({ listing }: ListingCardProps) {
     }
   };
 
+  const prev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIndex((i) => (i - 1 + images.length) % images.length);
+  };
+
+  const next = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIndex((i) => (i + 1) % images.length);
+  };
+
+  const goTo = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIndex(idx);
+  };
+
   return (
     <Link href={`/listings/${listing.id}`} className="card-hover block group">
-      {/* Cover image / platform fallback */}
-      <div className="relative aspect-[3/4] overflow-hidden">
-        {images[0] ? (
-          images[0].startsWith("data:") ? (
-            <img
-              src={images[0]}
-              alt={listing.title}
-              className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <Image
-              src={images[0]}
-              alt={listing.title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 20vw"
-              quality={95}
-              className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-            />
-          )
+
+      {/* ── Image area ── */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-dark-900">
+
+        {/* Images */}
+        {images.length > 0 ? (
+          <>
+            {images.map((src, i) => (
+              <div
+                key={i}
+                className={`absolute inset-0 transition-opacity duration-300 ${i === imgIndex ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+              >
+                <CardImage src={src} alt={listing.title} />
+              </div>
+            ))}
+          </>
         ) : (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${platformConfig.bgGlow}`}>
             <PlatformLogo className={`w-10 h-10 ${platformConfig.colorClass.split(" ")[1]}`} />
@@ -93,13 +127,68 @@ export function ListingCard({ listing }: ListingCardProps) {
         )}
 
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent pointer-events-none" />
+
+        {/* ── Prev / Next arrows — only when multiple images ── */}
+        {hasMultiple && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-dark-900/80 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-dark-900 z-10"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-dark-900/80 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-dark-900 z-10"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Dot indicators */}
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => goTo(e, i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-white w-3" : "bg-white/50"}`}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Image counter badge */}
+            <div className="absolute top-2 left-2 bg-dark-900/80 backdrop-blur-sm rounded-md px-1.5 py-0.5 text-xs text-gray-300 font-medium z-10">
+              {imgIndex + 1}/{images.length}
+            </div>
+          </>
+        )}
+
+        {/* Edition badge — only when no multi-image counter */}
+        {listing.edition && !hasMultiple && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-dark-900/90 text-amber-400 border border-amber-500/30 leading-tight">
+              🏷️ {listing.edition}
+            </span>
+          </div>
+        )}
+
+        {/* Edition badge when multi-image (move to avoid overlap with counter) */}
+        {listing.edition && hasMultiple && (
+          <div className="absolute top-2 left-12 z-10">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-dark-900/90 text-amber-400 border border-amber-500/30 leading-tight">
+              🏷️ {listing.edition}
+            </span>
+          </div>
+        )}
 
         {/* Wishlist button */}
         <button
           onClick={toggleWishlist}
           disabled={loading}
-          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 z-10 ${
             wishlisted
               ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
               : "bg-dark-800/80 text-slate-300 hover:bg-brand-500/20 hover:text-brand-400 backdrop-blur-sm"
@@ -108,36 +197,23 @@ export function ListingCard({ listing }: ListingCardProps) {
           <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
 
-        {/* Edition badge — top left on image */}
-        {listing.edition && (
-          <div className="absolute top-2 left-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-dark-900/90 text-amber-400 border border-amber-500/30 leading-tight">
-              🏷️ {listing.edition}
-            </span>
-          </div>
-        )}
-
         {/* Price */}
-        <div className="absolute bottom-2 left-2 bg-dark-900/90 rounded-md px-2 py-0.5">
+        <div className="absolute bottom-2 left-2 bg-dark-900/90 rounded-md px-2 py-0.5 z-10">
           <span className="font-display font-bold text-brand-400 text-base">
             {formatPrice(listing.price)}
           </span>
         </div>
       </div>
 
-      {/* Content */}
+      {/* ── Content ── */}
       <div className="p-3">
         <h3 className="font-semibold text-white text-sm truncate mb-1.5 group-hover:text-brand-300 transition-colors">
           {listing.title}
         </h3>
-
-        {/* Badges row — platform + condition only (edition is on image) */}
         <div className="flex items-center gap-1 flex-wrap mb-2">
           <PlatformBadge platform={listing.platform} showLogo={true} short={true} />
           <ConditionBadge condition={listing.condition} />
         </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-1 min-w-0">
             {listing.location && (
