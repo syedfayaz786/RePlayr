@@ -4,19 +4,20 @@ import { useState } from "react";
 import { CheckCircle, PackageCheck, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 
 interface SoldToBuyerButtonProps {
   listingId: string;
   buyerId: string;
   buyerName: string;
-  alreadySold: boolean;   // listing already marked sold to this buyer
+  alreadySold: boolean;
+  sellerName: string;
+  onSaleConfirmed?: () => void; // called immediately after sale succeeds
 }
 
-export function SoldToBuyerButton({ listingId, buyerId, buyerName, alreadySold }: SoldToBuyerButtonProps) {
+export function SoldToBuyerButton({ listingId, buyerId, buyerName, alreadySold, sellerName, onSaleConfirmed }: SoldToBuyerButtonProps) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading]       = useState(false);
-  const router = useRouter();
+  const [sold, setSold]             = useState(alreadySold);
 
   const markSold = async () => {
     setLoading(true);
@@ -29,7 +30,8 @@ export function SoldToBuyerButton({ listingId, buyerId, buyerName, alreadySold }
       if (!res.ok) throw new Error();
       toast.success(`Marked as sold to ${buyerName}!`);
       setConfirming(false);
-      router.refresh();
+      setSold(true);
+      onSaleConfirmed?.();
     } catch {
       toast.error("Failed to mark as sold");
     } finally {
@@ -37,7 +39,7 @@ export function SoldToBuyerButton({ listingId, buyerId, buyerName, alreadySold }
     }
   };
 
-  if (alreadySold) {
+  if (sold) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm font-medium">
         <CheckCircle className="w-4 h-4 flex-shrink-0" />

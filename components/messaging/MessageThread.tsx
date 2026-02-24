@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
+import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
 
 interface Message {
   id: string;
@@ -35,7 +36,6 @@ interface MessageThreadProps {
   partnerImage?: string | null;
   pinnedListing?: PinnedListing | null;
   deleteButton?: ReactNode;
-  soldToBuyerButton?: ReactNode;
   // Mutual rating
   saleConfirmed?: boolean;
   isSeller?: boolean;
@@ -45,6 +45,13 @@ interface MessageThreadProps {
   currentUserName?: string;
   listingTitle?: string;
   myExistingReview?: { rating: number; comment: string | null; strengths: string[] } | null;
+  // SoldToBuyerButton props (rendered internally so we can wire onSaleConfirmed)
+  soldToListingId?: string;
+  soldToBuyerId?: string;
+  soldToBuyerName?: string;
+  alreadySold?: boolean;
+  sellerDisplayName?: string;
+  buyerDisplayName?: string;
 }
 
 export function MessageThread({
@@ -56,7 +63,6 @@ export function MessageThread({
   partnerImage,
   pinnedListing,
   deleteButton,
-  soldToBuyerButton,
   saleConfirmed,
   isSeller,
   sellerId,
@@ -65,17 +71,39 @@ export function MessageThread({
   currentUserName,
   listingTitle,
   myExistingReview,
+  soldToListingId,
+  soldToBuyerId,
+  soldToBuyerName,
+  alreadySold,
+  sellerDisplayName,
+  buyerDisplayName,
 }: MessageThreadProps) {
-  const [messages, setMessages] = useState(initialThread);
-  const [input, setInput]       = useState("");
-  const [sending, setSending]   = useState(false);
-  const [lastSeen, setLastSeen] = useState(false); // has partner seen my last message?
+  const [messages, setMessages]         = useState(initialThread);
+  const [input, setInput]               = useState("");
+  const [sending, setSending]           = useState(false);
+  const [lastSeen, setLastSeen]         = useState(false);
+  const [localSaleConfirmed, setLocalSaleConfirmed] = useState(saleConfirmed ?? false);
 
   // Called by MutualRatingCard after submission — adds the rating message to local thread
   // Rating message was sent to recipient via API — sender sees submitted state in rating card,
   // not a chat bubble. So we don't append to local messages here.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRatingMessage = (_msgContent: string) => { /* no-op for sender */ };
+
+  // Called when seller clicks "Mark as sold" — instantly shows system message + rating card
+  const handleSaleConfirmed = () => {
+    const sName = sellerDisplayName ?? "You";
+    const bName = buyerDisplayName ?? partnerName;
+    const sysMsg: Message = {
+      id: "sale-confirmed-" + Date.now(),
+      content: `🎉 SALE_CONFIRMED|seller:${sName}|buyer:${bName}`,
+      senderId: currentUserId,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    setMessages(prev => [...prev, sysMsg]);
+    setLocalSaleConfirmed(true);
+  };
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
@@ -158,10 +186,19 @@ export function MessageThread({
         )}
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-white text-sm truncate">{partnerName}</div>
-          <div className="text-xs text-gray-400">{saleConfirmed ? "Sale confirmed ✓" : "Active seller"}</div>
+          <div className="text-xs text-gray-400">{localSaleConfirmed ? "Sale confirmed ✓" : "Active seller"}</div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {soldToBuyerButton}
+          {isSeller && soldToBuyerId && soldToListingId && (
+            <SoldToBuyerButton
+              listingId={soldToListingId}
+              buyerId={soldToBuyerId}
+              buyerName={soldToBuyerName ?? partnerName}
+              alreadySold={alreadySold ?? false}
+              sellerName={sellerDisplayName ?? "You"}
+              onSaleConfirmed={handleSaleConfirmed}
+            />
+          )}
           {deleteButton}
         </div>
       </div>
@@ -240,7 +277,7 @@ export function MessageThread({
                     <div className="text-gray-500 mt-0.5">{formatRelativeTime(msg.createdAt)}</div>
                   </div>
                 </div>
-                {saleConfirmed && listingId && sellerId && (
+                {localSaleConfirmed && listingId && sellerId && (
                   <MutualRatingCard
                     listingId={listingId}
                     listingTitle={listingTitle ?? "this listing"}

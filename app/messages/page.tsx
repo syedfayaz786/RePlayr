@@ -8,7 +8,6 @@ import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
-import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -224,16 +223,6 @@ export default async function MessagesPage({
                 partnerImage={activePartner.image}
                 deleteButton={<DeleteChatButton partnerId={activePartnerId} listingId={activeListingId} variant="full" />}
                 pinnedListing={pinnedListing}
-                soldToBuyerButton={
-                  isSeller && activePartnerId ? (
-                    <SoldToBuyerButton
-                      listingId={activeListing!.id}
-                      buyerId={activePartnerId}
-                      buyerName={activePartner.name ?? "this buyer"}
-                      alreadySold={sale?.buyerId === activePartnerId}
-                    />
-                  ) : undefined
-                }
                 saleConfirmed={saleConfirmed}
                 isSeller={isSeller}
                 sellerId={sale?.sellerId ?? activeListing?.sellerId}
@@ -241,6 +230,12 @@ export default async function MessagesPage({
                 sellerImage={sale ? (isSeller ? undefined : activePartner.image) : undefined}
                 listingTitle={activeListing?.title}
                 myExistingReview={myExistingReview}
+                soldToListingId={activeListing?.id}
+                soldToBuyerId={activePartnerId}
+                soldToBuyerName={activePartner.name ?? "this buyer"}
+                alreadySold={!!(sale?.buyerId === activePartnerId)}
+                sellerDisplayName={session.user.name ?? "You"}
+                buyerDisplayName={activePartner.name ?? "the buyer"}
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
