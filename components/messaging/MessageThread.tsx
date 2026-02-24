@@ -255,10 +255,8 @@ export function MessageThread({
             : null;
           const systemText = salePayload
             ? (isMe
-                // Seller sees: "You marked this listing as sold to [buyer]"
-                ? `🎉 You marked this listing as sold to ${salePayload.buyer}!`
-                // Buyer sees: "[seller] marked this listing as sold to you!"
-                : `🎉 ${salePayload.seller} marked this listing as sold to you!`)
+                ? `🎉 You marked this listing as sold to ${salePayload.buyer}! You can now rate each other.`
+                : `🎉 ${salePayload.seller} marked this listing as sold to you! You can now rate each other.`)
             : msg.content; // fallback for old messages
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
           const showLabel = !prevMsg || prevMsg.senderId !== msg.senderId;
