@@ -33,6 +33,7 @@ interface MessageThreadProps {
   partnerImage?: string | null;
   pinnedListing?: PinnedListing | null;
   deleteButton?: ReactNode;
+  soldToBuyerButton?: ReactNode;
 }
 
 export function MessageThread({
@@ -44,6 +45,7 @@ export function MessageThread({
   partnerImage,
   pinnedListing,
   deleteButton,
+  soldToBuyerButton,
 }: MessageThreadProps) {
   const [messages, setMessages] = useState(initialThread);
   const [input, setInput]       = useState("");
@@ -101,7 +103,10 @@ export function MessageThread({
           <div className="font-semibold text-white text-sm">{partnerName}</div>
           <div className="text-xs text-gray-400">Active seller</div>
         </div>
-        {deleteButton && <div className="flex-shrink-0">{deleteButton}</div>}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {soldToBuyerButton}
+          {deleteButton}
+        </div>
       </div>
 
       {/* ── Pinned listing banner ── */}

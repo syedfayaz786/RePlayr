@@ -216,6 +216,16 @@ export default async function MessagesPage({
                 partnerImage={activePartner.image}
                 deleteButton={<DeleteChatButton partnerId={activePartnerId} listingId={activeListingId} variant="full" />}
                 pinnedListing={pinnedListing}
+                soldToBuyerButton={
+                  isSeller && activePartnerId ? (
+                    <SoldToBuyerButton
+                      listingId={activeListing!.id}
+                      buyerId={activePartnerId}
+                      buyerName={activePartner.name ?? "this buyer"}
+                      alreadySold={sale?.buyerId === activePartnerId}
+                    />
+                  ) : undefined
+                }
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
@@ -273,26 +283,9 @@ export default async function MessagesPage({
                   )}
                 </div>
 
-                {activeListing.description && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                    <p className="text-sm text-gray-300 leading-relaxed line-clamp-4">{activeListing.description}</p>
-                  </div>
-                )}
-
                 <Link href={`/listings/${activeListing.id}`} className="btn-primary text-center text-sm py-2.5">
                   View Full Listing
                 </Link>
-
-                {/* Seller: mark sold to this buyer */}
-                {isSeller && activePartnerId && (
-                  <SoldToBuyerButton
-                    listingId={activeListing.id}
-                    buyerId={activePartnerId}
-                    buyerName={activePartner?.name ?? "this buyer"}
-                    alreadySold={sale?.buyerId === activePartnerId}
-                  />
-                )}
 
                 {/* Buyer: rate the seller */}
                 {isConfirmedBuyer && sale && (
