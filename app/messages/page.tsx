@@ -50,7 +50,7 @@ export default async function MessagesPage({
   for (const msg of allMessages) {
     const partnerId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
     const partner   = msg.senderId === session.user.id ? msg.receiver   : msg.sender;
-    const listingId = msg.listing?.id ?? msg.listingId ?? null;
+    const listingId = msg.listingId ?? null;
     const key       = `${partnerId}::${listingId ?? "none"}`;
 
     if (!convMap.has(key)) {
@@ -76,9 +76,9 @@ export default async function MessagesPage({
             { senderId: session.user.id, receiverId: activePartnerId },
             { senderId: activePartnerId, receiverId: session.user.id },
           ]},
-          // Include messages with this listingId OR null listingId (seller replies)
+          // Only fetch messages strictly scoped to this listing
           ...(activeListingId
-            ? [{ OR: [{ listingId: activeListingId }, { listingId: null }] }]
+            ? [{ listingId: activeListingId }]
             : [{ listingId: null }]),
         ],
       },
@@ -91,21 +91,15 @@ export default async function MessagesPage({
     });
 
     // Mark as read — split into two calls since updateMany doesn't support OR
-    if (activeListingId) {
-      await prisma.message.updateMany({
-        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: activeListingId },
-        data: { read: true },
-      }).catch(() => {});
-      await prisma.message.updateMany({
-        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: null },
-        data: { read: true },
-      }).catch(() => {});
-    } else {
-      await prisma.message.updateMany({
-        where: { senderId: activePartnerId, receiverId: session.user.id, read: false, listingId: null },
-        data: { read: true },
-      }).catch(() => {});
-    }
+    await prisma.message.updateMany({
+      where: {
+        senderId: activePartnerId,
+        receiverId: session.user.id,
+        read: false,
+        listingId: activeListingId ?? null,
+      },
+      data: { read: true },
+    }).catch(() => {});
   }
 
   // ── 4. Active listing details (fetch direct from DB) ─────────────────────
