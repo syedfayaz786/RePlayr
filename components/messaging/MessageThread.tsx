@@ -127,8 +127,9 @@ export function MessageThread({
     setMessages(prev => [...prev, sysMsg]);
     setLocalSaleConfirmed(true);
   };
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const inputRef   = useRef<HTMLInputElement>(null);
+  const bottomRef     = useRef<HTMLDivElement>(null);
+  const inputRef      = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const matchRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [currentMatch, setCurrentMatch] = useState(0);
@@ -155,16 +156,34 @@ export function MessageThread({
     if (matchPos === 0 && el && shouldScrollToFirst.current) {
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const container = scrollContainerRef.current;
+        if (container) {
+          const elTop    = el.offsetTop;
+          const elHeight = el.offsetHeight;
+          container.scrollTo({
+            top: elTop - (container.clientHeight / 2) + (elHeight / 2),
+            behavior: "smooth",
+          });
+        } else {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       });
     }
   };
 
-  // Scroll to current match when navigating prev/next
+  // Scroll to match within the container (not the whole page)
   const scrollToMatch = (idx: number) => {
     const el = matchRefsMap.current.get(idx);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const container = scrollContainerRef.current;
+    if (el && container) {
+      const elTop    = el.offsetTop;
+      const elHeight = el.offsetHeight;
+      const containerHeight = container.clientHeight;
+      // Center the match in the scroll container
+      container.scrollTo({
+        top: elTop - (containerHeight / 2) + (elHeight / 2),
+        behavior: "smooth",
+      });
     }
     setCurrentMatch(idx);
   };
@@ -351,7 +370,7 @@ export function MessageThread({
       })()}
 
       {/* ── Scrollable message list ── */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-1">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 text-sm py-8">Start the conversation!</div>
         )}
