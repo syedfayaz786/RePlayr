@@ -30,7 +30,7 @@ export default async function WishlistPage() {
       <Navbar />
       <PageHeader crumbs={[{ label: "My Wishlist" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8">
           <Heart className="w-6 h-6 text-brand-400 fill-brand-400" />
           <h1 className="font-display text-2xl font-bold text-white">My Wishlist</h1>
           <span className="badge bg-dark-700 text-gray-300 border border-dark-500">
@@ -48,7 +48,7 @@ export default async function WishlistPage() {
             <Link href="/" className="btn-primary inline-flex">Browse Games</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {wishlist.map(({ listing }) => (
               <ListingCard
                 key={listing.id}

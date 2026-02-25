@@ -206,8 +206,8 @@ export function ListingCard({ listing }: ListingCardProps) {
       </div>
 
       {/* ── Content ── */}
-      <div className="p-3">
-        <h3 className="font-semibold text-white text-sm truncate mb-1.5 group-hover:text-brand-300 transition-colors">
+      <div className="p-2 sm:p-3">
+        <h3 className="font-semibold text-white text-xs sm:text-sm truncate mb-1 sm:mb-1.5 group-hover:text-brand-300 transition-colors">
           {listing.title}
         </h3>
         <div className="flex items-center gap-1 flex-wrap mb-2">
@@ -219,7 +219,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             {listing.location && (
               <>
                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[110px] text-slate-300">{listing.location}</span>
+                <span className="truncate max-w-[80px] sm:max-w-[110px] text-slate-300">{listing.location}</span>
               </>
             )}
           </div>

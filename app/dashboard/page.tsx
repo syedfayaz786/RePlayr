@@ -46,8 +46,8 @@ export default async function DashboardPage() {
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-2xl font-bold text-white">My Listings</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-white">My Listings</h1>
           <Link href="/listings/new" className="btn-primary flex items-center gap-2">
             <Plus className="w-4 h-4" />
             New Listing
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {[
             { icon: Tag,        label: "Active Listings", value: listings.filter((l) => l.status === "active").length },
             { icon: DollarSign, label: "Pending Offers",  value: offers.length },
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
             <h2 className="font-semibold text-white mb-4">Pending Offers</h2>
             <div className="space-y-3">
               {offers.map((offer) => (
-                <div key={offer.id} className="card p-4 flex items-center justify-between gap-4">
+                <div key={offer.id} className="card p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3">
                   <div>
                     <p className="font-medium text-white">{offer.listing.title}</p>
                     <p className="text-sm text-gray-400">
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
               <Link href="/listings/new" className="btn-primary inline-flex">Post a Game</Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {serialisedListings.map((listing) => (
                 <div key={listing.id} className="relative">
                   <ListingCard listing={listing} />

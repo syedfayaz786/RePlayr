@@ -163,8 +163,8 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
             onClick={() => setSortOpen(o => !o)}
             className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-dark-700 border border-transparent hover:border-dark-600"
           >
-            <span className="hidden sm:inline">{SORT_LABELS[sort]}</span>
-            <span className="sm:hidden">Sort</span>
+            <span>{SORT_LABELS[sort]}</span>
+            
             <ChevronDown className={`w-3 h-3 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
           </button>
           {sortOpen && (

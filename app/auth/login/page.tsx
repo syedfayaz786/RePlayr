@@ -45,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex">
+    <div className="min-h-screen min-h-dvh bg-dark-900 flex flex-col lg:flex-row">
       {/* Left - decorative */}
       <div className="hidden lg:flex lg:w-1/2 bg-dark-800 border-r border-dark-600 flex-col items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0">
@@ -81,7 +81,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right - form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 py-8">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">

@@ -100,7 +100,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
       {/* ── Thumbnail strip — clickable ── */}
       {images.length > 1 && (
-        <div className="flex gap-2 p-3 overflow-x-auto border-t border-dark-600 bg-dark-800/50">
+        <div className="flex gap-2 p-2 sm:p-3 overflow-x-auto border-t border-dark-600 bg-dark-800/50 pb-2">
           {images.map((src, i) => (
             <button
               key={i}

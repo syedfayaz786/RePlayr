@@ -62,7 +62,7 @@ export default function ProfilePage() {
       <Navbar />
       <PageHeader crumbs={[{ label: "My Profile" }]} />
       <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Profile card */}
           <div className="space-y-4">
             <div className="card p-6">
@@ -142,7 +142,7 @@ export default function ProfilePage() {
 
           {/* Listings & Reviews */}
           <div className="lg:col-span-2">
-            <div className="flex gap-1 mb-6 bg-dark-800 rounded-xl p-1 border border-dark-600">
+            <div className="flex gap-1 mb-4 sm:mb-6 bg-dark-800 rounded-xl p-1 border border-dark-600 overflow-x-auto">
               {(["listings", "reviews"] as const).map((tab) => (
                 <button
                   key={tab}
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                   <a href="/listings/new" className="btn-primary inline-flex">Post Your First Game</a>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {listings.map((listing: any) => (
                     <ListingCard
                       key={listing.id}

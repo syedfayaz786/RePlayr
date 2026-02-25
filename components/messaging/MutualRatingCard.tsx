@@ -149,7 +149,7 @@ export function MutualRatingCard({
   return (
     // Rendered as a normal flow element inside the scrollable message list
     <div className="flex justify-center px-3 py-2">
-      <div className="w-full max-w-sm rounded-2xl border border-amber-500/25 bg-dark-800/90 overflow-hidden shadow-lg">
+      <div className="w-full max-w-full sm:max-w-sm rounded-2xl border border-amber-500/25 bg-dark-800/90 overflow-hidden shadow-lg">
 
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-2.5 bg-amber-500/8 border-b border-amber-500/20">

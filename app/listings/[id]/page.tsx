@@ -18,7 +18,7 @@ import dynamic from "next/dynamic";
 const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
   ssr: false,
   loading: () => (
-    <div className="h-[300px] rounded-xl bg-dark-700 border border-dark-600 flex items-center justify-center text-gray-500 text-sm">
+    <div className="h-[200px] sm:h-[300px] rounded-xl bg-dark-700 border border-dark-600 flex items-center justify-center text-gray-500 text-sm">
       Loading map…
     </div>
   ),
@@ -87,7 +87,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
         {/* Breadcrumb */}
 
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Left: Images + Details */}
           <div className="lg:col-span-2 space-y-6">
             <ImageGallery images={images} title={listing.title} />
@@ -100,9 +100,9 @@ export default async function ListingPage({ params }: { params: { id: string } }
                 <EditionBadge edition={listing.edition} />
               </div>
 
-              <h1 className="font-display text-3xl font-bold text-white mb-3">{listing.title}</h1>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-white mb-3">{listing.title}</h1>
 
-              <div className="flex items-center gap-2 text-brand-400 text-3xl font-display font-bold mb-6">
+              <div className="flex items-center gap-2 text-brand-400 text-2xl sm:text-3xl font-display font-bold mb-4 sm:mb-6">
                 {formatPrice(listing.price)}
               </div>
 

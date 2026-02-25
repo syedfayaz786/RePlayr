@@ -16,6 +16,8 @@
   html { scroll-behavior: smooth; }
 
   body {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
     background-color: #060714;
     color: #e2e8f7;
     font-family: var(--font-body);

@@ -155,7 +155,7 @@ export function ListingActions({
 
   if (isSeller) {
     return (
-      <div className="card p-6 space-y-3">
+      <div className="card p-4 sm:p-6 space-y-3">
         <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
         {/* Status pill */}
@@ -209,7 +209,7 @@ export function ListingActions({
 
   return (
     <>
-      <div className="card p-6 space-y-3">
+      <div className="card p-4 sm:p-6 space-y-3">
         <div className="text-2xl font-display font-bold text-brand-400 mb-2">
           {formatPrice(listingPrice)}
         </div>

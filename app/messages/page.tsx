@@ -9,6 +9,7 @@ import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DeleteChatButton } from "@/components/messaging/DeleteChatButton";
 import { MessagesSidebar } from "@/components/messaging/MessagesSidebar";
+import { MessagesLayout } from "@/components/messaging/MessagesLayout";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -166,13 +167,13 @@ export default async function MessagesPage({
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <PageHeader crumbs={[{ label: "Messages" }]} />
-      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
-        <h1 className="font-display text-2xl font-bold text-white mb-6">Messages</h1>
+      <main className="flex-1 max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8 w-full pt-3 sm:pt-6 pb-0 flex flex-col">
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-white mb-3 md:mb-5">Messages</h1>
 
-        <div className="card flex h-[680px] overflow-hidden">
-
-          {/* ── Col 1: Sidebar ── */}
-          <div className="w-72 border-r border-dark-600 flex-shrink-0 flex flex-col overflow-hidden">
+        <MessagesLayout
+          hasActiveConv={!!(activePartnerId && activePartner)}
+          hasActiveListing={!!activeListing}
+          sidebar={
             <MessagesSidebar
               conversations={convList.map(({ partner, lastMessage, unread, listingId, listing, allContents }) => ({
                 partnerId:          partner.id,
@@ -187,11 +188,9 @@ export default async function MessagesPage({
               }))}
               activeKey={activeKey}
             />
-          </div>
-
-          {/* ── Col 2: Thread ── */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            {activePartnerId && activePartner ? (
+          }
+          thread={
+            activePartnerId && activePartner ? (
               <MessageThread
                 thread={thread.map((m) => ({ ...m, createdAt: m.createdAt.toISOString(), listing: m.listing ? { ...m.listing, price: m.listing.price } : null }))}
                 currentUserId={session.user.id}
@@ -220,17 +219,14 @@ export default async function MessagesPage({
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                 <MessageSquare className="w-16 h-16 text-gray-600 mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">Your Messages</h3>
-                <p className="text-gray-400 text-sm">Select a conversation or start a new one from a listing</p>
+                <p className="text-gray-400 text-sm">Select a conversation to get started</p>
               </div>
-            )}
-          </div>
-
-          {/* ── Col 3: Listing info ── */}
-          <div className="w-72 border-l border-dark-600 flex-shrink-0 overflow-y-auto bg-dark-800/50">
-            {activeListing ? (
+            )
+          }
+          info={
+            activeListing ? (
               <div className="p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">About this listing</h3>
-
                 <Link href={`/listings/${activeListing.id}`} className="block group">
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-dark-700 border border-dark-600 group-hover:border-brand-500/50 transition-colors">
                     {listingImages[0] ? (
@@ -244,17 +240,15 @@ export default async function MessagesPage({
                     )}
                   </div>
                 </Link>
-
                 <div>
                   <Link href={`/listings/${activeListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
                     {activeListing.title}
                   </Link>
                   <p className="text-2xl font-bold text-brand-400 mt-1">${Number(activeListing.price).toFixed(2)}</p>
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <Tag  className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <Tag className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                     <span className="text-gray-400">Platform</span>
                     <span className="text-white ml-auto font-medium">{activeListing.platform}</span>
                   </div>
@@ -271,22 +265,18 @@ export default async function MessagesPage({
                     </div>
                   )}
                 </div>
-
                 <Link href={`/listings/${activeListing.id}`} className="btn-primary text-center text-sm py-2.5">
                   View Full Listing
                 </Link>
-
-
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">
                 <Package className="w-10 h-10 text-gray-600 mb-3" />
-                <p className="text-sm text-gray-500">Listing details will appear here when you select a conversation</p>
+                <p className="text-sm text-gray-500">Listing details appear here</p>
               </div>
-            )}
-          </div>
-
-        </div>
+            )
+          }
+        />
       </main>
     </div>
   );

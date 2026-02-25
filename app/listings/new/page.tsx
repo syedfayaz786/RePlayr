@@ -197,14 +197,14 @@ export default function NewListingPage() {
   return (
     <div className="min-h-screen flex flex-col"><Navbar />
       <PageHeader crumbs={[{ label: "Sell a Game" }]} />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-8 py-8">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-white mb-2">Sell a Game</h1>
           <p className="text-gray-400">List your game disc and find a local buyer in minutes</p>
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8 bg-dark-800 rounded-2xl p-4 border border-dark-600">
+        <div className="flex items-center gap-1 sm:gap-2 mb-6 sm:mb-8 bg-dark-800 rounded-2xl p-3 sm:p-4 border border-dark-600 overflow-x-auto">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <button type="button"

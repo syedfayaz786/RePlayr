@@ -61,14 +61,14 @@ export default async function HomePage({
             Play<span className="text-brand-500 mx-1.5">·</span>
             Repeat
           </p>
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             {[
               { icon: Gamepad2,    label: "Active",  value: stats.totalListings },
               { icon: Users,       label: "Gamers",  value: stats.totalUsers },
               { icon: ShieldCheck, label: "Trusted", value: "100%" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-center gap-1.5">
-                <Icon className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-400 flex-shrink-0" />
                 <span className="text-brand-300 font-bold text-sm">{value}</span>
                 <span className="text-gray-300 text-xs">{label}</span>
               </div>

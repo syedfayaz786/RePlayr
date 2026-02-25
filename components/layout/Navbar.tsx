@@ -45,7 +45,7 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300" style={{background: "linear-gradient(135deg, #06b6d4, #6366f1)", boxShadow: "0 0 20px rgba(6,182,212,0.4))"}}>
               <Gamepad2 className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-xl text-white">
+            <span className="font-display font-bold text-lg sm:text-xl text-white">
               Re<span className="text-brand-400">Playr</span>
             </span>
           </Link>
