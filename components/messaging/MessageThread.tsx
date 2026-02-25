@@ -291,50 +291,54 @@ export function MessageThread({
         </Link>
       )}
 
-      {/* ── Search navigation banner ── */}
-      {searchQuery?.trim() && (() => {
-        const totalMatches = messages.filter(m =>
-          m.content.toLowerCase().includes(searchQuery!.toLowerCase())
-        ).length;
+      {/* ── Search navigation banner — always rendered, hidden when no query, so height is always reserved ── */}
+      {(() => {
+        const q = searchQuery?.trim() ?? "";
+        const totalMatches = q
+          ? messages.filter(m => m.content.toLowerCase().includes(q.toLowerCase())).length
+          : 0;
         return (
           <div
-            className="flex-shrink-0 border-b border-amber-500/25 bg-amber-500/10"
-            style={{ minHeight: 36, display: "flex", alignItems: "center", padding: "0 12px", gap: 8 }}
+            style={{
+              height: 36,
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              padding: "0 12px",
+              gap: 8,
+              borderBottom: q ? "1px solid rgba(245,158,11,0.25)" : "1px solid transparent",
+              background: q ? "rgba(245,158,11,0.08)" : "transparent",
+              visibility: q ? "visible" : "hidden",
+              overflow: "hidden",
+            }}
           >
-            {/* Left: icon + query label — fixed, never reflows */}
-            <span className="text-amber-400" style={{ fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
+            {/* Left: fixed label */}
+            <span style={{ fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0, color: "#fbbf24" }}>
               🔍 <strong>"{searchQuery}"</strong>
               {totalMatches === 0
                 ? <span style={{ color: "#6b7280" }}> — no matches</span>
                 : <span style={{ color: "rgba(251,191,36,0.6)" }}> — {totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>}
             </span>
 
-            {/* Right: nav controls — fixed width, never shifts */}
+            {/* Right: nav controls — always in DOM with fixed widths */}
             <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-              {totalMatches > 1 && (
-                <>
-                  <button
-                    onClick={() => scrollToMatch((currentMatch - 1 + totalMatches) % totalMatches)}
-                    style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.4)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(245,158,11,0.2)")}
-                  >
-                    <ChevronUp className="w-3 h-3" />
-                  </button>
-                  {/* Fixed-width counter so layout never shifts as number changes */}
-                  <span style={{ width: 36, textAlign: "center", fontSize: 11, fontFamily: "monospace", color: "#fbbf24", flexShrink: 0 }}>
-                    {currentMatch + 1}/{totalMatches}
-                  </span>
-                  <button
-                    onClick={() => scrollToMatch((currentMatch + 1) % totalMatches)}
-                    style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.4)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(245,158,11,0.2)")}
-                  >
-                    <ChevronDown className="w-3 h-3" />
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => scrollToMatch((currentMatch - 1 + totalMatches) % totalMatches)}
+                disabled={totalMatches <= 1}
+                style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: totalMatches > 1 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", opacity: totalMatches <= 1 ? 0 : 1 }}
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+              <span style={{ width: 36, textAlign: "center", fontSize: 11, fontFamily: "monospace", color: "#fbbf24", flexShrink: 0, opacity: totalMatches <= 1 ? 0 : 1 }}>
+                {totalMatches > 0 ? `${currentMatch + 1}/${totalMatches}` : ""}
+              </span>
+              <button
+                onClick={() => scrollToMatch((currentMatch + 1) % totalMatches)}
+                disabled={totalMatches <= 1}
+                style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: totalMatches > 1 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", opacity: totalMatches <= 1 ? 0 : 1 }}
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
               <a
                 href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
                 style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 11, color: "rgba(251,191,36,0.6)", textDecoration: "none", marginLeft: 4, flexShrink: 0 }}
