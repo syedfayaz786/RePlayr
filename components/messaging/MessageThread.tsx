@@ -102,6 +102,12 @@ export function MessageThread({
   searchQuery,
 }: MessageThreadProps) {
   const [messages, setMessages]         = useState(initialThread);
+
+  // Sync messages when the thread prop changes (new conversation selected)
+  // The `key` prop on this component handles most cases, but this is a safety net
+  useEffect(() => {
+    setMessages(initialThread);
+  }, [initialThread]);
   const [input, setInput]               = useState("");
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);

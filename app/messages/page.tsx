@@ -196,6 +196,7 @@ export default async function MessagesPage({
           thread={
             activePartnerId && activePartner ? (
               <MessageThread
+                key={`${activePartnerId}::${activeListingId ?? "none"}`}
                 thread={thread.map((m) => ({ ...m, createdAt: m.createdAt.toISOString(), listing: m.listing ? { ...m.listing, price: m.listing.price } : null }))}
                 currentUserId={session.user.id}
                 partnerId={activePartnerId}
