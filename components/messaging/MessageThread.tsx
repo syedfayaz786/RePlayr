@@ -161,8 +161,14 @@ export function MessageThread({
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          const stickyH   = stickyTopRef.current?.offsetHeight ?? 0;
-          const targetTop = el.offsetTop - stickyH - (container.clientHeight / 2) + (el.offsetHeight / 2);
+          const elRect        = el.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          const stickyH       = stickyTopRef.current?.offsetHeight ?? 0;
+          const targetTop     = container.scrollTop
+            + (elRect.top - containerRect.top)
+            - stickyH
+            - (container.clientHeight / 2)
+            + (el.offsetHeight / 2);
           container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
         }
       });
@@ -179,8 +185,16 @@ export function MessageThread({
     const el = getMatchEl(idx);
     const container = scrollContainerRef.current;
     if (el && container) {
-      const stickyH   = stickyTopRef.current?.offsetHeight ?? 0;
-      const targetTop = el.offsetTop - stickyH - (container.clientHeight / 2) + (el.offsetHeight / 2);
+      // getBoundingClientRect gives current viewport-relative position — correct regardless of offsetParent
+      const elRect        = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const stickyH       = stickyTopRef.current?.offsetHeight ?? 0;
+      // Current scroll position + where el sits relative to container top, centered in visible area
+      const targetTop = container.scrollTop
+        + (elRect.top - containerRect.top)
+        - stickyH
+        - (container.clientHeight / 2)
+        + (el.offsetHeight / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
     setCurrentMatch(idx);
