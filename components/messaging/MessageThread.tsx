@@ -156,20 +156,21 @@ export function MessageThread({
     shouldScrollToFirst.current = !!searchQuery?.trim();
   }, [searchQuery]);
 
-  // Stable ref callback for match 0 — fires immediately when the DOM node is attached
+  // Ref callback — stores the DOM node for each match position
   const setMatchRef = (matchPos: number, el: HTMLDivElement | null) => {
-    matchRefsMap.current.set(matchPos, el);
-    // If this is the first match and we're waiting to scroll to it, do it now
+    if (el) {
+      matchRefsMap.current.set(matchPos, el);
+    }
+    // Trigger initial scroll to match 0 when it first attaches
     if (matchPos === 0 && el && shouldScrollToFirst.current) {
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          const elTop       = el.offsetTop;
-          const elHeight    = el.offsetHeight;
-          const stickyH     = stickyTopRef.current?.offsetHeight ?? 0;
-          const visibleH    = container.clientHeight;
-          const targetTop   = elTop - stickyH - (visibleH / 2) + (elHeight / 2);
+          const elTop    = el.offsetTop;
+          const elHeight = el.offsetHeight;
+          const stickyH  = stickyTopRef.current?.offsetHeight ?? 0;
+          const targetTop = elTop - stickyH - (container.clientHeight / 2) + (elHeight / 2);
           container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
         } else {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -178,20 +179,19 @@ export function MessageThread({
     }
   };
 
-  // Scroll to match — offset so it lands below the sticky header/banner bars
+  // Scroll to a match: scroll immediately (refs are valid NOW, before re-render),
+  // then update state to move the highlight ring.
   const scrollToMatch = (idx: number) => {
     const el = matchRefsMap.current.get(idx);
     const container = scrollContainerRef.current;
     if (el && container) {
       const elTop    = el.offsetTop;
       const elHeight = el.offsetHeight;
-      const containerHeight = container.clientHeight;
-      const stickyHeight = stickyTopRef.current?.offsetHeight ?? 0;
-      // Place the match in the center of the *visible* area below the sticky bars
-      const visibleHeight = containerHeight; // container starts below sticky
-      const targetTop = elTop - stickyHeight - (visibleHeight / 2) + (elHeight / 2);
+      const stickyH  = stickyTopRef.current?.offsetHeight ?? 0;
+      const targetTop = elTop - stickyH - (container.clientHeight / 2) + (elHeight / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
+    // Update highlight ring AFTER scroll is dispatched — re-render only changes ring, not position
     setCurrentMatch(idx);
   };
 
@@ -394,8 +394,8 @@ export function MessageThread({
                 return acc;
               }, [])
             : [];
-          // Clear stale entries beyond current match count
-          matchRefsMap.current.forEach((_, k) => { if (k >= matchIndices.length) matchRefsMap.current.delete(k); });
+          // Note: matchRefsMap is cleaned up only when searchQuery changes (see useEffect above)
+          // Do NOT mutate it during render — that races with scrollToMatch reads
 
           return messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
