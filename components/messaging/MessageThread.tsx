@@ -297,36 +297,51 @@ export function MessageThread({
           m.content.toLowerCase().includes(searchQuery!.toLowerCase())
         ).length;
         return (
-          <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border-b border-amber-500/25 flex-shrink-0">
-            <span className="text-xs text-amber-300 flex-1 truncate">
-              🔍 <span className="font-semibold">"{searchQuery}"</span>
-              {totalMatches > 0
-                ? <span className="text-amber-400/70"> — {totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>
-                : <span className="text-gray-500"> — no matches</span>}
+          <div
+            className="flex-shrink-0 border-b border-amber-500/25 bg-amber-500/10"
+            style={{ minHeight: 36, display: "flex", alignItems: "center", padding: "0 12px", gap: 8 }}
+          >
+            {/* Left: icon + query label — fixed, never reflows */}
+            <span className="text-amber-400" style={{ fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
+              🔍 <strong>"{searchQuery}"</strong>
+              {totalMatches === 0
+                ? <span style={{ color: "#6b7280" }}> — no matches</span>
+                : <span style={{ color: "rgba(251,191,36,0.6)" }}> — {totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>}
             </span>
-            {totalMatches > 1 && (
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  onClick={() => scrollToMatch((currentMatch - 1 + totalMatches) % totalMatches)}
-                  className="w-6 h-6 rounded flex items-center justify-center bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 transition-colors"
-                >
-                  <ChevronUp className="w-3 h-3" />
-                </button>
-                <span className="text-xs text-amber-300 font-mono w-10 text-center">
-                  {currentMatch + 1}/{totalMatches}
-                </span>
-                <button
-                  onClick={() => scrollToMatch((currentMatch + 1) % totalMatches)}
-                  className="w-6 h-6 rounded flex items-center justify-center bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 transition-colors"
-                >
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              </div>
-            )}
-            <a href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
-              className="flex-shrink-0 text-xs text-amber-400/70 hover:text-amber-200 transition-colors flex items-center gap-0.5 ml-1">
-              <X className="w-3 h-3" /> Clear
-            </a>
+
+            {/* Right: nav controls — fixed width, never shifts */}
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              {totalMatches > 1 && (
+                <>
+                  <button
+                    onClick={() => scrollToMatch((currentMatch - 1 + totalMatches) % totalMatches)}
+                    style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.4)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(245,158,11,0.2)")}
+                  >
+                    <ChevronUp className="w-3 h-3" />
+                  </button>
+                  {/* Fixed-width counter so layout never shifts as number changes */}
+                  <span style={{ width: 36, textAlign: "center", fontSize: 11, fontFamily: "monospace", color: "#fbbf24", flexShrink: 0 }}>
+                    {currentMatch + 1}/{totalMatches}
+                  </span>
+                  <button
+                    onClick={() => scrollToMatch((currentMatch + 1) % totalMatches)}
+                    style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(245,158,11,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.4)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(245,158,11,0.2)")}
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </>
+              )}
+              <a
+                href={`/messages?with=${partnerId}${listingId ? `&listing=${listingId}` : ""}`}
+                style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 11, color: "rgba(251,191,36,0.6)", textDecoration: "none", marginLeft: 4, flexShrink: 0 }}
+              >
+                <X className="w-3 h-3" /> Clear
+              </a>
+            </div>
           </div>
         );
       })()}
