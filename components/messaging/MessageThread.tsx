@@ -130,7 +130,7 @@ export function MessageThread({
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
-  const matchRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const matchRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [currentMatch, setCurrentMatch] = useState(0);
 
   // Scroll to bottom on new messages
@@ -140,17 +140,21 @@ export function MessageThread({
 
   // Reset to first match when query changes, scroll to it
   useEffect(() => {
+    matchRefsMap.current.clear(); // clear all old refs on query change
     setCurrentMatch(0);
     if (searchQuery?.trim()) {
       setTimeout(() => {
-        matchRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
+        matchRefsMap.current.get(0)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
     }
   }, [searchQuery]);
 
   // Scroll to current match when navigating
   const scrollToMatch = (idx: number) => {
-    matchRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const el = matchRefsMap.current.get(idx);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     setCurrentMatch(idx);
   };
 
@@ -330,8 +334,8 @@ export function MessageThread({
                 return acc;
               }, [])
             : [];
-          // Reset refs array length
-          matchRefs.current = new Array(matchIndices.length).fill(null);
+          // Clear stale entries beyond current match count
+          matchRefsMap.current.forEach((_, k) => { if (k >= matchIndices.length) matchRefsMap.current.delete(k); });
 
           return messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
@@ -454,7 +458,7 @@ export function MessageThread({
 
           return (
             <div key={msg.id}
-              ref={msgMatches ? (el) => { matchRefs.current[matchPos] = el; } : undefined}
+              ref={msgMatches ? (el) => { matchRefsMap.current.set(matchPos, el); } : undefined}
               className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
               {/* Sender label — only when sender changes */}
               {showLabel && (
