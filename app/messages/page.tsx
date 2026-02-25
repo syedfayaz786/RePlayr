@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { formatRelativeTime } from "@/lib/utils";
 import { MessageThread } from "@/components/messaging/MessageThread";
 import { MessageSquare, Package, MapPin, Tag, Star } from "lucide-react";
@@ -13,11 +14,14 @@ import { MessagesLayout } from "@/components/messaging/MessagesLayout";
 import Image from "next/image";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function MessagesPage({
   searchParams,
 }: {
   searchParams: { with?: string; listing?: string; q?: string };
 }) {
+  noStore(); // Disable all caching — always fetch fresh from DB
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/login");
 
@@ -55,6 +59,12 @@ export default async function MessagesPage({
 
     if (!convMap.has(key)) {
       convMap.set(key, { partner, lastMessage: msg, unread: 0, listingId, listing: msg.listing ? { id: msg.listing.id, title: msg.listing.title } : null, allContents: [] });
+    } else {
+      // If this entry has no listing title yet but this message does, fill it in
+      const entry = convMap.get(key)!;
+      if (!entry.listing && msg.listing) {
+        entry.listing = { id: msg.listing.id, title: msg.listing.title };
+      }
     }
     convMap.get(key)!.allContents.push(msg.content);
     if (msg.receiverId === session.user.id && !msg.read) {
