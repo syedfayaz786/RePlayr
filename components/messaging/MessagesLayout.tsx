@@ -41,7 +41,7 @@ export function MessagesLayout({ sidebar, thread, info, hasActiveConv, hasActive
         <div className="flex items-center px-4 py-3 border-b border-dark-600 md:hidden flex-shrink-0">
           <h2 className="font-semibold text-white text-sm">Messages</h2>
         </div>
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col">
           {sidebar}
         </div>
       </div>

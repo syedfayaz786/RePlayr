@@ -51,9 +51,9 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // When search becomes active, deselect the current conversation so Col 2+3 go blank
+  // When search becomes active, deselect current conversation so Col 2+3 go blank
   useEffect(() => {
-    if (search.trim()) {
+    if (search.trim() && activeKey) {
       router.push("/messages", { scroll: false });
     }
   }, [search]);
@@ -95,7 +95,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
       {/* ── Search bar ── */}
       <div className="p-3 border-b border-dark-600 flex-shrink-0">
@@ -223,8 +223,8 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
             const preview = previewContent(conv.lastMessageContent);
 
             return (
-              <a key={key} href={href}
-                className={`flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${
+              <button key={key} onClick={() => router.push(href, { scroll: false })}
+                className={`w-full text-left flex items-center gap-3 p-4 hover:bg-dark-700 transition-colors border-b border-dark-600 ${
                   isActive ? "bg-dark-700 border-l-2 border-l-brand-500" : ""
                 }`}
               >
@@ -263,7 +263,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
                 </div>
 
                 <DeleteChatButton partnerId={conv.partnerId} listingId={conv.listingId} variant="icon" />
-              </a>
+              </button>
             );
           })
         )}
