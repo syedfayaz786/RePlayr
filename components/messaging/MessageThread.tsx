@@ -163,10 +163,8 @@ export function MessageThread({
         if (container) {
           const elRect        = el.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
-          const stickyH       = stickyTopRef.current?.offsetHeight ?? 0;
           const targetTop     = container.scrollTop
             + (elRect.top - containerRect.top)
-            - stickyH
             - (container.clientHeight / 2)
             + (el.offsetHeight / 2);
           container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
@@ -182,22 +180,21 @@ export function MessageThread({
 
   // Scroll to a specific match index using data-attribute lookup (always fresh from DOM)
   const scrollToMatch = (idx: number) => {
-    const el = getMatchEl(idx);
-    const container = scrollContainerRef.current;
-    if (el && container) {
-      // getBoundingClientRect gives current viewport-relative position — correct regardless of offsetParent
+    setCurrentMatch(idx); // update highlight first
+    requestAnimationFrame(() => {   // wait for re-render, THEN scroll with fresh positions
+      const el = getMatchEl(idx);
+      const container = scrollContainerRef.current;
+      if (!el || !container) return;
       const elRect        = el.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
-      const stickyH       = stickyTopRef.current?.offsetHeight ?? 0;
-      // Current scroll position + where el sits relative to container top, centered in visible area
+      // elRect.top - containerRect.top = element's position relative to visible container top
+      // No stickyH needed — container already starts below sticky bars
       const targetTop = container.scrollTop
         + (elRect.top - containerRect.top)
-        - stickyH
         - (container.clientHeight / 2)
         + (el.offsetHeight / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-    }
-    setCurrentMatch(idx);
+    });
   };
 
   // Mark partner's messages as read when we open/focus the thread
