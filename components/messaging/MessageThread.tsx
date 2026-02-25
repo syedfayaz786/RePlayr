@@ -138,7 +138,6 @@ export function MessageThread({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const stickyTopRef       = useRef<HTMLDivElement>(null); // wraps header+listing+search banners
 
-  const matchRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [currentMatch, setCurrentMatch] = useState(0);
   const shouldScrollToFirst = useRef(false); // flag: scroll to match 0 once its ref is set
 
@@ -149,49 +148,41 @@ export function MessageThread({
     }
   }, [messages, searchQuery]);
 
-  // When query changes: clear refs, reset index, set flag to scroll on next ref assignment
+  // When query changes: reset index and flag to scroll to first match
   useEffect(() => {
-    matchRefsMap.current.clear();
     setCurrentMatch(0);
     shouldScrollToFirst.current = !!searchQuery?.trim();
   }, [searchQuery]);
 
-  // Ref callback — stores the DOM node for each match position
-  const setMatchRef = (matchPos: number, el: HTMLDivElement | null) => {
-    if (el) {
-      matchRefsMap.current.set(matchPos, el);
-    }
-    // Trigger initial scroll to match 0 when it first attaches
-    if (matchPos === 0 && el && shouldScrollToFirst.current) {
+  // Called when match 0 mounts — triggers initial scroll to first match
+  const onFirstMatchMount = (el: HTMLDivElement | null) => {
+    if (el && shouldScrollToFirst.current) {
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          const elTop    = el.offsetTop;
-          const elHeight = el.offsetHeight;
-          const stickyH  = stickyTopRef.current?.offsetHeight ?? 0;
-          const targetTop = elTop - stickyH - (container.clientHeight / 2) + (elHeight / 2);
+          const stickyH   = stickyTopRef.current?.offsetHeight ?? 0;
+          const targetTop = el.offsetTop - stickyH - (container.clientHeight / 2) + (el.offsetHeight / 2);
           container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-        } else {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       });
     }
   };
 
-  // Scroll to a match: scroll immediately (refs are valid NOW, before re-render),
-  // then update state to move the highlight ring.
+  // Query the scroll container for a match element by its data-match-pos attribute
+  const getMatchEl = (pos: number): HTMLDivElement | null => {
+    return scrollContainerRef.current?.querySelector<HTMLDivElement>(`[data-match-pos="${pos}"]`) ?? null;
+  };
+
+  // Scroll to a specific match index using data-attribute lookup (always fresh from DOM)
   const scrollToMatch = (idx: number) => {
-    const el = matchRefsMap.current.get(idx);
+    const el = getMatchEl(idx);
     const container = scrollContainerRef.current;
     if (el && container) {
-      const elTop    = el.offsetTop;
-      const elHeight = el.offsetHeight;
-      const stickyH  = stickyTopRef.current?.offsetHeight ?? 0;
-      const targetTop = elTop - stickyH - (container.clientHeight / 2) + (elHeight / 2);
+      const stickyH   = stickyTopRef.current?.offsetHeight ?? 0;
+      const targetTop = el.offsetTop - stickyH - (container.clientHeight / 2) + (el.offsetHeight / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
-    // Update highlight ring AFTER scroll is dispatched — re-render only changes ring, not position
     setCurrentMatch(idx);
   };
 
@@ -394,9 +385,6 @@ export function MessageThread({
                 return acc;
               }, [])
             : [];
-          // Note: matchRefsMap is cleaned up only when searchQuery changes (see useEffect above)
-          // Do NOT mutate it during render — that races with scrollToMatch reads
-
           return messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
           const isRating = msg.content.startsWith("⭐ Rating received");
@@ -518,7 +506,8 @@ export function MessageThread({
 
           return (
             <div key={msg.id}
-              ref={msgMatches ? (el) => setMatchRef(matchPos, el) : undefined}
+              ref={matchPos === 0 ? onFirstMatchMount : undefined}
+              data-match-pos={msgMatches ? matchPos : undefined}
               className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
               {/* Sender label — only when sender changes */}
               {showLabel && (
