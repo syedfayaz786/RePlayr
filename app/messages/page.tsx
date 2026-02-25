@@ -164,10 +164,10 @@ export default async function MessagesPage({
 
   // ── 6. Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Navbar />
       <PageHeader crumbs={[{ label: "Messages" }]} />
-      <main className="flex-1 max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8 w-full pt-3 sm:pt-6 pb-0 flex flex-col">
+      <main className="flex-1 min-h-0 max-w-screen-2xl mx-auto w-full px-2 sm:px-4 lg:px-8 pt-3 sm:pt-4 flex flex-col">
         <h1 className="font-display text-xl sm:text-2xl font-bold text-white mb-3 md:mb-5">Messages</h1>
 
         <MessagesLayout

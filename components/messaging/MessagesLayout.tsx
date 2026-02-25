@@ -26,22 +26,22 @@ export function MessagesLayout({ sidebar, thread, info, hasActiveConv, hasActive
 
   return (
     // Full viewport height minus navbar/header — use dvh for mobile browsers
-    <div className="flex overflow-hidden rounded-xl border border-dark-600 bg-dark-800" style={{ height: "calc(100svh - 180px)", minHeight: 480 }}>
+    <div className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-dark-600 bg-dark-800">
 
       {/* ══ COL 1: Sidebar ══
           Mobile: full width, shown only when mobilePanel=sidebar
           md+: fixed 288px, always visible
       */}
       <div className={`
-        flex-shrink-0 border-r border-dark-600 flex flex-col overflow-hidden
+        flex-shrink-0 border-r border-dark-600 flex flex-col min-h-0
         w-full md:w-72
         ${mobilePanel === "sidebar" ? "flex" : "hidden"} md:flex
       `}>
         {/* Mobile header for sidebar */}
-        <div className="flex items-center px-4 py-3 border-b border-dark-600 md:hidden">
+        <div className="flex items-center px-4 py-3 border-b border-dark-600 md:hidden flex-shrink-0">
           <h2 className="font-semibold text-white text-sm">Messages</h2>
         </div>
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {sidebar}
         </div>
       </div>
@@ -51,7 +51,7 @@ export function MessagesLayout({ sidebar, thread, info, hasActiveConv, hasActive
           md+: flex-1, always visible
       */}
       <div className={`
-        flex-col overflow-hidden min-w-0
+        flex-col overflow-hidden min-w-0 min-h-0
         w-full md:flex-1
         ${mobilePanel === "thread" ? "flex" : "hidden"} md:flex
       `}>
@@ -84,12 +84,12 @@ export function MessagesLayout({ sidebar, thread, info, hasActiveConv, hasActive
           lg+: fixed 288px, always visible
       */}
       <div className={`
-        flex-shrink-0 border-l border-dark-600 overflow-y-auto bg-dark-800/50
+        flex-shrink-0 border-l border-dark-600 min-h-0 bg-dark-800/50
         w-full lg:w-72
-        ${mobilePanel === "info" ? "flex flex-col" : "hidden"} lg:block
+        ${mobilePanel === "info" ? "flex flex-col" : "hidden"} lg:flex lg:flex-col
       `}>
         {/* Mobile back button in info panel */}
-        <div className="flex items-center px-4 py-3 border-b border-dark-600 lg:hidden">
+        <div className="flex items-center px-4 py-3 border-b border-dark-600 lg:hidden flex-shrink-0">
           <button
             onClick={() => setMobilePanel("thread")}
             className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
@@ -98,7 +98,7 @@ export function MessagesLayout({ sidebar, thread, info, hasActiveConv, hasActive
             <span className="text-xs">Back to chat</span>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {info}
         </div>
       </div>

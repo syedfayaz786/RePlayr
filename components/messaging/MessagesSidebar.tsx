@@ -95,7 +95,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
 
       {/* ── Search bar ── */}
       <div className="p-3 border-b border-dark-600 flex-shrink-0">
@@ -200,7 +200,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
       )}
 
       {/* ── Conversation list — scrollable ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
             <MessageSquare className="w-10 h-10 text-gray-500 mb-3" />
