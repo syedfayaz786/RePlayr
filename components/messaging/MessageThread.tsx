@@ -132,24 +132,35 @@ export function MessageThread({
 
   const matchRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [currentMatch, setCurrentMatch] = useState(0);
+  const shouldScrollToFirst = useRef(false); // flag: scroll to match 0 once its ref is set
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages (only when not searching)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Reset to first match when query changes, scroll to it
-  useEffect(() => {
-    matchRefsMap.current.clear(); // clear all old refs on query change
-    setCurrentMatch(0);
-    if (searchQuery?.trim()) {
-      setTimeout(() => {
-        matchRefsMap.current.get(0)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 150);
+    if (!searchQuery?.trim()) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
+  }, [messages, searchQuery]);
+
+  // When query changes: clear refs, reset index, set flag to scroll on next ref assignment
+  useEffect(() => {
+    matchRefsMap.current.clear();
+    setCurrentMatch(0);
+    shouldScrollToFirst.current = !!searchQuery?.trim();
   }, [searchQuery]);
 
-  // Scroll to current match when navigating
+  // Stable ref callback for match 0 — fires immediately when the DOM node is attached
+  const setMatchRef = (matchPos: number, el: HTMLDivElement | null) => {
+    matchRefsMap.current.set(matchPos, el);
+    // If this is the first match and we're waiting to scroll to it, do it now
+    if (matchPos === 0 && el && shouldScrollToFirst.current) {
+      shouldScrollToFirst.current = false;
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  };
+
+  // Scroll to current match when navigating prev/next
   const scrollToMatch = (idx: number) => {
     const el = matchRefsMap.current.get(idx);
     if (el) {
@@ -458,7 +469,7 @@ export function MessageThread({
 
           return (
             <div key={msg.id}
-              ref={msgMatches ? (el) => { matchRefsMap.current.set(matchPos, el); } : undefined}
+              ref={msgMatches ? (el) => setMatchRef(matchPos, el) : undefined}
               className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${showLabel ? "mt-3" : "mt-0.5"}`}>
               {/* Sender label — only when sender changes */}
               {showLabel && (
