@@ -51,12 +51,8 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // When search becomes active, deselect current conversation so Col 2+3 go blank
-  useEffect(() => {
-    if (search.trim() && activeKey) {
-      router.push("/messages", { scroll: false });
-    }
-  }, [search]);
+  // No auto-deselect on search — user can keep reading the current conv while filtering.
+  // Clicking a search result will navigate to that conv via router.push.
 
   const totalUnread = conversations.reduce((s, c) => s + c.unread, 0);
 
@@ -112,12 +108,10 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
             <button
               onClick={() => {
                 setSearch("");
-                // Restore active conv if one was selected before search
-                if (activeKey) {
-                  const [pid, lid] = activeKey.split("::");
-                  const url = `/messages?with=${pid}${lid !== "none" ? `&listing=${lid}` : ""}`;
-                  router.push(url, { scroll: false });
-                }
+                // Strip &q= from URL but keep current ?with= and &listing= intact
+                const params = new URLSearchParams(window.location.search);
+                params.delete("q");
+                router.push(`/messages${params.toString() ? "?" + params.toString() : ""}`, { scroll: false });
               }}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
             >
