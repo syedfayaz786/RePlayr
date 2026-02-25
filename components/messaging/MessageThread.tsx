@@ -127,9 +127,10 @@ export function MessageThread({
     setMessages(prev => [...prev, sysMsg]);
     setLocalSaleConfirmed(true);
   };
-  const bottomRef     = useRef<HTMLDivElement>(null);
-  const inputRef      = useRef<HTMLInputElement>(null);
+  const bottomRef          = useRef<HTMLDivElement>(null);
+  const inputRef           = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const stickyTopRef       = useRef<HTMLDivElement>(null); // wraps header+listing+search banners
 
   const matchRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [currentMatch, setCurrentMatch] = useState(0);
@@ -158,12 +159,12 @@ export function MessageThread({
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          const elTop    = el.offsetTop;
-          const elHeight = el.offsetHeight;
-          container.scrollTo({
-            top: elTop - (container.clientHeight / 2) + (elHeight / 2),
-            behavior: "smooth",
-          });
+          const elTop       = el.offsetTop;
+          const elHeight    = el.offsetHeight;
+          const stickyH     = stickyTopRef.current?.offsetHeight ?? 0;
+          const visibleH    = container.clientHeight;
+          const targetTop   = elTop - stickyH - (visibleH / 2) + (elHeight / 2);
+          container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
         } else {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
         }
@@ -171,7 +172,7 @@ export function MessageThread({
     }
   };
 
-  // Scroll to match within the container (not the whole page)
+  // Scroll to match — offset so it lands below the sticky header/banner bars
   const scrollToMatch = (idx: number) => {
     const el = matchRefsMap.current.get(idx);
     const container = scrollContainerRef.current;
@@ -179,11 +180,11 @@ export function MessageThread({
       const elTop    = el.offsetTop;
       const elHeight = el.offsetHeight;
       const containerHeight = container.clientHeight;
-      // Center the match in the scroll container
-      container.scrollTo({
-        top: elTop - (containerHeight / 2) + (elHeight / 2),
-        behavior: "smooth",
-      });
+      const stickyHeight = stickyTopRef.current?.offsetHeight ?? 0;
+      // Place the match in the center of the *visible* area below the sticky bars
+      const visibleHeight = containerHeight; // container starts below sticky
+      const targetTop = elTop - stickyHeight - (visibleHeight / 2) + (elHeight / 2);
+      container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
     setCurrentMatch(idx);
   };
@@ -251,8 +252,10 @@ export function MessageThread({
 
   return (
     <>
+      {/* ── Sticky top wrapper (header + listing banner + search banner) — measured for scroll offset ── */}
+      <div ref={stickyTopRef} className="flex-shrink-0 flex flex-col">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-600 bg-dark-800/60 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-600 bg-dark-800/60">
         {partnerImage ? (
           <Image src={partnerImage} alt={partnerName} width={36} height={36} className="rounded-full" />
         ) : (
@@ -368,6 +371,8 @@ export function MessageThread({
           </div>
         );
       })()}
+
+      </div>{/* end stickyTopRef */}
 
       {/* ── Scrollable message list ── */}
       <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
