@@ -159,11 +159,7 @@ export function MessageThread({
     if (el && shouldScrollToFirst.current) {
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-        const elTop    = getOffsetRelativeTo(el, container);
-        const targetTop = elTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
-        container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
       });
     }
   };
@@ -174,26 +170,12 @@ export function MessageThread({
   };
 
   // Get element's top offset relative to a specific container (walks offsetParent chain)
-  const getOffsetRelativeTo = (el: HTMLElement, container: HTMLElement): number => {
-    let top = 0;
-    let cur: HTMLElement | null = el;
-    while (cur && cur !== container) {
-      top += cur.offsetTop;
-      cur = cur.offsetParent as HTMLElement | null;
-    }
-    return top;
-  };
-
-  // Scroll to a specific match index using data-attribute lookup (always fresh from DOM)
+  // Scroll to a specific match index
   const scrollToMatch = (idx: number) => {
-    setCurrentMatch(idx); // update highlight first
+    setCurrentMatch(idx);
     requestAnimationFrame(() => {
       const el = getMatchEl(idx);
-      const container = scrollContainerRef.current;
-      if (!el || !container) return;
-      const elTop    = getOffsetRelativeTo(el, container);
-      const targetTop = elTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
-      container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   };
 
@@ -383,7 +365,7 @@ export function MessageThread({
       </div>{/* end stickyTopRef */}
 
       {/* ── Scrollable message list ── */}
-      <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
+      <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 relative">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 text-sm py-8">Start the conversation!</div>
         )}
