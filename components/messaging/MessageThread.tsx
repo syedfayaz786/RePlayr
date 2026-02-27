@@ -160,15 +160,10 @@ export function MessageThread({
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
-        if (container) {
-          const elRect        = el.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          const targetTop     = container.scrollTop
-            + (elRect.top - containerRect.top)
-            - (container.clientHeight / 2)
-            + (el.offsetHeight / 2);
-          container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-        }
+        if (!container) return;
+        const elTop    = getOffsetRelativeTo(el, container);
+        const targetTop = elTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+        container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
       });
     }
   };
@@ -178,21 +173,26 @@ export function MessageThread({
     return scrollContainerRef.current?.querySelector<HTMLDivElement>(`[data-match-pos="${pos}"]`) ?? null;
   };
 
+  // Get element's top offset relative to a specific container (walks offsetParent chain)
+  const getOffsetRelativeTo = (el: HTMLElement, container: HTMLElement): number => {
+    let top = 0;
+    let cur: HTMLElement | null = el;
+    while (cur && cur !== container) {
+      top += cur.offsetTop;
+      cur = cur.offsetParent as HTMLElement | null;
+    }
+    return top;
+  };
+
   // Scroll to a specific match index using data-attribute lookup (always fresh from DOM)
   const scrollToMatch = (idx: number) => {
     setCurrentMatch(idx); // update highlight first
-    requestAnimationFrame(() => {   // wait for re-render, THEN scroll with fresh positions
+    requestAnimationFrame(() => {
       const el = getMatchEl(idx);
       const container = scrollContainerRef.current;
       if (!el || !container) return;
-      const elRect        = el.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      // elRect.top - containerRect.top = element's position relative to visible container top
-      // No stickyH needed — container already starts below sticky bars
-      const targetTop = container.scrollTop
-        + (elRect.top - containerRect.top)
-        - (container.clientHeight / 2)
-        + (el.offsetHeight / 2);
+      const elTop    = getOffsetRelativeTo(el, container);
+      const targetTop = elTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     });
   };
