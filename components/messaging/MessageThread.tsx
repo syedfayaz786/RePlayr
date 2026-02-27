@@ -159,7 +159,10 @@ export function MessageThread({
     if (el && shouldScrollToFirst.current) {
       shouldScrollToFirst.current = false;
       requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const targetTop = el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+        container.scrollTop = Math.max(0, targetTop);
       });
     }
   };
@@ -169,13 +172,16 @@ export function MessageThread({
     return scrollContainerRef.current?.querySelector<HTMLDivElement>(`[data-match-pos="${pos}"]`) ?? null;
   };
 
-  // Get element's top offset relative to a specific container (walks offsetParent chain)
   // Scroll to a specific match index
   const scrollToMatch = (idx: number) => {
     setCurrentMatch(idx);
     requestAnimationFrame(() => {
       const el = getMatchEl(idx);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const container = scrollContainerRef.current;
+      if (!el || !container) return;
+      // container has position:relative so el.offsetTop is relative to container content area
+      const targetTop = el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+      container.scrollTop = Math.max(0, targetTop);
     });
   };
 
