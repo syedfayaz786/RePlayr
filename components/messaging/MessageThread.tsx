@@ -144,7 +144,8 @@ export function MessageThread({
   // Scroll to bottom on new messages (only when not searching)
   useEffect(() => {
     if (!searchQuery?.trim()) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const container = scrollContainerRef.current;
+      if (container) container.scrollTop = container.scrollHeight;
     }
   }, [messages, searchQuery]);
 
@@ -175,17 +176,15 @@ export function MessageThread({
   // Scroll to a specific match index
   const scrollToMatch = (idx: number) => {
     setCurrentMatch(idx);
-    requestAnimationFrame(() => {
+    // Double rAF: first waits for React commit, second waits for browser paint
+    // This ensures all effects have run before we set scrollTop
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const el = getMatchEl(idx);
       const container = scrollContainerRef.current;
-      console.log("[scroll] idx:", idx, "el:", el, "container:", container);
       if (!el || !container) return;
-      console.log("[scroll] el.offsetTop:", el.offsetTop, "el.offsetHeight:", el.offsetHeight, "container.clientHeight:", container.clientHeight, "container.scrollTop:", container.scrollTop, "el.offsetParent:", el.offsetParent);
       const targetTop = el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
-      console.log("[scroll] targetTop:", targetTop, "-> setting scrollTop");
       container.scrollTop = Math.max(0, targetTop);
-      console.log("[scroll] scrollTop after:", container.scrollTop);
-    });
+    }));
   };
 
   // Mark partner's messages as read when we open/focus the thread
