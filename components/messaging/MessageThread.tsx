@@ -178,10 +178,13 @@ export function MessageThread({
     requestAnimationFrame(() => {
       const el = getMatchEl(idx);
       const container = scrollContainerRef.current;
+      console.log("[scroll] idx:", idx, "el:", el, "container:", container);
       if (!el || !container) return;
-      // container has position:relative so el.offsetTop is relative to container content area
+      console.log("[scroll] el.offsetTop:", el.offsetTop, "el.offsetHeight:", el.offsetHeight, "container.clientHeight:", container.clientHeight, "container.scrollTop:", container.scrollTop, "el.offsetParent:", el.offsetParent);
       const targetTop = el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+      console.log("[scroll] targetTop:", targetTop, "-> setting scrollTop");
       container.scrollTop = Math.max(0, targetTop);
+      console.log("[scroll] scrollTop after:", container.scrollTop);
     });
   };
 
