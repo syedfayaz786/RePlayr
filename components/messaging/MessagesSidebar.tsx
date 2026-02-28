@@ -51,8 +51,16 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // No auto-deselect on search — user can keep reading the current conv while filtering.
-  // Clicking a search result will navigate to that conv via router.push.
+  // When search becomes active, clear col 2 (navigate to /messages with no ?with=)
+  useEffect(() => {
+    if (search.trim()) {
+      // Strip ?with= and ?listing= from URL but keep nothing — show empty col 2
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("with")) {
+        router.push("/messages", { scroll: false });
+      }
+    }
+  }, [search]);
 
   const totalUnread = conversations.reduce((s, c) => s + c.unread, 0);
 
@@ -251,9 +259,19 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
                   {conv.listingTitle && (
                     <p className="text-xs text-brand-400 truncate mb-0.5 font-medium">🎮 {conv.listingTitle}</p>
                   )}
-                  <p className={`text-xs truncate ${conv.unread > 0 ? "text-gray-300 font-medium" : "text-gray-500"}`}>
-                    {preview}
-                  </p>
+                  {search.trim() ? (() => {
+                    const q = search.toLowerCase();
+                    const matchCount = conv.allContents.filter(m => m.toLowerCase().includes(q)).length;
+                    return (
+                      <p className="text-xs truncate text-amber-400 font-medium">
+                        🔍 {matchCount} matched message{matchCount !== 1 ? "s" : ""}
+                      </p>
+                    );
+                  })() : (
+                    <p className={`text-xs truncate ${conv.unread > 0 ? "text-gray-300 font-medium" : "text-gray-500"}`}>
+                      {preview}
+                    </p>
+                  )}
                 </div>
 
                 <DeleteChatButton partnerId={conv.partnerId} listingId={conv.listingId} variant="icon" />
