@@ -4,10 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
-import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus, Eye, DollarSign, Tag } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
+import { MyListingsGrid } from "@/components/dashboard/MyListingsGrid";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -19,6 +19,7 @@ export default async function DashboardPage() {
       include: {
         seller: { select: { id: true, name: true, image: true } },
         _count:  { select: { wishlistedBy: true, offers: true } },
+        sale:    { select: { id: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -58,8 +59,8 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {[
             { icon: Tag,        label: "Active Listings", value: listings.filter((l) => l.status === "active").length },
-            { icon: DollarSign, label: "Pending Offers",  value: offers.length },
-            { icon: Eye,        label: "Total Saves",     value: listings.reduce((s, l) => s + l._count.wishlistedBy, 0) },
+            { icon: DollarSign, label: "Sold",             value: listings.filter((l) => l.status === "sold" || l.sale).length },
+            { icon: Eye,        label: "Total Saves",      value: listings.reduce((s, l) => s + l._count.wishlistedBy, 0) },
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="card p-4">
               <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
@@ -101,43 +102,12 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Listings grid — identical cards to the home page */}
+        {/* Listings grid with filter tabs */}
         <div>
-          <h2 className="font-semibold text-white mb-4">All Listings</h2>
-
-          {serialisedListings.length === 0 ? (
-            <div className="card p-12 text-center">
-              <Tag className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <h3 className="text-white font-semibold mb-2">No listings yet</h3>
-              <p className="text-gray-400 text-sm mb-4">Post your first game and start selling!</p>
-              <Link href="/listings/new" className="btn-primary inline-flex">Post a Game</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {serialisedListings.map((listing) => (
-                <div key={listing.id} className="relative">
-                  <ListingCard listing={listing} />
-
-                  {/* Inactive overlay */}
-                  {listing.status !== "active" && (
-                    <div className="absolute inset-0 rounded-xl bg-dark-900/60 flex items-center justify-center pointer-events-none">
-                      <span className="px-3 py-1 rounded-full bg-dark-800 border border-dark-500 text-gray-400 text-xs font-semibold uppercase tracking-wider">
-                        {listing.status}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Quick-edit button sitting above the card footer */}
-                  <Link
-                    href={`/listings/${listing.id}/edit`}
-                    className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-white">My Listings</h2>
+          </div>
+          <MyListingsGrid listings={serialisedListings} />
         </div>
 
       </main>
