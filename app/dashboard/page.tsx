@@ -9,12 +9,22 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MyListingsGrid } from "@/components/dashboard/MyListingsGrid";
+import { SavesPanel } from "@/components/dashboard/SavesPanel";
+import { OffersPanel } from "@/components/dashboard/OffersPanel";
 
-export default async function DashboardPage({ searchParams }: { searchParams: { filter?: string } }) {
+type FilterParam = "all" | "active" | "sold" | "views" | "saves" | "offers";
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { filter?: string };
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/login");
 
-  const [listings, offers] = await Promise.all([
+  const filter = (searchParams?.filter ?? "all") as FilterParam;
+
+  const [listings, offers, savedListings] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: session.user.id },
       include: {
@@ -27,8 +37,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     prisma.offer.findMany({
       where: { sellerId: session.user.id, status: "pending" },
       include: {
-        buyer:   { select: { name: true } },
-        listing: { select: { title: true, price: true } },
+        buyer:   { select: { id: true, name: true, image: true } },
+        listing: { select: { id: true, title: true, price: true, images: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    // Listings that have been wishlisted, with who saved them
+    prisma.listing.findMany({
+      where: {
+        sellerId: session.user.id,
+        wishlistedBy: { some: {} },
+      },
+      include: {
+        wishlistedBy: {
+          include: { user: { select: { id: true, name: true, image: true } } },
+          orderBy: { createdAt: "desc" },
+        },
+        _count: { select: { wishlistedBy: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -40,11 +65,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     updatedAt: l.updatedAt.toISOString(),
   }));
 
+  const serialisedOffers = offers.map((o) => ({
+    ...o,
+    createdAt: o.createdAt.toISOString(),
+    updatedAt: o.updatedAt.toISOString(),
+  }));
+
+  const serialisedSaved = savedListings.map((l) => ({
+    id: l.id,
+    title: l.title,
+    price: l.price,
+    images: l.images,
+    saveCount: l._count.wishlistedBy,
+    savedBy: l.wishlistedBy.map((w) => ({
+      id: w.user.id,
+      name: w.user.name,
+      image: w.user.image,
+      savedAt: w.createdAt.toISOString(),
+    })),
+  }));
+
   const stats = {
-    active:       listings.filter((l) => l.status === "active").length,
-    sold:         listings.filter((l) => l.status === "sold" || l.sale).length,
-    totalViews:   listings.reduce((s, l) => s + (l.views ?? 0), 0),
-    totalSaves:   listings.reduce((s, l) => s + l._count.wishlistedBy, 0),
+    active:        listings.filter((l) => l.status === "active").length,
+    sold:          listings.filter((l) => l.status === "sold" || l.sale).length,
+    totalViews:    listings.reduce((s, l) => s + (l.views ?? 0), 0),
+    totalSaves:    listings.reduce((s, l) => s + l._count.wishlistedBy, 0),
     pendingOffers: offers.length,
   };
 
@@ -56,6 +101,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       href: "/dashboard?filter=active",
       color: "text-brand-400",
       hoverBorder: "hover:border-brand-500/50",
+      hint: "View listings →",
     },
     {
       icon: BadgeCheck,
@@ -64,6 +110,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       href: "/dashboard?filter=sold",
       color: "text-green-400",
       hoverBorder: "hover:border-green-500/50",
+      hint: "View listings →",
     },
     {
       icon: Eye,
@@ -72,24 +119,29 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       href: "/dashboard?filter=views",
       color: "text-sky-400",
       hoverBorder: "hover:border-sky-500/50",
+      hint: "View listings →",
     },
     {
       icon: Heart,
       label: "Total Saves",
       value: stats.totalSaves,
-      href: null,
+      href: "/dashboard?filter=saves",
       color: "text-pink-400",
-      hoverBorder: "",
+      hoverBorder: "hover:border-pink-500/50",
+      hint: "View saved →",
     },
     {
       icon: DollarSign,
       label: "Pending Offers",
       value: stats.pendingOffers,
-      href: stats.pendingOffers > 0 ? "#pending-offers" : null,
+      href: "/dashboard?filter=offers",
       color: "text-amber-400",
       hoverBorder: "hover:border-amber-500/50",
+      hint: "View offers →",
     },
   ];
+
+  const isGridFilter = ["all", "active", "sold", "views"].includes(filter);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -108,21 +160,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {statCards.map(({ icon: Icon, label, value, href, color, hoverBorder }) => {
+          {statCards.map(({ icon: Icon, label, value, href, color, hoverBorder, hint }) => {
+            const isActive = filter === href?.split("=")[1];
             const inner = (
-              <div className={`card p-4 h-full transition-all ${href ? `${hoverBorder} cursor-pointer` : ""}`}>
+              <div className={`card p-4 h-full transition-all ${
+                isActive
+                  ? `border-2 ${color.replace("text-", "border-")}/60 bg-dark-700`
+                  : href ? `${hoverBorder} cursor-pointer` : ""
+              }`}>
                 <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                   <Icon className={`w-4 h-4 ${color}`} />
                   {label}
                 </div>
-                <div className={`font-display font-bold text-2xl ${href ? color : "text-white"}`}>
+                <div className={`font-display font-bold text-2xl ${color}`}>
                   {value}
                 </div>
-                {href && (
-                  <p className={`text-xs mt-1.5 ${color} opacity-60 group-hover:opacity-100 transition-opacity`}>
-                    View listings →
-                  </p>
-                )}
+                <p className={`text-xs mt-1.5 ${color} transition-opacity ${isActive ? "opacity-100 font-medium" : "opacity-50 group-hover:opacity-80"}`}>
+                  {isActive ? "Currently viewing" : hint}
+                </p>
               </div>
             );
             return href ? (
@@ -135,49 +190,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           })}
         </div>
 
-        {/* Pending Offers */}
-        {offers.length > 0 && (
-          <div className="mb-10" id="pending-offers">
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-amber-400" />
-              Pending Offers
-              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
-                {offers.length}
-              </span>
-            </h2>
-            <div className="space-y-3">
-              {offers.map((offer) => (
-                <div key={offer.id} className="card p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-white">{offer.listing.title}</p>
-                    <p className="text-sm text-gray-400">
-                      {offer.buyer.name} offers{" "}
-                      <span className="text-brand-400 font-semibold">{formatPrice(offer.amount)}</span>
-                      {" "}(listed at {formatPrice(offer.listing.price)})
-                    </p>
-                    {offer.message && (
-                      <p className="text-xs text-gray-500 mt-1 italic">&ldquo;{offer.message}&rdquo;</p>
-                    )}
-                  </div>
-                  <a
-                    href={`/messages?with=${offer.buyer.name}`}
-                    className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30 text-brand-400 hover:bg-brand-500/20 transition-colors"
-                  >
-                    Reply
-                  </a>
-                </div>
-              ))}
-            </div>
+        {/* Content area — switches based on filter */}
+        {isGridFilter ? (
+          <div>
+            <h2 className="font-semibold text-white mb-4">My Listings</h2>
+            <Suspense fallback={null}>
+              <MyListingsGrid
+                listings={serialisedListings}
+                initialFilter={filter as "all" | "active" | "sold" | "views"}
+              />
+            </Suspense>
           </div>
-        )}
-
-        {/* Listings grid with filter tabs */}
-        <div>
-          <h2 className="font-semibold text-white mb-4">My Listings</h2>
-          <Suspense fallback={null}>
-            <MyListingsGrid listings={serialisedListings} initialFilter={(searchParams?.filter as "all" | "active" | "sold" | "views") ?? "all"} />
-          </Suspense>
-        </div>
+        ) : filter === "saves" ? (
+          <SavesPanel listings={serialisedSaved} />
+        ) : filter === "offers" ? (
+          <OffersPanel offers={serialisedOffers} />
+        ) : null}
 
       </main>
     </div>
