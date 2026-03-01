@@ -6,7 +6,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { Tag, CheckCircle2, Zap } from "lucide-react";
 
 type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
-type Listing = ListingCardListing & { status: string; sale?: { id: string } | null };
+type Listing = ListingCardListing & { status: string; sale?: { id: string } | null; views?: number };
 
 type Filter = "all" | "active" | "sold";
 
@@ -83,7 +83,7 @@ export function MyListingsGrid({ listings }: { listings: Listing[] }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map((listing) => (
             <div key={listing.id} className="relative">
-              <ListingCard listing={listing} />
+              <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
               {/* Sold / inactive overlay */}
               {listing.status !== "active" && (

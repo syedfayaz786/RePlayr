@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MapPin, Clock, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { formatPrice, formatRelativeTime } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { useState } from "react";
@@ -28,6 +28,8 @@ interface ListingCardProps {
     _count?: { wishlistedBy: number };
     isWishlisted?: boolean;
     distanceKm?: number;
+    views?: number;
+    isSeller?: boolean;
   };
 }
 
@@ -224,6 +226,12 @@ export function ListingCard({ listing }: ListingCardProps) {
             )}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
+            {listing.isSeller && listing.views !== undefined && (
+              <span className="flex items-center gap-0.5 text-sky-400/80 mr-1">
+                <Eye className="w-3 h-3" />
+                <span>{listing.views}</span>
+              </span>
+            )}
             <Clock className="w-3 h-3" />
             <span>{formatRelativeTime(listing.createdAt)}</span>
           </div>

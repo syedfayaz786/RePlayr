@@ -90,6 +90,7 @@ model Listing {
   fuzzyLng Float?
 
   status    String   @default("active")
+  views     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sellerId  String
