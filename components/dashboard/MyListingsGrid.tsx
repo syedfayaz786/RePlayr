@@ -5,13 +5,8 @@ import Link from "next/link";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Tag, CheckCircle2, Zap } from "lucide-react";
 
-type Listing = {
-  id: string;
-  title: string;
-  status: string;
-  sale?: { id: string } | null;
-  [key: string]: unknown;
-};
+type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
+type Listing = ListingCardListing & { status: string; sale?: { id: string } | null };
 
 type Filter = "all" | "active" | "sold";
 
@@ -88,7 +83,7 @@ export function MyListingsGrid({ listings }: { listings: Listing[] }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map((listing) => (
             <div key={listing.id} className="relative">
-              <ListingCard listing={listing as Parameters<typeof ListingCard>[0]["listing"]} />
+              <ListingCard listing={listing} />
 
               {/* Sold / inactive overlay */}
               {listing.status !== "active" && (
