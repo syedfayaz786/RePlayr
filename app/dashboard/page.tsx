@@ -7,9 +7,10 @@ import { formatPrice } from "@/lib/utils";
 import { Plus, Eye, DollarSign, Tag, Heart, BadgeCheck } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
+import { Suspense } from "react";
 import { MyListingsGrid } from "@/components/dashboard/MyListingsGrid";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: { filter?: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/login");
 
@@ -52,22 +53,25 @@ export default async function DashboardPage() {
       icon: Tag,
       label: "Active",
       value: stats.active,
-      href: null, // filter handled client-side via MyListingsGrid
+      href: "/dashboard?filter=active",
       color: "text-brand-400",
+      hoverBorder: "hover:border-brand-500/50",
     },
     {
       icon: BadgeCheck,
       label: "Sold",
       value: stats.sold,
-      href: null,
+      href: "/dashboard?filter=sold",
       color: "text-green-400",
+      hoverBorder: "hover:border-green-500/50",
     },
     {
       icon: Eye,
       label: "Total Views",
       value: stats.totalViews,
-      href: null,
+      href: "/dashboard?filter=views",
       color: "text-sky-400",
+      hoverBorder: "hover:border-sky-500/50",
     },
     {
       icon: Heart,
@@ -75,6 +79,7 @@ export default async function DashboardPage() {
       value: stats.totalSaves,
       href: null,
       color: "text-pink-400",
+      hoverBorder: "",
     },
     {
       icon: DollarSign,
@@ -82,6 +87,7 @@ export default async function DashboardPage() {
       value: stats.pendingOffers,
       href: stats.pendingOffers > 0 ? "#pending-offers" : null,
       color: "text-amber-400",
+      hoverBorder: "hover:border-amber-500/50",
     },
   ];
 
@@ -102,9 +108,9 @@ export default async function DashboardPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {statCards.map(({ icon: Icon, label, value, href, color }) => {
+          {statCards.map(({ icon: Icon, label, value, href, color, hoverBorder }) => {
             const inner = (
-              <div className={`card p-4 h-full transition-colors ${href ? "hover:border-brand-500/50 cursor-pointer" : ""}`}>
+              <div className={`card p-4 h-full transition-all ${href ? `${hoverBorder} cursor-pointer` : ""}`}>
                 <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                   <Icon className={`w-4 h-4 ${color}`} />
                   {label}
@@ -112,15 +118,17 @@ export default async function DashboardPage() {
                 <div className={`font-display font-bold text-2xl ${href ? color : "text-white"}`}>
                   {value}
                 </div>
-                {href && value > 0 && (
-                  <p className={`text-xs mt-1 ${color} opacity-70`}>View →</p>
+                {href && (
+                  <p className={`text-xs mt-1.5 ${color} opacity-60 group-hover:opacity-100 transition-opacity`}>
+                    View listings →
+                  </p>
                 )}
               </div>
             );
             return href ? (
-              <a key={label} href={href} className="block">
+              <Link key={label} href={href} className="block group">
                 {inner}
-              </a>
+              </Link>
             ) : (
               <div key={label}>{inner}</div>
             );
@@ -166,7 +174,9 @@ export default async function DashboardPage() {
         {/* Listings grid with filter tabs */}
         <div>
           <h2 className="font-semibold text-white mb-4">My Listings</h2>
-          <MyListingsGrid listings={serialisedListings} />
+          <Suspense fallback={null}>
+            <MyListingsGrid listings={serialisedListings} initialFilter={(searchParams?.filter as "all" | "active" | "sold" | "views") ?? "all"} />
+          </Suspense>
         </div>
 
       </main>
