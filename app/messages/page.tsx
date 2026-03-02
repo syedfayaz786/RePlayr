@@ -74,7 +74,16 @@ export default async function MessagesPage({
   const convList = Array.from(convMap.values());
   const activeKey = activePartnerId ? `${activePartnerId}::${activeListingId ?? "none"}` : null;
   const activeConv = activeKey ? convMap.get(activeKey) : null;
-  const activePartner = activeConv?.partner ?? null;
+  let activePartner: { id: string; name: string | null; image: string | null } | null = activeConv?.partner ?? null;
+
+  // If we have a partnerId but no existing conversation, fetch the partner directly
+  if (activePartnerId && !activePartner) {
+    const partnerUser = await prisma.user.findUnique({
+      where: { id: activePartnerId },
+      select: { id: true, name: true, image: true },
+    });
+    if (partnerUser) activePartner = partnerUser;
+  }
 
   // ── 3. Thread messages (all between the pair, scoped to listing) ──────────
   let thread: typeof allMessages = [];

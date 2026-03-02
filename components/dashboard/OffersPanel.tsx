@@ -145,7 +145,7 @@ export function OffersPanel({ offers }: { offers: Offer[] }) {
 
               {/* Reply CTA */}
               <Link
-                href={`/messages?with=${offer.buyer.name}`}
+                href={`/messages?with=${offer.buyer.id}&listing=${offer.listing.id}`}
                 className="flex items-center justify-center gap-1.5 w-full text-xs px-3 py-2 rounded-lg bg-brand-500/10 border border-brand-500/30 text-brand-400 hover:bg-brand-500/20 transition-colors font-medium mt-auto"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
