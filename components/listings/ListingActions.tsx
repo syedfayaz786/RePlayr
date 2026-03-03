@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { LocationRequestPanel } from "@/components/listings/LocationRequestPanel";
+import { MarkAsSoldModal } from "@/components/listings/MarkAsSoldModal";
 
 interface ListingActionsProps {
   listingId: string;
@@ -42,6 +43,7 @@ export function ListingActions({
   const [copied, setCopied] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(status);
   const [markingStatus, setMarkingStatus] = useState(false);
+  const [showSoldModal, setShowSoldModal] = useState(false);
 
   const requireAuth = () => {
     if (!session) {
@@ -174,12 +176,11 @@ export function ListingActions({
         {/* Mark as sold / relist */}
         {currentStatus === "active" ? (
           <button
-            onClick={() => updateStatus("sold")}
-            disabled={markingStatus}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200 disabled:opacity-50"
+            onClick={() => setShowSoldModal(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
           >
             <CheckCircle2 className="w-4 h-4" />
-            {markingStatus ? "Updating…" : "Mark as Sold"}
+            Mark as Sold
           </button>
         ) : currentStatus === "sold" ? (
           <button
@@ -204,6 +205,15 @@ export function ListingActions({
           <LocationRequestPanel listingId={listingId} />
         </div>
       </div>
+
+      {showSoldModal && (
+        <MarkAsSoldModal
+          listingId={listingId}
+          listingTitle={listingTitle}
+          onClose={() => setShowSoldModal(false)}
+          onSold={() => { setCurrentStatus("sold"); setShowSoldModal(false); }}
+        />
+      )}
     );
   }
 
