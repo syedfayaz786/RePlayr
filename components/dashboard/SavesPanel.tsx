@@ -63,10 +63,10 @@ export function SavesPanel({ listings }: { listings: SavedListing[] }) {
         {sorted.map((listing) => {
           const img = getFirstImage(listing.images);
           return (
-            <div key={listing.id} className="card p-4 flex gap-4 items-start">
+            <Link key={listing.id} href={`/listings/${listing.id}`} className="card p-4 flex gap-4 items-start hover:border-pink-500/40 transition-colors block group">
 
               {/* Thumbnail */}
-              <Link href={`/listings/${listing.id}`} className="flex-shrink-0">
+              <div className="flex-shrink-0">
                 <div className="w-14 h-14 rounded-lg overflow-hidden bg-dark-700 border border-dark-600">
                   {img ? (
                     img.startsWith("data:") ? (
@@ -78,14 +78,14 @@ export function SavesPanel({ listings }: { listings: SavedListing[] }) {
                     <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">No img</div>
                   )}
                 </div>
-              </Link>
+              </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <Link href={`/listings/${listing.id}`} className="font-medium text-white hover:text-brand-300 transition-colors truncate">
+                  <span className="font-medium text-white group-hover:text-brand-300 transition-colors truncate">
                     {listing.title}
-                  </Link>
+                  </span>
                   <span className="flex-shrink-0 font-display font-bold text-brand-400 text-sm">
                     {formatPrice(listing.price)}
                   </span>
@@ -126,7 +126,7 @@ export function SavesPanel({ listings }: { listings: SavedListing[] }) {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
