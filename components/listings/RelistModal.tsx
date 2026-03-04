@@ -191,14 +191,14 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
             <label className="label-base">Platform</label>
             <div className="grid grid-cols-3 gap-2">
               {PLATFORMS.map((p) => {
-                const cfg = (PLATFORM_CONFIG[p] ?? {}) as unknown as Record<string, unknown>;
+                const cfg = PLATFORM_CONFIG[p];
                 const isActive = form.platform === p;
                 return (
                   <button key={p} type="button" onClick={() => set("platform", p)}
                     className={`py-2 px-2 rounded-xl border text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                       isActive ? "border-brand-500 bg-brand-500/20 text-brand-300" : "border-dark-600 bg-dark-800 text-gray-400 hover:border-dark-500"
                     }`}>
-                    {cfg.emoji && <span>{cfg.emoji}</span>}{p}
+                    {cfg?.Logo && <cfg.Logo className="w-3.5 h-3.5" />}{cfg?.shortLabel ?? p}
                   </button>
                 );
               })}
