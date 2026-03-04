@@ -92,14 +92,15 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
         body: JSON.stringify({
           ...form,
           price:  parseFloat(form.price),
-          images: JSON.stringify(images),
+          images: images,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         toast.success("Listing created!");
-        onClose();
+        // Navigate first, onClose will unmount the modal naturally via parent re-render
         router.push(`/listings/${data.id}`);
+        onClose();
       } else {
         toast.error(data.error ?? "Failed to create listing");
       }

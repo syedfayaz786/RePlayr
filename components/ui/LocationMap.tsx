@@ -54,7 +54,7 @@ function loadLeaflet(): Promise<any> {
     } else {
       // Script tag already injected — wait for it to finish loading
       const poll = setInterval(() => {
-        if (window.L) { clearInterval(poll); resolve(window.L); }
+        if (window.L && window.L.map) { clearInterval(poll); resolve(window.L); }
       }, 50);
     }
   });
@@ -103,7 +103,7 @@ export default function LocationMap({
     let mounted = true;
 
     loadLeaflet().then((L) => {
-      if (!L || !mounted || !divRef.current) return;
+      if (!L || !L.map || !mounted || !divRef.current) return;
 
       // Destroy old instance first
       if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
