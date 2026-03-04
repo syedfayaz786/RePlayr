@@ -123,7 +123,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-md relative">
+      <div className="card w-full max-w-md relative overflow-visible">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10"><X className="w-5 h-5" /></button>
 
         <div className="flex gap-1.5 px-6 pt-5">
@@ -162,7 +162,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
               <button onClick={() => setStep("where")} className="text-xs text-gray-500 hover:text-gray-300 mb-3 transition-colors">Back</button>
               <h3 className="font-display font-bold text-white text-lg mb-1">Find the Buyer</h3>
               <p className="text-sm text-gray-400 mb-4">Optional — search by name or email to link the buyer.</p>
-              <div ref={searchRef} className="relative mb-4">
+              <div ref={searchRef} className="relative mb-4 overflow-visible">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 animate-spin" />}
@@ -171,7 +171,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
                     className="input-base pl-10 pr-10" autoFocus />
                 </div>
                 {dropdownOpen && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-dark-800 border border-dark-600 rounded-xl overflow-hidden shadow-2xl z-50 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-dark-800 border border-dark-600 rounded-xl shadow-2xl z-[200] max-h-56 overflow-y-auto">
                     {results.map((user) => (
                       <button key={user.id} onClick={() => { setSelectedUser(user); setQuery(user.name??""); setDropdownOpen(false); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-700 transition-colors text-left border-b border-dark-700 last:border-0">

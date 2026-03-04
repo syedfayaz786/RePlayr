@@ -235,6 +235,16 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isWishlisted={isWishlisted}
               isSeller={isSeller}
               status={listing.status}
+              listingData={{
+                title:       listing.title,
+                description: listing.description,
+                price:       listing.price,
+                platform:    listing.platform,
+                edition:     listing.edition,
+                condition:   listing.condition,
+                location:    listing.location,
+                images:      listing.images,
+              }}
             />
 
             {/* Rate seller — only visible to the confirmed buyer */}
