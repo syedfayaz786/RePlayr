@@ -191,7 +191,7 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
             <label className="label-base">Platform</label>
             <div className="grid grid-cols-3 gap-2">
               {PLATFORMS.map((p) => {
-                const cfg = (PLATFORM_CONFIG[p] ?? {}) as Record<string, unknown>;
+                const cfg = (PLATFORM_CONFIG[p] ?? {}) as unknown as Record<string, unknown>;
                 const isActive = form.platform === p;
                 return (
                   <button key={p} type="button" onClick={() => set("platform", p)}
