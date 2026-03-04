@@ -95,14 +95,13 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
           images: JSON.stringify(images),
         }),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         toast.success("Listing created!");
         onClose();
         router.push(`/listings/${data.id}`);
       } else {
-        const d = await res.json();
-        toast.error(d.error ?? "Failed to create listing");
+        toast.error(data.error ?? "Failed to create listing");
       }
     } catch { toast.error("Something went wrong"); }
     finally { setLoading(false); }
