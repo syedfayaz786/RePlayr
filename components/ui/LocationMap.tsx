@@ -34,9 +34,25 @@ declare global {
 
 function loadLeaflet(): Promise<any> {
   if (typeof window === "undefined") return Promise.resolve(null);
-  if (window._leafletLoaded && window.L) return Promise.resolve(window.L);
+  // Already fully loaded
+  if (window._leafletLoaded && window.L && typeof window.L.map === "function") {
+    return Promise.resolve(window.L);
+  }
 
   return new Promise((resolve, reject) => {
+    // Helper: poll until L.map is a real function, then resolve
+    const waitForL = () => {
+      const poll = setInterval(() => {
+        if (window.L && typeof window.L.map === "function") {
+          clearInterval(poll);
+          window._leafletLoaded = true;
+          resolve(window.L);
+        }
+      }, 30);
+      // Timeout after 10s
+      setTimeout(() => { clearInterval(poll); reject(new Error("Leaflet load timeout")); }, 10000);
+    };
+
     if (!document.getElementById("leaflet-css")) {
       const link = document.createElement("link");
       link.id   = "leaflet-css";
@@ -44,18 +60,18 @@ function loadLeaflet(): Promise<any> {
       link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
       document.head.appendChild(link);
     }
+
     if (!document.getElementById("leaflet-js")) {
       const s = document.createElement("script");
       s.id  = "leaflet-js";
       s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      s.onload  = () => { window._leafletLoaded = true; resolve(window.L); };
+      // Don't resolve in onload directly — L.map may not be ready yet
+      s.onload  = waitForL;
       s.onerror = reject;
       document.head.appendChild(s);
     } else {
-      // Script tag already injected — wait for it to finish loading
-      const poll = setInterval(() => {
-        if (window.L && window.L.map) { clearInterval(poll); resolve(window.L); }
-      }, 50);
+      // Script already injected, just wait for it
+      waitForL();
     }
   });
 }
