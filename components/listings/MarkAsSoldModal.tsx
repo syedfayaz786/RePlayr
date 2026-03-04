@@ -59,6 +59,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.trim().length === 0) { setResults([]); setDropdownOpen(false); return; }
     debounceRef.current = setTimeout(() => doSearch(query), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, doSearch]);
@@ -140,7 +141,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
               <div className="flex items-center gap-2 mb-1"><CheckCircle2 className="w-5 h-5 text-green-400" /><h3 className="font-display font-bold text-white text-lg">Mark as Sold</h3></div>
               <p className="text-sm text-gray-400 mb-5"><span className="text-white font-medium">{listingTitle}</span><br/>Where did this sale happen?</p>
               <div className="space-y-3">
-                <button onClick={() => { setSoldWhere("replayr"); setStep("search"); doSearch(""); }}
+                <button onClick={() => { setSoldWhere("replayr"); setStep("search"); }}
                   className="w-full flex items-center gap-4 p-4 rounded-xl border border-dark-600 bg-dark-800 hover:border-brand-500/60 hover:bg-dark-700 transition-all group text-left">
                   <div className="w-10 h-10 rounded-xl bg-brand-500/15 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/25 transition-colors"><ShoppingBag className="w-5 h-5 text-brand-400" /></div>
                   <div className="flex-1"><p className="font-semibold text-white text-sm">Sold on RePlayr</p><p className="text-xs text-gray-400 mt-0.5">Find the buyer and request a review</p></div>
