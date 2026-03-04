@@ -157,6 +157,7 @@ export function ListingActions({
 
   if (isSeller) {
     return (
+      <>
       <div className="card p-4 sm:p-6 space-y-3">
         <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
@@ -214,6 +215,7 @@ export function ListingActions({
           onSold={() => { setCurrentStatus("sold"); setShowSoldModal(false); }}
         />
       )}
+    </>
     );
   }
 
