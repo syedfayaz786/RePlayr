@@ -120,6 +120,7 @@ export default function LocationMap({
 
     loadLeaflet().then((L) => {
       if (!L || !L.map || !mounted || !divRef.current) return;
+      try {
 
       // Destroy old instance first
       if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
@@ -182,6 +183,11 @@ export default function LocationMap({
       const circleBounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
       map.fitBounds(circleBounds, { padding: [20, 20], maxZoom: 12 });
       setTimeout(() => map.invalidateSize(), 120);
+      } catch (e) {
+        console.warn("Leaflet map init failed:", e);
+      }
+    }).catch((e) => {
+      console.warn("Leaflet failed to load:", e);
     });
 
     return () => {
