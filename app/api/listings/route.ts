@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     const { title, description, price, platform, edition,
             condition, location, images, latitude, longitude } = body;
 
-    if (!title || !price || !platform || !condition) {
+    if (!title || !price || !platform || !condition || !location) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       platform,
       edition:     edition ?? null,
       condition,
-      location:    location ?? null,
+      location,
       images:      JSON.stringify(images ?? []),
       sellerId:    session.user.id,
     };

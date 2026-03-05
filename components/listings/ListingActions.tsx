@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -9,18 +9,6 @@ import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { LocationRequestPanel } from "@/components/listings/LocationRequestPanel";
 import { MarkAsSoldModal } from "@/components/listings/MarkAsSoldModal";
-import { RelistModal } from "@/components/listings/RelistModal";
-
-interface ListingData {
-  title: string;
-  description: string | null;
-  price: number;
-  platform: string;
-  edition: string | null;
-  condition: string;
-  location: string | null;
-  images: string; // JSON string
-}
 
 interface ListingActionsProps {
   listingId: string;
@@ -31,7 +19,6 @@ interface ListingActionsProps {
   isWishlisted: boolean;
   isSeller: boolean;
   status: string;
-  listingData?: ListingData;
 }
 
 export function ListingActions({
@@ -43,7 +30,6 @@ export function ListingActions({
   isWishlisted: initialWishlisted,
   isSeller,
   status,
-  listingData,
 }: ListingActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -58,7 +44,6 @@ export function ListingActions({
   const [currentStatus, setCurrentStatus] = useState(status);
   const [markingStatus, setMarkingStatus] = useState(false);
   const [showSoldModal, setShowSoldModal] = useState(false);
-  const [showRelistModal, setShowRelistModal] = useState(false);
 
   const requireAuth = () => {
     if (!session) {
@@ -191,37 +176,27 @@ export function ListingActions({
 
         {/* Mark as sold / relist */}
         {currentStatus === "active" ? (
-          <>
-            <button
-              onClick={() => setShowSoldModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Mark as Sold
-            </button>
-            <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
-              <Edit className="w-4 h-4" />Edit Listing
-            </Link>
-          </>
+          <button
+            onClick={() => setShowSoldModal(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Mark as Sold
+          </button>
         ) : currentStatus === "sold" ? (
-          <>
-            <button
-              onClick={() => setShowRelistModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 text-brand-300 hover:text-brand-200"
-            >
-              <Copy className="w-4 h-4" />
-              Relist as New
-            </button>
-            <button
-              onClick={() => updateStatus("active")}
-              disabled={markingStatus}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
-            >
-              <RotateCcw className="w-4 h-4" />
-              {markingStatus ? "Updating…" : "Mark as Available"}
-            </button>
-          </>
+          <button
+            onClick={() => updateStatus("active")}
+            disabled={markingStatus}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {markingStatus ? "Updating…" : "Relist (Mark Active)"}
+          </button>
         ) : null}
+
+        <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
+          <Edit className="w-4 h-4" />Edit Listing
+        </Link>
 
         {/* Address requests from buyers */}
         <div className="border-t border-dark-600 pt-4">
@@ -238,13 +213,6 @@ export function ListingActions({
           listingTitle={listingTitle}
           onClose={() => setShowSoldModal(false)}
           onSold={() => { setCurrentStatus("sold"); setShowSoldModal(false); }}
-        />
-      )}
-
-      {showRelistModal && listingData && (
-        <RelistModal
-          listingData={listingData}
-          onClose={() => setShowRelistModal(false)}
         />
       )}
     </>
