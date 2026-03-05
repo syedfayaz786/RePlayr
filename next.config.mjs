@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// cache-bust: v101
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -15,6 +16,8 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.resolve.fallback = { ...config.resolve.fallback, fs: false };
+    // Disable module concatenation to prevent Leaflet chunk caching issues
+    config.optimization = { ...config.optimization, moduleIds: 'named' };
     return config;
   },
 };

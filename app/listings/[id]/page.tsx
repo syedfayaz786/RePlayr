@@ -15,16 +15,6 @@ import { ImageGallery } from "@/components/listings/ImageGallery";
 import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ViewTracker } from "@/components/listings/ViewTracker";
-import dynamic from "next/dynamic";
-const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[200px] sm:h-[300px] rounded-xl bg-dark-700 border border-dark-600 flex items-center justify-center text-gray-500 text-sm">
-      Loading map…
-    </div>
-  ),
-});
-
 export default async function ListingPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
 
@@ -135,18 +125,6 @@ export default async function ListingPage({ params }: { params: { id: string } }
               </div>
             </div>
 
-            {/* Location map — Facebook-style fuzzy area */}
-            {(listing as any).fuzzyLat && (listing as any).fuzzyLng && (
-              <LocationMap
-                fuzzyLat={(listing as any).fuzzyLat}
-                fuzzyLng={(listing as any).fuzzyLng}
-                label={listing.location ?? undefined}
-                radiusKm={3}
-                listingId={listing.id}
-                isSeller={isSeller}
-              />
-            )}
-
             {/* Privacy shield — only shown to the seller */}
             {isSeller && (listing as any).fuzzyLat && (
               <div className="card p-5 border border-brand-500/20 bg-brand-500/5">
@@ -235,6 +213,16 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isWishlisted={isWishlisted}
               isSeller={isSeller}
               status={listing.status}
+              listingData={{
+                title:       listing.title,
+                description: listing.description,
+                price:       listing.price,
+                platform:    listing.platform,
+                edition:     listing.edition,
+                condition:   listing.condition,
+                location:    listing.location,
+                images:      listing.images,
+              }}
             />
 
             {/* Rate seller — only visible to the confirmed buyer */}
