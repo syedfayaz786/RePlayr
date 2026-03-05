@@ -46,7 +46,7 @@ export default function LocationMap({
     let mounted = true;
 
     // Dynamically import leaflet only on client
-    import("leaflet").then((L) => {
+    import("leaflet").then((mod) => { const L = (mod as any).default ?? mod;
       if (!mounted || !divRef.current) return;
       try {
         // Leaflet CSS — inject once
