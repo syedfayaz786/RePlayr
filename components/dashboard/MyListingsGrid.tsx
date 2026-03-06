@@ -176,6 +176,15 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
               <div key={listing.id} className="relative">
                 <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
+                {/* Sold badge */}
+                {listing.status === "sold" && (
+                  <div className="absolute top-2 left-2 pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/20 border border-green-500/40 text-green-400">
+                      Sold
+                    </span>
+                  </div>
+                )}
+
                 {/* Edit button */}
                 <Link href={`/listings/${listing.id}/edit`}
                   className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
