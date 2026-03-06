@@ -38,7 +38,11 @@ export default async function ListingPage({ params }: { params: { id: string } }
   if (!listing) notFound();
 
   const images = (() => {
-    try { return JSON.parse(listing.images) as string[]; }
+    try {
+      let parsed = JSON.parse(listing.images);
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
+      return Array.isArray(parsed) ? parsed as string[] : [];
+    }
     catch { return []; }
   })();
 

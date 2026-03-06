@@ -56,7 +56,12 @@ export function ListingCard({ listing }: ListingCardProps) {
   const [imgIndex, setImgIndex]     = useState(0);
 
   const images = (() => {
-    try { return JSON.parse(listing.images) as string[]; }
+    try {
+      let parsed = JSON.parse(listing.images);
+      // Handle double-stringified images: "["url"]" => parse again
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
+      return Array.isArray(parsed) ? parsed as string[] : [];
+    }
     catch { return []; }
   })();
 
