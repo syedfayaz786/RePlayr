@@ -31,16 +31,9 @@ export default async function DashboardPage({
         seller: { select: { id: true, name: true, image: true } },
         _count:  { select: { wishlistedBy: true, offers: true } },
         sale: {
-          select: {
-            id: true,
-            buyerId: true,
+          include: {
             buyer: { select: { id: true, name: true, image: true } },
           },
-        },
-        reviewsReceived: {
-          where: { role: "buyer" },
-          select: { id: true, rating: true, authorId: true },
-          take: 1,
         },
       },
       orderBy: { createdAt: "desc" },
@@ -70,13 +63,33 @@ export default async function DashboardPage({
     }),
   ]);
 
+  // Fetch reviews that buyers left for the seller, keyed by listingId
+  const soldListingIds = listings
+    .filter(l => l.sale?.listingId)
+    .map(l => l.id);
+
+  const buyerReviews = soldListingIds.length > 0
+    ? await prisma.review.findMany({
+        where: {
+          listingId: { in: soldListingIds },
+          targetId: session.user.id,
+          role: "buyer", // author was buyer => they reviewed the seller
+        },
+        select: { id: true, rating: true, authorId: true, listingId: true },
+      })
+    : [];
+
+  const reviewByListingId = Object.fromEntries(
+    buyerReviews.map(r => [r.listingId, r])
+  );
+
   const serialisedListings = listings.map((l) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
     updatedAt: l.updatedAt.toISOString(),
     saleBuyer: (l as any).sale?.buyer ?? null,
     saleBuyerId: (l as any).sale?.buyerId ?? null,
-    buyerReview: (l as any).reviewsReceived?.[0] ?? null,
+    buyerReview: reviewByListingId[l.id] ?? null,
   }));
 
   const serialisedOffers = offers.map((o) => ({
