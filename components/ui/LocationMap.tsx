@@ -1,7 +1,7 @@
 "use client";
 
-import { MapPin, Lock, MessageSquare, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
+import { MapPin, Lock, MessageSquare, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface LocationMapProps {
@@ -13,16 +13,77 @@ interface LocationMapProps {
   isSeller?: boolean;
 }
 
+// Inner map component — only imported client-side via dynamic()
+function LeafletMap({ fuzzyLat, fuzzyLng, radiusKm = 3 }: { fuzzyLat: number; fuzzyLng: number; radiusKm?: number }) {
+  const { MapContainer, TileLayer, Circle, CircleMarker, useMap } = require("react-leaflet");
+  require("leaflet/dist/leaflet.css");
+
+  function FitBounds() {
+    const map = useMap();
+    useEffect(() => {
+      const L = require("leaflet");
+      const bounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
+      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
+      setTimeout(() => map.invalidateSize(), 120);
+    }, [map]);
+    return null;
+  }
+
+  return (
+    <MapContainer
+      center={[fuzzyLat, fuzzyLng]}
+      zoom={11}
+      scrollWheelZoom={false}
+      attributionControl={false}
+      zoomControl={true}
+      style={{ height: "100%", width: "100%", background: "#1a1f2e" }}
+    >
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        maxZoom={19}
+      />
+      <Circle
+        center={[fuzzyLat, fuzzyLng]}
+        radius={radiusKm * 1000 * 1.25}
+        pathOptions={{ color: "#06b6d4", fillColor: "#06b6d4", fillOpacity: 0.08, weight: 0 }}
+      />
+      <Circle
+        center={[fuzzyLat, fuzzyLng]}
+        radius={radiusKm * 1000}
+        pathOptions={{ color: "#0891b2", fillColor: "#06b6d4", fillOpacity: 0.22, weight: 2.5, opacity: 0.9, dashArray: "8 5" }}
+      />
+      <CircleMarker
+        center={[fuzzyLat, fuzzyLng]}
+        radius={8}
+        pathOptions={{ color: "#fff", fillColor: "#06b6d4", fillOpacity: 1, weight: 2.5 }}
+      />
+      <FitBounds />
+    </MapContainer>
+  );
+}
+
 export default function LocationMap({
+  fuzzyLat,
+  fuzzyLng,
   label,
   radiusKm = 3,
   listingId,
   isSeller = false,
 }: LocationMapProps) {
+  const [MapComponent, setMapComponent] = useState<React.ComponentType<any> | null>(null);
+
   type ReqStatus = "idle" | "pending" | "approved" | "denied" | "sending" | "checking";
   const [reqStatus, setReqStatus] = useState<ReqStatus>(
     !isSeller && listingId ? "checking" : "idle"
   );
+
+  // Load map only on client
+  useEffect(() => {
+    if (fuzzyLat && fuzzyLng) {
+      setMapComponent(() => LeafletMap);
+    }
+  }, [fuzzyLat, fuzzyLng]);
 
   useEffect(() => {
     if (isSeller || !listingId) return;
@@ -120,15 +181,11 @@ export default function LocationMap({
           <p className="text-xs text-gray-500 leading-tight mt-0.5">Approximate location — exact address shared privately after contact</p>
         </div>
       </div>
-      {/* Static placeholder — no map library needed */}
-      <div className="h-[200px] sm:h-[260px] w-full bg-dark-800 flex flex-col items-center justify-center gap-3 border-b border-dark-600">
-        <div className="w-16 h-16 rounded-full bg-brand-500/10 border-2 border-dashed border-brand-500/30 flex items-center justify-center">
-          <MapPin className="w-7 h-7 text-brand-400" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-white">{label ?? "Pickup area"}</p>
-          <p className="text-xs text-gray-500 mt-1">~{radiusKm} km radius · exact location protected</p>
-        </div>
+      <div className="h-[200px] sm:h-[260px] w-full bg-dark-700">
+        {MapComponent && fuzzyLat && fuzzyLng
+          ? <MapComponent fuzzyLat={fuzzyLat} fuzzyLng={fuzzyLng} radiusKm={radiusKm} />
+          : <div className="h-full flex items-center justify-center text-gray-500 text-sm">Loading map…</div>
+        }
       </div>
       {bottomBar()}
     </div>

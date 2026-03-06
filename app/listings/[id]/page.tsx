@@ -12,6 +12,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ListingActions } from "@/components/listings/ListingActions";
 import { ImageGallery } from "@/components/listings/ImageGallery";
+import dynamic from "next/dynamic";
+const LocationMap = dynamic(() => import("@/components/ui/LocationMap"), {
+  ssr: false,
+  loading: () => <div className="h-[200px] sm:h-[260px] rounded-xl bg-dark-700 border border-dark-600 animate-pulse" />,
+});
 import { RateSellerWidget } from "@/components/ui/RateSellerWidget";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ViewTracker } from "@/components/listings/ViewTracker";
@@ -128,6 +133,18 @@ export default async function ListingPage({ params }: { params: { id: string } }
                 </div>
               </div>
             </div>
+
+            {/* Location map */}
+            {(listing as any).fuzzyLat && (listing as any).fuzzyLng && (
+              <LocationMap
+                fuzzyLat={(listing as any).fuzzyLat}
+                fuzzyLng={(listing as any).fuzzyLng}
+                label={listing.location ?? undefined}
+                radiusKm={3}
+                listingId={listing.id}
+                isSeller={isSeller}
+              />
+            )}
 
             {/* Privacy shield — only shown to the seller */}
             {isSeller && (listing as any).fuzzyLat && (
