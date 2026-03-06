@@ -179,7 +179,7 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                 {/* Sold badge — centred on image, always visible */}
                 {listing.status === "sold" && (
                   <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500 border border-green-400 text-white shadow-lg shadow-green-500/30">
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/30 backdrop-blur-sm border border-green-400/60 text-green-300 shadow-lg shadow-green-500/20">
                       Sold
                     </span>
                   </div>
