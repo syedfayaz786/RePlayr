@@ -184,6 +184,8 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             {user.location && <span className="flex items-center gap-0.5 text-xs text-gray-500"><MapPin className="w-3 h-3" />{user.location}</span>}
                             <span className="text-xs text-gray-600">{memberSince(user.createdAt)}</span>
+                          </div>
+                          <div className="mt-0.5">
                             <span className="text-xs text-gray-600">{user._count.salesAsBuyer} purchase{user._count.salesAsBuyer!==1?"s":""}</span>
                           </div>
                         </div>
