@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { MapPin, Lock, MessageSquare, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -13,54 +13,70 @@ interface LocationMapProps {
   isSeller?: boolean;
 }
 
-// Inner map component — only imported client-side via dynamic()
-function LeafletMap({ fuzzyLat, fuzzyLng, radiusKm = 3 }: { fuzzyLat: number; fuzzyLng: number; radiusKm?: number }) {
-  const { MapContainer, TileLayer, Circle, CircleMarker, useMap } = require("react-leaflet");
-  require("leaflet/dist/leaflet.css");
+function MapWidget({ fuzzyLat, fuzzyLng, radiusKm = 3 }: { fuzzyLat: number; fuzzyLng: number; radiusKm?: number }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
 
-  function FitBounds() {
-    const map = useMap();
-    useEffect(() => {
-      const L = require("leaflet");
-      const bounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
-      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
-      setTimeout(() => map.invalidateSize(), 120);
-    }, [map]);
-    return null;
-  }
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
 
-  return (
-    <MapContainer
-      center={[fuzzyLat, fuzzyLng]}
-      zoom={11}
-      scrollWheelZoom={false}
-      attributionControl={false}
-      zoomControl={true}
-      style={{ height: "100%", width: "100%", background: "#1a1f2e" }}
-    >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={19}
-      />
-      <Circle
-        center={[fuzzyLat, fuzzyLng]}
-        radius={radiusKm * 1000 * 1.25}
-        pathOptions={{ color: "#06b6d4", fillColor: "#06b6d4", fillOpacity: 0.08, weight: 0 }}
-      />
-      <Circle
-        center={[fuzzyLat, fuzzyLng]}
-        radius={radiusKm * 1000}
-        pathOptions={{ color: "#0891b2", fillColor: "#06b6d4", fillOpacity: 0.22, weight: 2.5, opacity: 0.9, dashArray: "8 5" }}
-      />
-      <CircleMarker
-        center={[fuzzyLat, fuzzyLng]}
-        radius={8}
-        pathOptions={{ color: "#fff", fillColor: "#06b6d4", fillOpacity: 1, weight: 2.5 }}
-      />
-      <FitBounds />
-    </MapContainer>
-  );
+    let L: any;
+    try { L = require("leaflet"); } catch { return; }
+
+    // Inject CSS once
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    // Fix default icon paths broken by webpack
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    });
+
+    const map = L.map(containerRef.current, {
+      center: [fuzzyLat, fuzzyLng],
+      zoom: 11,
+      scrollWheelZoom: false,
+      attributionControl: false,
+      zoomControl: true,
+      dragging: true,
+    });
+    mapRef.current = map;
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
+
+    L.circle([fuzzyLat, fuzzyLng], {
+      radius: radiusKm * 1000 * 1.25,
+      color: "#06b6d4", fillColor: "#06b6d4", fillOpacity: 0.08, weight: 0, interactive: false,
+    }).addTo(map);
+
+    L.circle([fuzzyLat, fuzzyLng], {
+      radius: radiusKm * 1000,
+      color: "#0891b2", fillColor: "#06b6d4", fillOpacity: 0.22, weight: 2.5, opacity: 0.9, dashArray: "8 5", interactive: false,
+    }).addTo(map);
+
+    L.circleMarker([fuzzyLat, fuzzyLng], {
+      radius: 8, color: "#fff", fillColor: "#06b6d4", fillOpacity: 1, weight: 2.5, interactive: false,
+    }).addTo(map);
+
+    const bounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
+    map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
+    setTimeout(() => map.invalidateSize(), 150);
+
+    return () => { map.remove(); mapRef.current = null; };
+  }, [fuzzyLat, fuzzyLng, radiusKm]);
+
+  return <div ref={containerRef} style={{ height: "100%", width: "100%" }} />;
 }
 
 export default function LocationMap({
@@ -71,19 +87,14 @@ export default function LocationMap({
   listingId,
   isSeller = false,
 }: LocationMapProps) {
-  const [MapComponent, setMapComponent] = useState<React.ComponentType<any> | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   type ReqStatus = "idle" | "pending" | "approved" | "denied" | "sending" | "checking";
   const [reqStatus, setReqStatus] = useState<ReqStatus>(
     !isSeller && listingId ? "checking" : "idle"
   );
 
-  // Load map only on client
-  useEffect(() => {
-    if (fuzzyLat && fuzzyLng) {
-      setMapComponent(() => LeafletMap);
-    }
-  }, [fuzzyLat, fuzzyLng]);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (isSeller || !listingId) return;
@@ -116,9 +127,7 @@ export default function LocationMap({
     if (isSeller) return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-dark-700 border-t border-dark-600">
         <Lock className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
-        <p className="text-xs text-gray-400">
-          Buyers see a <strong className="text-white">fuzzy area</strong> — your exact address is never shown until you approve a request.
-        </p>
+        <p className="text-xs text-gray-400">Buyers see a <strong className="text-white">fuzzy area</strong> — your exact address is never shown until you approve a request.</p>
       </div>
     );
     if (reqStatus === "checking") return (
@@ -157,8 +166,7 @@ export default function LocationMap({
           <Lock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
           <span className="text-xs text-gray-400 truncate">Exact address hidden — ask the seller</span>
         </div>
-        <button onClick={sendRequest}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-xs font-semibold transition-all">
+        <button onClick={sendRequest} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-xs font-semibold transition-all">
           <MessageSquare className="w-3 h-3" />
           Request Address
         </button>
@@ -182,8 +190,8 @@ export default function LocationMap({
         </div>
       </div>
       <div className="h-[200px] sm:h-[260px] w-full bg-dark-700">
-        {MapComponent && fuzzyLat && fuzzyLng
-          ? <MapComponent fuzzyLat={fuzzyLat} fuzzyLng={fuzzyLng} radiusKm={radiusKm} />
+        {mounted && fuzzyLat && fuzzyLng
+          ? <MapWidget fuzzyLat={fuzzyLat} fuzzyLng={fuzzyLng} radiusKm={radiusKm} />
           : <div className="h-full flex items-center justify-center text-gray-500 text-sm">Loading map…</div>
         }
       </div>
