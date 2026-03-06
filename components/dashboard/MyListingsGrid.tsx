@@ -179,11 +179,11 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                 {/* Sold — greyscale + dim overlay + centred badge */}
                 {listing.status === "sold" && (
                   <>
-                    {/* Greyscale + dim over image area only */}
-                    <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] rounded-t-xl pointer-events-none"
+                    {/* Greyscale + dim over entire tile */}
+                    <div className="absolute inset-0 rounded-xl pointer-events-none"
                       style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
 
-                    {/* SOLD badge centred */}
+                    {/* SOLD badge centred on image area */}
                     <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
                       <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/30 backdrop-blur-sm border border-green-400/60 text-green-300 shadow-lg shadow-green-500/20">
                         Sold
