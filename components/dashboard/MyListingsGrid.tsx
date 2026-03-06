@@ -237,31 +237,40 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                   <div className="absolute inset-0 rounded-xl bg-dark-900/55 pointer-events-none" />
                 )}
 
-                {/* SOLD badge — centre of image */}
+                {/* SOLD badge + buyer info + review — stacked in centre of image */}
                 {listing.status !== "active" && (
-                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
                     <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
                       listing.status === "sold"
                         ? "bg-green-500/20 border-green-500/40 text-green-400"
-                        : "bg-dark-800 border-dark-500 text-gray-400"
+                        : "bg-dark-800/90 border-dark-500 text-gray-400"
                     }`}>{listing.status}</span>
-                  </div>
-                )}
 
-                {/* Review overlay — bottom of image area for sold listings with a RePlayr buyer */}
-                {isSold && hasBuyer && (
-                  <div className="absolute left-0 right-0 bottom-[3.5rem] px-2 py-1.5 flex items-center justify-between gap-1"
-                    style={{ background: "linear-gradient(to top, rgba(8,10,26,0.95) 80%, transparent)" }}>
-                    {hasReview ? (
-                      <div className="flex items-center gap-1">
+                    {/* Sold to buyer link */}
+                    {isSold && hasBuyer && listing.saleBuyer && (
+                      <Link
+                        href={`/messages?with=${listing.saleBuyerId}&listing=${listing.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-xs text-brand-300 hover:text-brand-200 bg-dark-900/80 px-2 py-0.5 rounded-full border border-brand-500/20 transition-colors truncate max-w-[120px]"
+                      >
+                        Sold to {listing.saleBuyer.name ?? "buyer"}
+                      </Link>
+                    )}
+
+                    {/* Star rating */}
+                    {isSold && hasBuyer && hasReview && (
+                      <div className="flex items-center gap-1 bg-dark-900/80 px-2 py-0.5 rounded-full">
                         <StarRow rating={buyerReview!.rating} />
                         <span className="text-xs text-amber-400 font-semibold">{buyerReview!.rating}/5</span>
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Request review button */}
+                    {isSold && hasBuyer && !hasReview && listing.saleBuyer && (
                       <RequestReviewButton
                         listingId={listing.id}
                         buyerId={listing.saleBuyerId!}
-                        buyerName={listing.saleBuyer?.name ?? "buyer"}
+                        buyerName={listing.saleBuyer.name ?? "buyer"}
                       />
                     )}
                   </div>
