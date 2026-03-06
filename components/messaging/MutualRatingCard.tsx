@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, Send, CheckCircle, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import toast from "react-hot-toast";
 
 const SELLER_STRENGTHS = [
@@ -163,14 +164,20 @@ export function MutualRatingCard({
 
           {/* Who am I rating */}
           <div className="flex items-center gap-2">
-            {targetImage ? (
-              <Image src={targetImage} alt={targetName} width={24} height={24} className="rounded-full flex-shrink-0" />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-xs flex-shrink-0">
-                {targetName[0]?.toUpperCase()}
-              </div>
-            )}
-            <span className="text-xs font-medium text-gray-300">{label}</span>
+            <Link href={`/users/${targetId}`} target="_blank" className="flex-shrink-0 hover:ring-2 hover:ring-brand-500 rounded-full transition-all">
+              {targetImage ? (
+                <Image src={targetImage} alt={targetName} width={24} height={24} className="rounded-full" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-xs">
+                  {targetName[0]?.toUpperCase()}
+                </div>
+              )}
+            </Link>
+            <span className="text-xs font-medium text-gray-300">
+              {label.split(targetName)[0]}
+              <Link href={`/users/${targetId}`} target="_blank" className="text-brand-400 hover:text-brand-300 transition-colors">{targetName}</Link>
+              {label.split(targetName)[1]}
+            </span>
           </div>
 
           {submitted ? (

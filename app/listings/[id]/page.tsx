@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, EditionBadge } from "@/components/ui/Badges";
 import { StarRating } from "@/components/ui/StarRating";
+import { UserLink } from "@/components/ui/UserLink";
 import { MapPin, Clock, Package, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -181,7 +182,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
                           {review.author.name?.[0]?.toUpperCase() ?? "?"}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{review.author.name}</div>
+                          <UserLink id={review.author.id ?? ""} name={review.author.name} image={review.author.image} size="sm" />
                           <StarRating rating={review.rating} size="sm" />
                         </div>
                       </div>
@@ -200,26 +201,11 @@ export default async function ListingPage({ params }: { params: { id: string } }
             {/* Seller */}
             <div className="card p-6">
               <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Seller</h3>
-              <div className="flex items-center gap-3 mb-4">
-                {listing.seller.image ? (
-                  <Image
-                    src={listing.seller.image}
-                    alt={listing.seller.name ?? ""}
-                    width={48}
-                    height={48}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-lg">
-                    {listing.seller.name?.[0]?.toUpperCase() ?? "?"}
-                  </div>
-                )}
-                <div>
-                  <div className="font-semibold text-white">{listing.seller.name}</div>
-                  <StarRating rating={Math.round(avgRating)} size="sm" />
-                  <div className="text-xs text-gray-400">
-                    {listing.seller._count.reviewsReceived} reviews · {listing.seller._count.listings} listings
-                  </div>
+              <UserLink id={listing.sellerId} name={listing.seller.name} image={listing.seller.image} size="lg" className="mb-4" />
+              <div className="ml-14 -mt-3 mb-4">
+                <StarRating rating={Math.round(avgRating)} size="sm" />
+                <div className="text-xs text-gray-400 mt-0.5">
+                  {listing.seller._count.reviewsReceived} reviews · {listing.seller._count.listings} listings
                 </div>
               </div>
             </div>

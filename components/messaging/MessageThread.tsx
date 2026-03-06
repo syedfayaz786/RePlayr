@@ -254,15 +254,17 @@ export function MessageThread({
       <div ref={stickyTopRef} className="flex-shrink-0 flex flex-col">
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-600 bg-dark-800/60">
-        {partnerImage ? (
-          <Image src={partnerImage} alt={partnerName} width={36} height={36} className="rounded-full" />
-        ) : (
-          <div className="w-9 h-9 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-sm flex-shrink-0">
-            {partnerName[0].toUpperCase()}
-          </div>
-        )}
+        <Link href={`/users/${partnerId}`} className="flex-shrink-0 hover:ring-2 hover:ring-brand-500 rounded-full transition-all">
+          {partnerImage ? (
+            <Image src={partnerImage} alt={partnerName} width={36} height={36} className="rounded-full" />
+          ) : (
+            <div className="w-9 h-9 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-sm flex-shrink-0">
+              {partnerName[0].toUpperCase()}
+            </div>
+          )}
+        </Link>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-white text-sm truncate">{partnerName}</div>
+          <Link href={`/users/${partnerId}`} className="font-semibold text-white text-sm truncate hover:text-brand-400 transition-colors block">{partnerName}</Link>
           <div className="text-xs text-gray-400">{localSaleConfirmed ? "Sale confirmed ✓" : "Active seller"}</div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">

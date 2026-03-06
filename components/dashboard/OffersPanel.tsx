@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { UserLink } from "@/components/ui/UserLink";
 import { DollarSign, MessageCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
@@ -132,7 +133,7 @@ export function OffersPanel({ offers }: { offers: Offer[] }) {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white leading-tight truncate">{offer.buyer.name ?? "Anonymous"}</p>
+                  <UserLink id={offer.buyer.id} name={offer.buyer.name} image={offer.buyer.image} size="sm" />
                   <p className="text-xs text-gray-500">{timeAgo(offer.createdAt)}</p>
                 </div>
               </div>

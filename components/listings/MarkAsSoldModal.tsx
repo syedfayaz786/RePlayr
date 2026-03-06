@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -180,7 +181,11 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
                           : <div className="w-9 h-9 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-300 text-sm font-bold flex-shrink-0">{(user.name??"?")[0].toUpperCase()}</div>
                         }
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{user.name??"Anonymous"}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-white truncate">{user.name??"Anonymous"}</p>
+                            <Link href={`/users/${user.id}`} target="_blank" onClick={e => e.stopPropagation()}
+                              className="text-xs text-brand-400 hover:text-brand-300 flex-shrink-0 transition-colors">View profile</Link>
+                          </div>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             {user.location && <span className="flex items-center gap-0.5 text-xs text-gray-500"><MapPin className="w-3 h-3" />{user.location}</span>}
                             <span className="text-xs text-gray-600">{memberSince(user.createdAt)}</span>
