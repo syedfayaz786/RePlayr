@@ -30,7 +30,18 @@ export default async function DashboardPage({
       include: {
         seller: { select: { id: true, name: true, image: true } },
         _count:  { select: { wishlistedBy: true, offers: true } },
-        sale:    { select: { id: true } },
+        sale: {
+          select: {
+            id: true,
+            buyerId: true,
+            buyer: { select: { id: true, name: true, image: true } },
+          },
+        },
+        reviewsReceived: {
+          where: { role: "buyer" },
+          select: { id: true, rating: true, authorId: true },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -63,6 +74,9 @@ export default async function DashboardPage({
     ...l,
     createdAt: l.createdAt.toISOString(),
     updatedAt: l.updatedAt.toISOString(),
+    saleBuyer: (l as any).sale?.buyer ?? null,
+    saleBuyerId: (l as any).sale?.buyerId ?? null,
+    buyerReview: (l as any).reviewsReceived?.[0] ?? null,
   }));
 
   const serialisedOffers = offers.map((o) => ({

@@ -4,37 +4,97 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown, Star, Send } from "lucide-react";
+import toast from "react-hot-toast";
 
 type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
-type Listing = ListingCardListing & { status: string; sale?: { id: string } | null; views?: number };
+type Listing = ListingCardListing & {
+  status: string;
+  sale?: { id: string } | null;
+  views?: number;
+  saleBuyer?: { id: string; name: string | null; image: string | null } | null;
+  saleBuyerId?: string | null;
+  buyerReview?: { id: string; rating: number; authorId: string } | null;
+};
 
-type Filter = "all" | "active" | "sold" | "views";
+type Filter  = "all" | "active" | "sold" | "views";
 type SortKey = "newest" | "oldest" | "price_desc" | "price_asc" | "views_desc" | "title_asc";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "newest",     label: "Newest first" },
-  { key: "oldest",     label: "Oldest first" },
-  { key: "price_desc", label: "Price: High → Low" },
-  { key: "price_asc",  label: "Price: Low → High" },
-  { key: "views_desc", label: "Most viewed" },
-  { key: "title_asc",  label: "Title A → Z" },
+  { key: "newest",     label: "Newest first"      },
+  { key: "oldest",     label: "Oldest first"       },
+  { key: "price_desc", label: "Price: High → Low"  },
+  { key: "price_asc",  label: "Price: Low → High"  },
+  { key: "views_desc", label: "Most viewed"         },
+  { key: "title_asc",  label: "Title A → Z"        },
 ];
 
 const EMPTY_MESSAGES: Record<Filter, { title: string; body: string }> = {
-  all:    { title: "No listings yet",         body: "Post your first game and start selling!" },
-  active: { title: "No active listings",       body: "All your listings are sold or inactive." },
-  sold:   { title: "Nothing sold yet",         body: "Your sold games will appear here." },
-  views:  { title: "No views yet",             body: "Listings with at least one view will appear here." },
+  all:    { title: "No listings yet",        body: "Post your first game and start selling!" },
+  active: { title: "No active listings",      body: "All your listings are sold or inactive." },
+  sold:   { title: "Nothing sold yet",        body: "Your sold games will appear here." },
+  views:  { title: "No views yet",            body: "Listings with at least one view will appear here." },
 };
+
+function StarRow({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map((s) => (
+        <Star key={s} className={`w-3 h-3 ${s <= rating ? "fill-amber-400 text-amber-400" : "text-gray-600"}`} />
+      ))}
+    </div>
+  );
+}
+
+function RequestReviewButton({ listingId, buyerId, buyerName }: { listingId: string; buyerId: string; buyerName: string }) {
+  const [sent,    setSent]    = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const request = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSending(true);
+    try {
+      const res = await fetch("/api/reviews/request", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ listingId, buyerId }),
+      });
+      if (!res.ok) throw new Error();
+      setSent(true);
+      toast.success(`Review request sent to ${buyerName}!`);
+    } catch {
+      toast.error("Failed to send request");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) return (
+    <div className="flex items-center gap-1 text-xs text-green-400 font-medium">
+      <CheckCircle2 className="w-3 h-3" /> Requested
+    </div>
+  );
+
+  return (
+    <button
+      onClick={request}
+      disabled={sending}
+      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition-all disabled:opacity-50"
+    >
+      <Send className="w-3 h-3" />
+      {sending ? "Sending…" : "Request Review"}
+    </button>
+  );
+}
 
 export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[]; initialFilter?: Filter }) {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const [filter,       setFilter]       = useState<Filter>  ((searchParams.get("filter") as Filter)   ?? initialFilter ?? "all");
-  const [sort,         setSort]         = useState<SortKey>  ((searchParams.get("sort")   as SortKey)  ?? "newest");
-  const [sortOpen,     setSortOpen]     = useState(false);
+  const [filter,   setFilter]   = useState<Filter>  ((searchParams.get("filter") as Filter)  ?? initialFilter ?? "all");
+  const [sort,     setSort]     = useState<SortKey>  ((searchParams.get("sort")   as SortKey) ?? "newest");
+  const [sortOpen, setSortOpen] = useState(false);
 
   useEffect(() => {
     const f = searchParams.get("filter") as Filter | null;
@@ -66,7 +126,6 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
   };
 
   const filtered = listings.filter((l) => {
-    if (filter === "all")    return true;
     if (filter === "active") return l.status === "active";
     if (filter === "sold")   return l.status === "sold" || l.sale;
     if (filter === "views")  return (l.views ?? 0) > 0;
@@ -106,29 +165,21 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
 
   return (
     <div>
-      {/* Filter tabs + Sort row */}
+      {/* Filter tabs + Sort */}
       <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-        {/* Filter tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           {tabs.map(({ key, label, icon, color }) => {
             const isActive = filter === key;
             return (
-              <button
-                key={key}
-                onClick={() => updateFilter(key)}
+              <button key={key} onClick={() => updateFilter(key)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                  isActive
-                    ? activeStyle[color]
-                    : "bg-dark-800 border-dark-600 text-gray-400 hover:text-white hover:border-dark-500"
-                }`}
-              >
+                  isActive ? activeStyle[color] : "bg-dark-800 border-dark-600 text-gray-400 hover:text-white hover:border-dark-500"
+                }`}>
                 {icon}
                 {label}
                 <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full font-bold ${
                   isActive ? badgeStyle[color] : "bg-dark-700 text-gray-500"
-                }`}>
-                  {counts[key]}
-                </span>
+                }`}>{counts[key]}</span>
               </button>
             );
           })}
@@ -136,32 +187,23 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
 
         {/* Sort dropdown */}
         <div className="relative">
-          <button
-            onClick={() => setSortOpen(!sortOpen)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-800 border border-dark-600 text-sm text-gray-300 hover:text-white hover:border-dark-500 transition-all"
-          >
+          <button onClick={() => setSortOpen(!sortOpen)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-800 border border-dark-600 text-sm text-gray-300 hover:text-white hover:border-dark-500 transition-all">
             <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
             <span>{currentSortLabel}</span>
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
           </button>
-
           {sortOpen && (
             <>
-              {/* Backdrop */}
               <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
               <div className="absolute right-0 top-full mt-1 w-48 rounded-xl shadow-2xl z-20 overflow-hidden"
                 style={{ background: "rgba(11,13,31,0.98)", border: "1px solid rgba(6,182,212,0.15)", backdropFilter: "blur(16px)" }}>
                 {SORT_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => updateSort(option.key)}
+                  <button key={option.key} onClick={() => updateSort(option.key)}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      sort === option.key
-                        ? "text-brand-400 bg-brand-500/10"
-                        : "text-gray-300 hover:bg-dark-600/80 hover:text-white"
-                    }`}
-                  >
-                    {option.key === sort && <span className="mr-2">✓</span>}{option.label}
+                      sort === option.key ? "text-brand-400 bg-brand-500/10" : "text-gray-300 hover:bg-dark-600/80 hover:text-white"
+                    }`}>
+                    {sort === option.key && <span className="mr-2">✓</span>}{option.label}
                   </button>
                 ))}
               </div>
@@ -176,38 +218,61 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
           <Tag className="w-10 h-10 text-gray-500 mx-auto mb-3" />
           <h3 className="text-white font-semibold mb-2">{EMPTY_MESSAGES[filter].title}</h3>
           <p className="text-gray-400 text-sm mb-4">{EMPTY_MESSAGES[filter].body}</p>
-          {filter === "all" && (
-            <Link href="/listings/new" className="btn-primary inline-flex">Post a Game</Link>
-          )}
+          {filter === "all" && <Link href="/listings/new" className="btn-primary inline-flex">Post a Game</Link>}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-          {sorted.map((listing) => (
-            <div key={listing.id} className="relative">
-              <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
+          {sorted.map((listing) => {
+            const isSold       = listing.status === "sold" || !!listing.sale;
+            const hasBuyer     = !!listing.saleBuyerId;
+            const buyerReview  = listing.buyerReview;
+            const hasReview    = !!buyerReview;
 
-              {/* Sold / inactive overlay */}
-              {listing.status !== "active" && (
-                <div className="absolute inset-0 rounded-xl bg-dark-900/60 flex items-center justify-center pointer-events-none">
-                  <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
-                    listing.status === "sold"
-                      ? "bg-green-500/20 border-green-500/40 text-green-400"
-                      : "bg-dark-800 border-dark-500 text-gray-400"
-                  }`}>
-                    {listing.status}
-                  </span>
-                </div>
-              )}
+            return (
+              <div key={listing.id} className="relative flex flex-col">
+                <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
-              {/* Edit button */}
-              <Link
-                href={`/listings/${listing.id}/edit`}
-                className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all"
-              >
-                Edit
-              </Link>
-            </div>
-          ))}
+                {/* Sold overlay */}
+                {listing.status !== "active" && (
+                  <div className="absolute inset-0 rounded-xl bg-dark-900/60 flex items-center justify-center pointer-events-none"
+                    style={{ bottom: isSold && hasBuyer ? "3.5rem" : "0" }}>
+                    <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
+                      listing.status === "sold"
+                        ? "bg-green-500/20 border-green-500/40 text-green-400"
+                        : "bg-dark-800 border-dark-500 text-gray-400"
+                    }`}>{listing.status}</span>
+                  </div>
+                )}
+
+                {/* Edit button */}
+                <Link href={`/listings/${listing.id}/edit`}
+                  className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
+                  Edit
+                </Link>
+
+                {/* Review strip for sold listings with a buyer */}
+                {isSold && hasBuyer && (
+                  <div className="mt-1 px-2 py-2 rounded-b-xl bg-dark-800 border border-t-0 border-dark-600 flex items-center justify-between gap-2">
+                    {hasReview ? (
+                      <div className="flex items-center gap-1.5">
+                        <StarRow rating={buyerReview!.rating} />
+                        <span className="text-xs text-amber-400 font-medium">{buyerReview!.rating}/5</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-500 italic">No review yet</span>
+                    )}
+                    {!hasReview && listing.saleBuyerId && listing.saleBuyer && (
+                      <RequestReviewButton
+                        listingId={listing.id}
+                        buyerId={listing.saleBuyerId}
+                        buyerName={listing.saleBuyer.name ?? "buyer"}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
