@@ -4,8 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown, Star, Send } from "lucide-react";
-import toast from "react-hot-toast";
+import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown } from "lucide-react";
 
 type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
 type Listing = ListingCardListing & {
@@ -36,57 +35,7 @@ const EMPTY_MESSAGES: Record<Filter, { title: string; body: string }> = {
   views:  { title: "No views yet",            body: "Listings with at least one view will appear here." },
 };
 
-function StarRow({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1,2,3,4,5].map((s) => (
-        <Star key={s} className={`w-3 h-3 ${s <= rating ? "fill-amber-400 text-amber-400" : "text-gray-600"}`} />
-      ))}
-    </div>
-  );
-}
 
-function RequestReviewButton({ listingId, buyerId, buyerName }: { listingId: string; buyerId: string; buyerName: string }) {
-  const [sent,    setSent]    = useState(false);
-  const [sending, setSending] = useState(false);
-
-  const request = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSending(true);
-    try {
-      const res = await fetch("/api/reviews/request", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ listingId, buyerId }),
-      });
-      if (!res.ok) throw new Error();
-      setSent(true);
-      toast.success(`Review request sent to ${buyerName}!`);
-    } catch {
-      toast.error("Failed to send request");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  if (sent) return (
-    <div className="flex items-center gap-1 text-xs text-green-400 font-medium">
-      <CheckCircle2 className="w-3 h-3" /> Requested
-    </div>
-  );
-
-  return (
-    <button
-      onClick={request}
-      disabled={sending}
-      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition-all disabled:opacity-50"
-    >
-      <Send className="w-3 h-3" />
-      {sending ? "Sending…" : "Request Review"}
-    </button>
-  );
-}
 
 export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[]; initialFilter?: Filter }) {
   const router       = useRouter();
@@ -223,58 +172,9 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {sorted.map((listing) => {
-            const isSold       = listing.status === "sold" || !!listing.sale;
-            const hasBuyer     = !!listing.saleBuyerId;
-            const buyerReview  = listing.buyerReview;
-            const hasReview    = !!buyerReview;
-
             return (
               <div key={listing.id} className="relative">
                 <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
-
-                {/* Sold dim overlay */}
-                {listing.status !== "active" && (
-                  <div className="absolute inset-0 rounded-xl bg-dark-900/55 pointer-events-none" />
-                )}
-
-                {/* SOLD badge + buyer info + review — stacked, centred on image portion only */}
-                {listing.status !== "active" && (
-                  <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex flex-col items-center justify-center gap-1.5 px-2">
-                    <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
-                      listing.status === "sold"
-                        ? "bg-green-500/20 border-green-500/40 text-green-400"
-                        : "bg-dark-800/90 border-dark-500 text-gray-400"
-                    }`}>{listing.status}</span>
-
-                    {/* Sold to buyer link */}
-                    {isSold && hasBuyer && listing.saleBuyer && (
-                      <Link
-                        href={`/messages?with=${listing.saleBuyerId}&listing=${listing.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className="text-xs text-brand-300 hover:text-brand-200 bg-dark-900/80 px-2 py-0.5 rounded-full border border-brand-500/20 transition-colors truncate max-w-[130px]"
-                      >
-                        Sold to {listing.saleBuyer.name ?? "buyer"}
-                      </Link>
-                    )}
-
-                    {/* Star rating */}
-                    {isSold && hasBuyer && hasReview && (
-                      <div className="flex items-center gap-1 bg-dark-900/80 px-2 py-0.5 rounded-full">
-                        <StarRow rating={buyerReview!.rating} />
-                        <span className="text-xs text-amber-400 font-semibold">{buyerReview!.rating}/5</span>
-                      </div>
-                    )}
-
-                    {/* Request review button */}
-                    {isSold && hasBuyer && !hasReview && listing.saleBuyer && (
-                      <RequestReviewButton
-                        listingId={listing.id}
-                        buyerId={listing.saleBuyerId!}
-                        buyerName={listing.saleBuyer.name ?? "buyer"}
-                      />
-                    )}
-                  </div>
-                )}
 
                 {/* Edit button */}
                 <Link href={`/listings/${listing.id}/edit`}
