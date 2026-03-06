@@ -176,13 +176,20 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
               <div key={listing.id} className="relative">
                 <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
-                {/* Sold badge — centred on image, always visible */}
+                {/* Sold — greyscale + dim overlay + centred badge */}
                 {listing.status === "sold" && (
-                  <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/30 backdrop-blur-sm border border-green-400/60 text-green-300 shadow-lg shadow-green-500/20">
-                      Sold
-                    </span>
-                  </div>
+                  <>
+                    {/* Greyscale + dim over image area only */}
+                    <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] rounded-t-xl pointer-events-none"
+                      style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
+
+                    {/* SOLD badge centred */}
+                    <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
+                      <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/30 backdrop-blur-sm border border-green-400/60 text-green-300 shadow-lg shadow-green-500/20">
+                        Sold
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 {/* Edit button */}
