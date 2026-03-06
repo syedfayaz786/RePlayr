@@ -237,9 +237,9 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                   <div className="absolute inset-0 rounded-xl bg-dark-900/55 pointer-events-none" />
                 )}
 
-                {/* SOLD badge + buyer info + review — stacked in centre of image */}
+                {/* SOLD badge + buyer info + review — stacked, centred on image portion only */}
                 {listing.status !== "active" && (
-                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
+                  <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex flex-col items-center justify-center gap-1.5 px-2">
                     <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
                       listing.status === "sold"
                         ? "bg-green-500/20 border-green-500/40 text-green-400"
@@ -251,7 +251,7 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                       <Link
                         href={`/messages?with=${listing.saleBuyerId}&listing=${listing.id}`}
                         onClick={e => e.stopPropagation()}
-                        className="text-xs text-brand-300 hover:text-brand-200 bg-dark-900/80 px-2 py-0.5 rounded-full border border-brand-500/20 transition-colors truncate max-w-[120px]"
+                        className="text-xs text-brand-300 hover:text-brand-200 bg-dark-900/80 px-2 py-0.5 rounded-full border border-brand-500/20 transition-colors truncate max-w-[130px]"
                       >
                         Sold to {listing.saleBuyer.name ?? "buyer"}
                       </Link>
