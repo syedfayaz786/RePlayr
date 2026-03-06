@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import {
   Gamepad2, Heart, MessageSquare, Plus,
-  User, LogOut, Menu, X, ChevronDown,
+  User, LogOut, Menu, X, ChevronDown, LayoutDashboard,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -63,6 +63,12 @@ export function Navbar() {
                   Wishlist
                 </Link>
 
+                {/* My Listings */}
+                <Link href="/dashboard" className="btn-ghost flex items-center gap-2">
+                  <LayoutDashboard className="w-4 h-4" />
+                  My Listings
+                </Link>
+
                 {/* Messages with unread badge */}
                 <Link href="/messages" className="btn-ghost flex items-center gap-2">
                   <span className="relative inline-flex">
@@ -111,14 +117,6 @@ export function Navbar() {
                         <User className="w-4 h-4 text-gray-400" />
                         <span className="text-sm">My Profile</span>
                       </Link>
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600/80 transition-colors"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Gamepad2 className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">My Listings</span>
-                      </Link>
                       <div className="border-t border-dark-500/50" />
                       <button
                         onClick={() => signOut({ callbackUrl: "/auth/login" })}
@@ -166,6 +164,9 @@ export function Navbar() {
                     {unread > 99 ? "99+" : unread}
                   </span>
                 )}
+              </Link>
+              <Link href="/dashboard" className="btn-ghost flex items-center gap-2 w-full" onClick={() => setMenuOpen(false)}>
+                <LayoutDashboard className="w-4 h-4" />My Listings
               </Link>
               <Link href="/profile" className="btn-ghost flex items-center gap-2 w-full" onClick={() => setMenuOpen(false)}>
                 <User className="w-4 h-4" />Profile

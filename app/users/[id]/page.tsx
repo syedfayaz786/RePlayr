@@ -4,7 +4,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
 import { ListingCard } from "@/components/listings/ListingCard";
 import Image from "next/image";
-import { MapPin, Calendar, Package, Star, ShoppingBag } from "lucide-react";
+import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home } from "lucide-react";
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -55,6 +56,16 @@ export default async function UserProfilePage({ params }: { params: { id: string
   return (
     <div className="min-h-screen flex flex-col bg-dark-900">
       <Navbar />
+      {/* Breadcrumb */}
+      <div className="border-b border-dark-600 bg-dark-800/40">
+        <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-1.5 text-xs text-gray-500">
+          <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
+            <Home className="w-3 h-3" />Home
+          </Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-gray-400 truncate">{user.name ?? "User Profile"}</span>
+        </div>
+      </div>
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-6">
 
         {/* Profile header */}
