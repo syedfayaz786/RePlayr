@@ -229,13 +229,17 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
             const hasReview    = !!buyerReview;
 
             return (
-              <div key={listing.id} className="relative flex flex-col">
+              <div key={listing.id} className="relative">
                 <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
-                {/* Sold overlay */}
+                {/* Sold dim overlay */}
                 {listing.status !== "active" && (
-                  <div className="absolute inset-0 rounded-xl bg-dark-900/60 flex items-center justify-center pointer-events-none"
-                    style={{ bottom: isSold && hasBuyer ? "3.5rem" : "0" }}>
+                  <div className="absolute inset-0 rounded-xl bg-dark-900/55 pointer-events-none" />
+                )}
+
+                {/* SOLD badge — centre of image */}
+                {listing.status !== "active" && (
+                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                     <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${
                       listing.status === "sold"
                         ? "bg-green-500/20 border-green-500/40 text-green-400"
@@ -244,32 +248,30 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                   </div>
                 )}
 
+                {/* Review overlay — bottom of image area for sold listings with a RePlayr buyer */}
+                {isSold && hasBuyer && (
+                  <div className="absolute left-0 right-0 bottom-[3.5rem] px-2 py-1.5 flex items-center justify-between gap-1"
+                    style={{ background: "linear-gradient(to top, rgba(8,10,26,0.95) 80%, transparent)" }}>
+                    {hasReview ? (
+                      <div className="flex items-center gap-1">
+                        <StarRow rating={buyerReview!.rating} />
+                        <span className="text-xs text-amber-400 font-semibold">{buyerReview!.rating}/5</span>
+                      </div>
+                    ) : (
+                      <RequestReviewButton
+                        listingId={listing.id}
+                        buyerId={listing.saleBuyerId!}
+                        buyerName={listing.saleBuyer?.name ?? "buyer"}
+                      />
+                    )}
+                  </div>
+                )}
+
                 {/* Edit button */}
                 <Link href={`/listings/${listing.id}/edit`}
                   className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
                   Edit
                 </Link>
-
-                {/* Review strip for sold listings with a buyer */}
-                {isSold && hasBuyer && (
-                  <div className="mt-1 px-2 py-2 rounded-b-xl bg-dark-800 border border-t-0 border-dark-600 flex items-center justify-between gap-2">
-                    {hasReview ? (
-                      <div className="flex items-center gap-1.5">
-                        <StarRow rating={buyerReview!.rating} />
-                        <span className="text-xs text-amber-400 font-medium">{buyerReview!.rating}/5</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500 italic">No review yet</span>
-                    )}
-                    {!hasReview && listing.saleBuyerId && listing.saleBuyer && (
-                      <RequestReviewButton
-                        listingId={listing.id}
-                        buyerId={listing.saleBuyerId}
-                        buyerName={listing.saleBuyer.name ?? "buyer"}
-                      />
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
