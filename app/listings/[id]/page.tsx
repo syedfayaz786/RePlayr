@@ -30,7 +30,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
       seller: {
         include: {
           reviewsReceived: {
-            include: { author: { select: { name: true, image: true } } },
+            include: { author: { select: { id: true, name: true, image: true } } },
             orderBy: { createdAt: "desc" },
             take: 5,
           },
