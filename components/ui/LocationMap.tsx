@@ -69,9 +69,18 @@ function MapWidget({ fuzzyLat, fuzzyLng, radiusKm = 3 }: { fuzzyLat: number; fuz
       radius: 8, color: "#fff", fillColor: "#06b6d4", fillOpacity: 1, weight: 2.5, interactive: false,
     }).addTo(map);
 
-    const bounds = L.circle([fuzzyLat, fuzzyLng], { radius: radiusKm * 1000 * 1.3 }).getBounds();
-    map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
-    setTimeout(() => map.invalidateSize(), 150);
+    setTimeout(() => {
+      try {
+        const bounds = L.latLngBounds(
+          [fuzzyLat - (radiusKm * 0.015), fuzzyLng - (radiusKm * 0.02)],
+          [fuzzyLat + (radiusKm * 0.015), fuzzyLng + (radiusKm * 0.02)]
+        );
+        map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
+        map.invalidateSize();
+      } catch (e) {
+        // fitBounds failed, map still renders at default zoom
+      }
+    }, 200);
 
     return () => { map.remove(); mapRef.current = null; };
   }, [fuzzyLat, fuzzyLng, radiusKm]);
