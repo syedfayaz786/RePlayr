@@ -7,6 +7,32 @@ import { X, CheckCircle2, Globe, ShoppingBag, Search, User, MapPin, Star, Chevro
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
+const BUYER_STRENGTHS = [
+  "Punctual","Fair negotiation","Great communication",
+  "Reliable","Respectful","Quick decision",
+  "Easy to deal with","Showed up on time","Paid as agreed","Would trade again",
+];
+
+function StrengthPicker({ selected, onChange }: { selected: string[]; onChange: (v: string[]) => void }) {
+  const toggle = (s: string) =>
+    onChange(selected.includes(s) ? selected.filter(x => x !== s) : [...selected, s]);
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {BUYER_STRENGTHS.map(s => (
+        <button key={s} type="button" onClick={() => toggle(s)}
+          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+            selected.includes(s)
+              ? "bg-brand-500 border-brand-500 text-white"
+              : "bg-dark-700 border-dark-600 text-gray-400 hover:border-brand-500/50 hover:text-white"
+          }`}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type SearchUser = {
   id: string; name: string | null; image: string | null; location: string | null;
   createdAt: string; _count: { listings: number; salesAsBuyer: number };
@@ -45,6 +71,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
   const debounceRef                     = useRef<ReturnType<typeof setTimeout>|null>(null);
   const [rating, setRating]             = useState(0);
   const [comment, setComment]           = useState("");
+  const [strengths, setStrengths]       = useState<string[]>([]);
   const [sendingReview, setSendingReview] = useState(false);
   const [reviewSent, setReviewSent]     = useState(false);
 
@@ -106,7 +133,7 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
     try {
       const res = await fetch("/api/reviews", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetId: selectedUser.id, listingId, rating, comment: comment.trim()||null, role: "seller" }),
+        body: JSON.stringify({ targetId: selectedUser.id, listingId, rating, comment: comment.trim()||null, strengths, role: "seller" }),
       });
       if (res.ok) {
         setReviewSent(true); setStep("done"); toast.success("Review sent!"); onSold(); router.refresh();
@@ -125,14 +152,13 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="card w-full max-w-md relative overflow-visible">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10"><X className="w-5 h-5" /></button>
-
-        <div className="flex gap-1.5 px-6 pt-5">
+        <div className="flex gap-1.5 px-6 pt-5 pr-14">
           {progressSteps.map((s) => {
             const idx = progressSteps.indexOf(step==="done"?"review":step);
             const ti  = progressSteps.indexOf(s);
             return <div key={s} className={"h-1 flex-1 rounded-full transition-all " + (ti<idx?"bg-brand-600":ti===idx?"bg-brand-400":"bg-dark-600")} />;
           })}
+          <button onClick={onClose} className="absolute top-4 right-4 text-brand-400 hover:text-brand-300 transition-colors z-10"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-6 pt-4">
@@ -281,6 +307,10 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
               </div>
               <StarPicker value={rating} onChange={setRating} />
               {rating > 0 && <p className="text-sm font-medium text-amber-400 mt-1.5 mb-0">{RATING_LABELS[rating]}</p>}
+              <div className="mt-3">
+                <p className="text-xs text-gray-500 mb-2">Highlight strengths (optional)</p>
+                <StrengthPicker selected={strengths} onChange={setStrengths} />
+              </div>
               <textarea value={comment} onChange={(e) => setComment(e.target.value)}
                 placeholder="Leave a comment (optional)..." rows={3}
                 className="input-base resize-none mb-4 text-sm mt-3" />
