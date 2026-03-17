@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ArrowUpDown } from "lucide-react";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -239,7 +240,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         };
 
         return (
-          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2 flex-wrap">
             {/* All / Clear button */}
             <button
               onClick={clearAll}
@@ -268,6 +269,28 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                 </button>
               );
             })}
+            {/* Sort dropdown — right aligned */}
+            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+              <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+              <select
+                value={searchParams.get("sort") ?? "newest"}
+                onChange={(e) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (e.target.value === "newest") params.delete("sort");
+                  else params.set("sort", e.target.value);
+                  params.delete("page");
+                  router.push(`/?${params.toString()}`);
+                }}
+                className="bg-dark-700 border border-dark-500 text-gray-300 text-sm rounded-lg px-3 py-1.5 hover:border-brand-500/50 focus:outline-none focus:border-brand-500 transition-colors"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="distance_asc">Nearest first</option>
+                <option value="distance_desc">Furthest first</option>
+                <option value="price_asc">Price: Low → High</option>
+                <option value="price_desc">Price: High → Low</option>
+              </select>
+            </div>
           </div>
         );
       })()}

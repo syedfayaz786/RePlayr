@@ -312,26 +312,6 @@ export function SearchBar() {
             </div>
           </div>
 
-          {/* Sort */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-gray-400">
-              <ArrowUpDown className="w-4 h-4" />
-              <span className="text-sm">Sort by</span>
-            </div>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="input-base text-sm py-1.5 flex-1"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="distance_asc">Nearest first</option>
-              <option value="distance_desc">Furthest first</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-            </select>
-          </div>
-
           {/* Radius */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-gray-400">

@@ -68,9 +68,9 @@ export async function GET(req: Request) {
           _count:  { select: { wishlistedBy: true } },
         },
         orderBy: sort === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" },
-        // For distance/radius filtering we fetch more and paginate in JS
-        take: (sort.startsWith("distance") || !isNaN(radius)) ? 1000 : perPage,
-        skip: (sort.startsWith("distance") || !isNaN(radius)) ? 0 : skip,
+        // Fetch more when doing client-side distance sort/filter
+        take: (sort.startsWith("distance") || hasUserCoords) ? 2000 : perPage,
+        skip: (sort.startsWith("distance") || hasUserCoords) ? 0 : skip,
       }),
       prisma.listing.count({ where }),
     ]);
@@ -85,7 +85,7 @@ export async function GET(req: Request) {
       return { ...rest, ...(distanceKm !== undefined && { distanceKm }) };
     });
 
-    // Filter by radius if user coords available
+    // Filter by radius only for listings that have location data
     if (hasUserCoords && !isNaN(radius)) {
       safe = safe.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
     }
