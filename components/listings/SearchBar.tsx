@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, MapPin, X, ChevronDown, Check, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, X, ChevronDown, Check, ArrowUpDown, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -214,6 +214,7 @@ export function SearchBar() {
   const [maxPrice,  setMaxPrice]  = useState(searchParams.get("maxPrice") ?? "");
   const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "10000");
   const [sort,      setSort]      = useState(searchParams.get("sort") ?? "newest");
+  const [minRating, setMinRating] = useState(searchParams.get("minRating") ?? "");
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
@@ -224,8 +225,9 @@ export function SearchBar() {
     if (maxPrice)         params.set("maxPrice",  maxPrice);
     if (radius && parseInt(radius) > 0 && parseInt(radius) < 10000) params.set("radius", radius);
     if (sort && sort !== "newest") params.set("sort", sort);
+    if (minRating) params.set("minRating", minRating);
     router.push(`/?${params.toString()}`);
-  }, [query, platforms, condition, minPrice, maxPrice, radius, sort, router]);
+  }, [query, platforms, condition, minPrice, maxPrice, radius, sort, minRating, router]);
 
   // Auto-apply when platform selection changes — no need to hit Search
   const isFirstRender = useRef(true);
@@ -237,11 +239,11 @@ export function SearchBar() {
 
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
-    setMinPrice(""); setMaxPrice(""); setRadius("10000"); setSort("newest");
+    setMinPrice(""); setMaxPrice(""); setRadius("10000"); setSort("newest"); setMinRating("");
     router.push("/");
   };
 
-  const hasFilters = query || platforms.length > 0 || condition || minPrice || maxPrice;
+  const hasFilters = query || platforms.length > 0 || condition || minPrice || maxPrice || minRating;
 
   return (
     <div className="w-full space-y-3">
@@ -322,6 +324,29 @@ export function SearchBar() {
               onChange={(e) => setRadius(e.target.value)}
               className="flex-1 accent-brand-500" />
             <span className="text-brand-400 font-semibold text-sm w-20 text-right">{(!radius || parseInt(radius) >= 10000) ? "Any" : `${radius} km`}</span>
+          </div>
+
+          {/* Seller Rating */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <Star className="w-4 h-4" />
+              <span className="text-sm">Seller Rating</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {["", "2", "3", "4", "4.5"].map((val) => (
+                <button
+                  key={val}
+                  onClick={() => setMinRating(val)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    minRating === val
+                      ? "bg-brand-500 border-brand-500 text-white"
+                      : "bg-dark-700 border-dark-600 text-gray-400 hover:border-brand-500/50 hover:text-white"
+                  }`}
+                >
+                  {val === "" ? "Any" : val === "4.5" ? "4.5★ +" : `${val}★ +`}
+                </button>
+              ))}
+            </div>
           </div>
 
           {hasFilters && (

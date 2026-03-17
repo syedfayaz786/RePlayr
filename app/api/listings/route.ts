@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       prisma.listing.findMany({
         where,
         include: {
-          seller: { select: { id: true, name: true, image: true } },
+          seller: { select: { id: true, name: true, image: true, reviewsReceived: { select: { rating: true } } } },
           _count:  { select: { wishlistedBy: true } },
         },
         orderBy: sort === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" },
@@ -79,7 +79,12 @@ export async function GET(req: Request) {
     // Strip exact coords; expose fuzzy only (distance computed client-side)
     const safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
-      return rest;
+      const reviews: { rating: number }[] = rest.seller?.reviewsReceived ?? [];
+      const sellerAvgRating = reviews.length
+        ? reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviews.length
+        : undefined;
+      const { reviewsReceived: _dropped, ...sellerClean } = rest.seller ?? {};
+      return { ...rest, seller: { ...sellerClean, avgRating: sellerAvgRating } };
     });
 
     // Price sorts handled client-side too
