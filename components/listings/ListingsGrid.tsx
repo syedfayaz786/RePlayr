@@ -20,7 +20,7 @@ interface Listing {
   status: string;
   createdAt: string;
   sellerId: string;
-  seller: { id: string; name: string | null; image: string | null; reviewsReceived?: { rating: number }[] };
+  seller: { id: string; name: string | null; image: string | null };
   _count: { wishlistedBy: number };
 }
 
