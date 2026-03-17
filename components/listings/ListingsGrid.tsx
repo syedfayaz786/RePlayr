@@ -100,6 +100,14 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
 
   const paramStr = searchParams.toString();
 
+  // Clear all URL filters on fresh page load (not on client-side navigation)
+  useEffect(() => {
+    if (window.location.search) {
+      router.replace("/", { scroll: false });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Get user location once — does NOT trigger a re-fetch, distance computed client-side
   useEffect(() => {
     if (navigator.geolocation) {
