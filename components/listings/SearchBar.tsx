@@ -212,7 +212,7 @@ export function SearchBar() {
   const [condition, setCondition] = useState(searchParams.get("condition") ?? "");
   const [minPrice,  setMinPrice]  = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice,  setMaxPrice]  = useState(searchParams.get("maxPrice") ?? "");
-  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "500");
+  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "10000");
   const [sort,      setSort]      = useState(searchParams.get("sort") ?? "newest");
 
   const applyFilters = useCallback(() => {
@@ -222,7 +222,7 @@ export function SearchBar() {
     if (condition)        params.set("condition", condition);
     if (minPrice)         params.set("minPrice",  minPrice);
     if (maxPrice)         params.set("maxPrice",  maxPrice);
-    if (radius && parseInt(radius) > 0 && parseInt(radius) < 500) params.set("radius", radius);
+    if (radius && parseInt(radius) > 0 && parseInt(radius) < 10000) params.set("radius", radius);
     if (sort && sort !== "newest") params.set("sort", sort);
     router.push(`/?${params.toString()}`);
   }, [query, platforms, condition, minPrice, maxPrice, radius, sort, router]);
@@ -237,7 +237,7 @@ export function SearchBar() {
 
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
-    setMinPrice(""); setMaxPrice(""); setRadius("500"); setSort("newest");
+    setMinPrice(""); setMaxPrice(""); setRadius("10000"); setSort("newest");
     router.push("/");
   };
 
@@ -306,7 +306,7 @@ export function SearchBar() {
               </div>
               <div>
                 <label className="label-base">Max ($)</label>
-                <input type="number" placeholder="500" value={maxPrice}
+                <input type="number" placeholder="10000" value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)} className="input-base" />
               </div>
             </div>
@@ -318,10 +318,10 @@ export function SearchBar() {
               <MapPin className="w-4 h-4" />
               <span className="text-sm">Within</span>
             </div>
-            <input type="range" min="5" max="500" step="5" value={radius || "500"}
+            <input type="range" min="5" max="10000" step="50" value={radius || "10000"}
               onChange={(e) => setRadius(e.target.value)}
               className="flex-1 accent-brand-500" />
-            <span className="text-brand-400 font-semibold text-sm w-20 text-right">{(!radius || parseInt(radius) >= 500) ? "Any" : `${radius} km`}</span>
+            <span className="text-brand-400 font-semibold text-sm w-20 text-right">{(!radius || parseInt(radius) >= 10000) ? "Any" : `${radius} km`}</span>
           </div>
 
           {hasFilters && (
