@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy } from "lucide-react";
+import { UserLink } from "@/components/ui/UserLink";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,7 @@ interface ListingActionsProps {
   isSeller: boolean;
   status: string;
   listingData?: ListingData;
+  buyer?: { id: string; name?: string | null; image?: string | null } | null;
 }
 
 export function ListingActions({
@@ -44,6 +46,7 @@ export function ListingActions({
   isSeller,
   status,
   listingData,
+  buyer,
 }: ListingActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -177,7 +180,7 @@ export function ListingActions({
         <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
         {/* Status pill */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
             currentStatus === "active"
               ? "bg-green-500/15 text-green-300 border-green-500/30"
@@ -187,6 +190,18 @@ export function ListingActions({
           }`}>
             {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
           </span>
+          {/* Buyer link — only visible to seller when sold */}
+          {currentStatus === "sold" && buyer && (
+            <a
+              href={`/messages?with=${buyer.id}&listing=${listingId}`}
+              className="flex items-center gap-2 flex-1 min-w-0 group"
+              title="Open chat with buyer"
+            >
+              <span className="text-xs text-gray-500">to</span>
+              <UserLink id={buyer.id} name={buyer.name} image={buyer.image} size="sm" showName />
+              <span className="text-xs text-brand-400 group-hover:text-brand-300 transition-colors ml-auto whitespace-nowrap">Chat →</span>
+            </a>
+          )}
         </div>
 
         {/* Mark as sold / relist */}

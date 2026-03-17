@@ -257,6 +257,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isWishlisted={isWishlisted}
               isSeller={isSeller}
               status={listing.status}
+              buyer={isSeller ? (sale as any)?.buyer ?? null : null}
               listingData={{
                 title:       listing.title,
                 description: listing.description,
@@ -269,15 +270,15 @@ export default async function ListingPage({ params }: { params: { id: string } }
               }}
             />
 
-            {/* Rate seller — only visible to the confirmed buyer */}
-            {isConfirmedBuyer && (
+            {/* Rate seller — only visible to the confirmed buyer, hidden once review submitted */}
+            {isConfirmedBuyer && !existingReview && (
               <RateSellerWidget
                 sellerId={listing.sellerId}
                 sellerName={listing.seller.name ?? "Seller"}
                 sellerImage={listing.seller.image}
                 listingId={listing.id}
                 listingTitle={listing.title}
-                existingReview={existingReview ? { rating: existingReview.rating, comment: existingReview.comment } : null}
+                existingReview={null}
               />
             )}
           </div>
