@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { User, MapPin, Save, Star, Camera, Loader2, X, Check, ZoomIn, ZoomOut } from "lucide-react";
 import toast from "react-hot-toast";
 import { StarRating } from "@/components/ui/StarRating";
+import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
 
@@ -392,33 +393,16 @@ export default function ProfilePage() {
             <h2 className="text-lg font-semibold text-white mb-4">
               Reviews ({reviews.length})
             </h2>
-
             {reviews.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
                 <Star className="w-10 h-10 mx-auto mb-3 text-gray-500" />
                 <p>No reviews yet — complete a trade to receive your first review!</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {reviews.map((review: any) => (
-                  <div key={review.id} className="card p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-xs">
-                        {review.author?.name?.[0]?.toUpperCase() ?? "?"}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">
-                          {review.author?.name}
-                        </div>
-                        <StarRating rating={review.rating} size="sm" />
-                      </div>
-                    </div>
-                    {review.comment && (
-                      <p className="text-sm text-gray-300">{review.comment}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <ReviewsTabs reviews={reviews.map((r: any) => ({
+                ...r,
+                createdAt: typeof r.createdAt === "string" ? r.createdAt : new Date(r.createdAt).toISOString(),
+              }))} />
             )}
           </div>
         </div>
