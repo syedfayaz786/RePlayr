@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
+import { ListingCard } from "@/components/listings/ListingCard";
 import Image from "next/image";
-import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home } from "lucide-react";
+import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,6 +26,24 @@ export default async function UserProfilePage({ params }: { params: { id: string
       bio: true,
       location: true,
       createdAt: true,
+      listings: {
+        where: { status: "active" },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          platform: true,
+          condition: true,
+          edition: true,
+          location: true,
+          images: true,
+          status: true,
+          views: true,
+          createdAt: true,
+          _count: { select: { wishlistedBy: true } },
+        },
+      },
       reviewsReceived: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -38,7 +57,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
         },
       },
       _count: {
-        select: { listings: true, reviewsReceived: true, salesAsSeller: true },
+        select: {
+          listings: true,
+          reviewsReceived: true,
+          salesAsSeller: true,
+          salesAsBuyer: true,
+        },
       },
     },
   });
@@ -50,13 +74,15 @@ export default async function UserProfilePage({ params }: { params: { id: string
     ? user.reviewsReceived.reduce((sum, r) => sum + r.rating, 0) / user.reviewsReceived.length
     : 0;
 
-  // Serialize dates for client component
   const reviewsForClient = user.reviewsReceived.map((r) => ({
     ...r,
     createdAt: r.createdAt.toISOString(),
-    author: {
-      ...r.author,
-    },
+  }));
+
+  const listingsForClient = user.listings.map((l) => ({
+    ...l,
+    createdAt: l.createdAt.toISOString(),
+    seller: { id: user.id, name: user.name, image: user.image },
   }));
 
   return (
@@ -64,7 +90,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
       <Navbar />
       {/* Breadcrumb */}
       <div className="border-b border-dark-600 bg-dark-800/40">
-        <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-1.5 text-xs text-gray-500">
+        <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center gap-1.5 text-xs text-gray-500">
           <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
             <Home className="w-3 h-3" />Home
           </Link>
@@ -72,14 +98,15 @@ export default async function UserProfilePage({ params }: { params: { id: string
           <span className="text-gray-400 truncate">{user.name ?? "User Profile"}</span>
         </div>
       </div>
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-6">
 
-        {/* Profile header */}
+      <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 py-8 space-y-6">
+
+        {/* Profile hero */}
         <div className="card p-6">
           <div className="flex items-start gap-5">
             {user.image ? (
               <Image src={user.image} alt={user.name ?? ""} width={80} height={80}
-                className="rounded-full flex-shrink-0" />
+                className="rounded-full flex-shrink-0 object-cover w-20 h-20" />
             ) : (
               <div className="w-20 h-20 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-2xl flex-shrink-0">
                 {user.name?.[0]?.toUpperCase() ?? "?"}
@@ -95,14 +122,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 )}
               </div>
 
-              <div className="flex items-center gap-4 mt-1 flex-wrap">
-                {avgRating > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <StarRating rating={Math.round(avgRating)} size="sm" />
-                    <span className="text-sm text-gray-400">{avgRating.toFixed(1)} · {user._count.reviewsReceived} review{user._count.reviewsReceived !== 1 ? "s" : ""}</span>
-                  </div>
-                )}
-              </div>
+              {avgRating > 0 && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <StarRating rating={Math.round(avgRating)} size="sm" />
+                  <span className="text-sm text-gray-400">{avgRating.toFixed(1)} · {user._count.reviewsReceived} review{user._count.reviewsReceived !== 1 ? "s" : ""}</span>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-3 mt-2">
                 {user.location && (
@@ -118,7 +143,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
               {user.bio && <p className="text-sm text-gray-300 mt-3 leading-relaxed">{user.bio}</p>}
 
               {/* Stats row */}
-              <div className="flex gap-4 mt-4">
+              <div className="flex gap-5 mt-4 flex-wrap">
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.listings}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-1"><Package className="w-3 h-3" />Listings</div>
@@ -126,6 +151,10 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.salesAsSeller}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-1"><ShoppingBag className="w-3 h-3" />Sold</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">{user._count.salesAsBuyer}</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Bought</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.reviewsReceived}</div>
@@ -136,15 +165,44 @@ export default async function UserProfilePage({ params }: { params: { id: string
           </div>
         </div>
 
-        {/* Reviews */}
-        {user.reviewsReceived.length > 0 ? (
-          <ReviewsTabs reviews={reviewsForClient} />
-        ) : (
-          <div className="card p-10 text-center">
-            <p className="text-gray-500">This user hasn&apos;t received any reviews yet.</p>
-          </div>
-        )}
+        {/* Two-column: Listings + Reviews */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
+          {/* Left — Active Listings */}
+          <div>
+            <h2 className="text-base font-semibold text-white mb-4">
+              Active Listings
+              {listingsForClient.length > 0 && (
+                <span className="ml-2 text-xs text-gray-500 font-normal">({listingsForClient.length})</span>
+              )}
+            </h2>
+            {listingsForClient.length === 0 ? (
+              <div className="card p-8 text-center text-gray-500 text-sm">No active listings</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {listingsForClient.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right — Reviews */}
+          <div>
+            <h2 className="text-base font-semibold text-white mb-4">
+              Reviews
+              {reviewsForClient.length > 0 && (
+                <span className="ml-2 text-xs text-gray-500 font-normal">({reviewsForClient.length})</span>
+              )}
+            </h2>
+            {reviewsForClient.length > 0 ? (
+              <ReviewsTabs reviews={reviewsForClient} />
+            ) : (
+              <div className="card p-8 text-center text-gray-500 text-sm">No reviews yet</div>
+            )}
+          </div>
+
+        </div>
       </main>
     </div>
   );
