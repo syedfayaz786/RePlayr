@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
@@ -31,7 +32,7 @@ interface ListingActionsProps {
   isSeller: boolean;
   status: string;
   listingData?: ListingData;
-  buyer?: { id: string; name?: string | null } | null;
+  buyer?: { id: string; name?: string | null; image?: string | null } | null;
   soldOutside?: boolean;
 }
 
@@ -191,7 +192,7 @@ export function ListingActions({
             {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
           </span>
           {currentStatus === "sold" && soldOutside && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
               <Globe className="w-3 h-3" /> Outside RePlayr
             </span>
           )}
@@ -200,9 +201,18 @@ export function ListingActions({
               <span className="text-xs text-gray-500">to</span>
               <a
                 href={`/users/${buyer.id}`}
-                className="text-xs font-medium text-white hover:text-brand-400 transition-colors"
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
               >
-                {buyer.name ?? "buyer"}
+                {buyer.image ? (
+                  <Image src={buyer.image} alt={buyer.name ?? ""} width={18} height={18} className="rounded-full object-cover w-[18px] h-[18px] flex-shrink-0" />
+                ) : (
+                  <div className="w-[18px] h-[18px] rounded-full bg-brand-500/30 flex items-center justify-center text-brand-300 text-[9px] font-bold flex-shrink-0">
+                    {buyer.name?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                )}
+                <span className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
+                  {buyer.name ?? "buyer"}
+                </span>
               </a>
             </>
           )}
