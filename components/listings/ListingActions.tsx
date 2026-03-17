@@ -178,7 +178,7 @@ export function ListingActions({
         <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
         {/* Status pill */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
             currentStatus === "active"
               ? "bg-green-500/15 text-green-300 border-green-500/30"
