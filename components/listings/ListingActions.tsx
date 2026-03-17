@@ -32,6 +32,7 @@ interface ListingActionsProps {
   isSeller: boolean;
   status: string;
   listingData?: ListingData;
+  buyer?: { id: string; name?: string | null } | null;
 }
 
 export function ListingActions({
@@ -44,6 +45,7 @@ export function ListingActions({
   isSeller,
   status,
   listingData,
+  buyer,
 }: ListingActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -187,6 +189,24 @@ export function ListingActions({
           }`}>
             {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
           </span>
+          {currentStatus === "sold" && buyer && (
+            <>
+              <span className="text-xs text-gray-500">to</span>
+              <a
+                href={`/users/${buyer.id}`}
+                className="text-xs font-medium text-white hover:text-brand-400 transition-colors"
+              >
+                {buyer.name ?? "buyer"}
+              </a>
+              <span className="text-gray-600 text-xs">·</span>
+              <a
+                href={`/messages?with=${buyer.id}&listing=${listingId}`}
+                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                Open Chat →
+              </a>
+            </>
+          )}
         </div>
 
         {/* Mark as sold / relist */}

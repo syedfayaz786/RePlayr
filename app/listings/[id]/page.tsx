@@ -238,6 +238,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isWishlisted={isWishlisted}
               isSeller={isSeller}
               status={listing.status}
+              buyer={isSeller ? ((sale as any)?.buyer ? { id: (sale as any).buyer.id, name: (sale as any).buyer.name } : null) : null}
               listingData={{
                 title:       listing.title,
                 description: listing.description,
