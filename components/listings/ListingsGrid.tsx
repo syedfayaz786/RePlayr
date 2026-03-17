@@ -122,6 +122,10 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", String(p));
       params.set("perPage", String(pp));
+      if (userCoords) {
+        params.set("userLat", userCoords.lat.toString());
+        params.set("userLng", userCoords.lng.toString());
+      }
       const res = await fetch(`/api/listings?${params.toString()}`);
       const json = await res.json();
       setData(json);
