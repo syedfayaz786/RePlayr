@@ -30,8 +30,8 @@ function StarAvg({ reviews, active }: { reviews: Review[]; active?: boolean }) {
           <svg key={i} className="w-3 h-3" viewBox="0 0 24 24" fill="none">
             <polygon
               points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-              fill={i < rounded ? (active ? "white" : "#22d3ee") : "none"}
-              stroke={i < rounded ? (active ? "white" : "#22d3ee") : (active ? "rgba(255,255,255,0.4)" : "#4b5563")}
+              fill={i < rounded ? (active ? "#f59e0b" : "#22d3ee") : "none"}
+              stroke={i < rounded ? (active ? "#f59e0b" : "#22d3ee") : (active ? "rgba(245,158,11,0.35)" : "#4b5563")}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -39,7 +39,7 @@ function StarAvg({ reviews, active }: { reviews: Review[]; active?: boolean }) {
           </svg>
         ))}
       </span>
-      <span className={`text-xs font-medium ${active ? "text-white" : "text-gray-400"}`}>{avg.toFixed(1)}</span>
+      <span className={`text-xs font-medium ${active ? "text-amber-400" : "text-gray-400"}`}>{avg.toFixed(1)}</span>
     </span>
   );
 }
