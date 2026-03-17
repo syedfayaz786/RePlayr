@@ -187,6 +187,10 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
     listings = [...listings].sort((a: any, b: any) => a.price - b.price);
   } else if (sort === "price_desc") {
     listings = [...listings].sort((a: any, b: any) => b.price - a.price);
+  } else if (sort === "rating_desc") {
+    listings = [...listings].sort((a: any, b: any) => (b.seller?.avgRating ?? 0) - (a.seller?.avgRating ?? 0));
+  } else if (sort === "rating_asc") {
+    listings = [...listings].sort((a: any, b: any) => (a.seller?.avgRating ?? 0) - (b.seller?.avgRating ?? 0));
   }
 
   // Client-side pagination
