@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   const condition = searchParams.get("condition");
   const minPrice  = searchParams.get("minPrice");
   const maxPrice  = searchParams.get("maxPrice");
-  const perPage   = Math.min(parseInt(searchParams.get("perPage") ?? "50") || 50, 200);
+  const perPage   = Math.min(parseInt(searchParams.get("perPage") ?? "50") || 50, 2000);
   const page      = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
   const skip      = (page - 1) * perPage;
   const userLat   = parseFloat(searchParams.get("userLat") ?? "");

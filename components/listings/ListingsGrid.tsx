@@ -173,8 +173,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
       : undefined,
   }));
 
-  // Apply radius filter if set
-  if (userCoords && radius !== null && !isNaN(radius) && radius > 0) {
+  // Apply radius filter only when explicitly set below max (500)
+  if (userCoords && radius !== null && !isNaN(radius) && radius > 0 && radius < 500) {
     listings = listings.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
   }
 
