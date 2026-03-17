@@ -30,6 +30,7 @@ export async function GET(req: Request) {
   const userLng   = parseFloat(searchParams.get("userLng") ?? "");
   const radius    = parseFloat(searchParams.get("radius") ?? "250");
   const sort      = searchParams.get("sort") ?? "newest";
+  const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
 
   // Use AND so every filter is required simultaneously —
   // prevents OR(text search) from swallowing platform/condition filters
@@ -76,7 +77,6 @@ export async function GET(req: Request) {
     ]);
 
     // Strip exact coords; expose fuzzy only; compute distance if user coords provided
-    const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
     let safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
       const distanceKm = hasUserCoords && rest.fuzzyLat && rest.fuzzyLng
