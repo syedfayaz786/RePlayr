@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, MapPin, X, ChevronDown, Check } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, X, ChevronDown, Check, ArrowUpDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
