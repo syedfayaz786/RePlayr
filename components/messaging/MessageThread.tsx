@@ -268,25 +268,13 @@ export function MessageThread({
           <div className="text-xs text-gray-400">{localSaleConfirmed ? "Sale confirmed ✓" : "Active seller"}</div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {isSeller && soldToBuyerId && soldToListingId && (
-            <SoldToBuyerButton
-              listingId={soldToListingId}
-              buyerId={soldToBuyerId}
-              buyerName={soldToBuyerName ?? partnerName}
-              alreadySold={alreadySold ?? false}
-              sellerName={sellerDisplayName ?? "You"}
-              onSaleConfirmed={handleSaleConfirmed}
-            />
-          )}
           {deleteButton}
         </div>
       </div>
 
       {/* ── Pinned listing banner ── */}
       {pinnedListing && (
-        <Link href={`/listings/${pinnedListing.id}`}
-          className="flex items-center gap-3 px-4 py-2.5 bg-brand-500/8 border-b border-brand-500/20 hover:bg-brand-500/15 transition-colors group flex-shrink-0"
-        >
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-brand-500/8 border-b border-brand-500/20 flex-shrink-0">
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-dark-700 flex-shrink-0 border border-dark-500">
             {pinnedListing.images[0] ? (
               pinnedListing.images[0].startsWith("data:") ? (
@@ -300,7 +288,7 @@ export function MessageThread({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-brand-400 font-semibold uppercase tracking-wider mb-0.5">About this listing</p>
-            <p className="text-sm font-medium text-white truncate group-hover:text-brand-300 transition-colors">{pinnedListing.title}</p>
+            <p className="text-sm font-medium text-white truncate">{pinnedListing.title}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-brand-400 font-bold text-sm">${Number(pinnedListing.price).toFixed(2)}</span>
               <span className="text-xs text-gray-500">·</span>
@@ -309,8 +297,19 @@ export function MessageThread({
               <span className="text-xs text-gray-400">{pinnedListing.condition}</span>
             </div>
           </div>
-          <span className="text-xs text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">View →</span>
-        </Link>
+          {isSeller && soldToBuyerId && soldToListingId && (
+            <div className="flex-shrink-0">
+              <SoldToBuyerButton
+                listingId={soldToListingId}
+                buyerId={soldToBuyerId}
+                buyerName={soldToBuyerName ?? partnerName}
+                alreadySold={alreadySold ?? false}
+                sellerName={sellerDisplayName ?? "You"}
+                onSaleConfirmed={handleSaleConfirmed}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── Search navigation banner — always rendered, hidden when no query, so height is always reserved ── */}
