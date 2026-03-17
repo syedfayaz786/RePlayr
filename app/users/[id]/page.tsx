@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
-import { ListingCard } from "@/components/listings/ListingCard";
+import { ListingsReviewsTabs } from "@/components/ui/ListingsReviewsTabs";
 import Image from "next/image";
 import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart } from "lucide-react";
 import Link from "next/link";
@@ -165,44 +165,11 @@ export default async function UserProfilePage({ params }: { params: { id: string
           </div>
         </div>
 
-        {/* Two-column: Listings + Reviews */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Left — Active Listings */}
-          <div>
-            <h2 className="text-base font-semibold text-white mb-4">
-              Active Listings
-              {listingsForClient.length > 0 && (
-                <span className="ml-2 text-xs text-gray-500 font-normal">({listingsForClient.length})</span>
-              )}
-            </h2>
-            {listingsForClient.length === 0 ? (
-              <div className="card p-8 text-center text-gray-500 text-sm">No active listings</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {listingsForClient.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right — Reviews */}
-          <div>
-            <h2 className="text-base font-semibold text-white mb-4">
-              Reviews
-              {reviewsForClient.length > 0 && (
-                <span className="ml-2 text-xs text-gray-500 font-normal">({reviewsForClient.length})</span>
-              )}
-            </h2>
-            {reviewsForClient.length > 0 ? (
-              <ReviewsTabs reviews={reviewsForClient} />
-            ) : (
-              <div className="card p-8 text-center text-gray-500 text-sm">No reviews yet</div>
-            )}
-          </div>
-
-        </div>
+        {/* Tabbed: Listings | Reviews */}
+        <ListingsReviewsTabs
+          listings={listingsForClient}
+          reviews={reviewsForClient}
+        />
       </main>
     </div>
   );
