@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
-import { LocationRequestPanel } from "@/components/listings/LocationRequestPanel";
 import { MarkAsSoldModal } from "@/components/listings/MarkAsSoldModal";
 import { RelistModal } from "@/components/listings/RelistModal";
 
@@ -198,12 +197,6 @@ export function ListingActions({
               >
                 {buyer.name ?? "buyer"}
               </a>
-              <a
-                href={`/messages?with=${buyer.id}&listing=${listingId}`}
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors ml-auto"
-              >
-                Open Chat →
-              </a>
             </>
           )}
         </div>
@@ -239,16 +232,17 @@ export function ListingActions({
               <RotateCcw className="w-4 h-4" />
               {markingStatus ? "Updating…" : "Mark as Available"}
             </button>
+            {buyer && (
+              <a
+                href={`/messages?with=${buyer.id}&listing=${listingId}`}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-dark-700 hover:bg-dark-600 border border-dark-500 text-gray-300 hover:text-white"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Open Chat with Buyer
+              </a>
+            )}
           </>
         ) : null}
-
-        {/* Address requests from buyers */}
-        <div className="border-t border-dark-600 pt-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <span className="w-4 h-4 text-brand-400">📍</span> Address Requests
-          </p>
-          <LocationRequestPanel listingId={listingId} />
-        </div>
       </div>
 
       {showSoldModal && (
