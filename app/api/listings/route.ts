@@ -28,6 +28,8 @@ export async function GET(req: Request) {
   const skip      = (page - 1) * perPage;
   const userLat   = parseFloat(searchParams.get("userLat") ?? "");
   const userLng   = parseFloat(searchParams.get("userLng") ?? "");
+  const radius    = parseFloat(searchParams.get("radius") ?? "250");
+  const sort      = searchParams.get("sort") ?? "newest";
 
   // Use AND so every filter is required simultaneously —
   // prevents OR(text search) from swallowing platform/condition filters
@@ -65,16 +67,17 @@ export async function GET(req: Request) {
           seller: { select: { id: true, name: true, image: true } },
           _count:  { select: { wishlistedBy: true } },
         },
-        orderBy: { createdAt: "desc" },
-        take: perPage,
-        skip,
+        orderBy: sort === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" },
+        // For distance/radius filtering we fetch more and paginate in JS
+        take: (sort.startsWith("distance") || !isNaN(radius)) ? 1000 : perPage,
+        skip: (sort.startsWith("distance") || !isNaN(radius)) ? 0 : skip,
       }),
       prisma.listing.count({ where }),
     ]);
 
     // Strip exact coords; expose fuzzy only; compute distance if user coords provided
     const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
-    const safe = listings.map((l: any) => {
+    let safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
       const distanceKm = hasUserCoords && rest.fuzzyLat && rest.fuzzyLng
         ? Math.round(haversineKm(userLat, userLng, rest.fuzzyLat, rest.fuzzyLng) * 10) / 10
@@ -82,12 +85,32 @@ export async function GET(req: Request) {
       return { ...rest, ...(distanceKm !== undefined && { distanceKm }) };
     });
 
+    // Filter by radius if user coords available
+    if (hasUserCoords && !isNaN(radius)) {
+      safe = safe.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
+    }
+
+    // Sort — DB handles newest/oldest; client-side for distance/price sorts
+    if (sort === "distance_asc" && hasUserCoords) {
+      safe.sort((a: any, b: any) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+    } else if (sort === "distance_desc" && hasUserCoords) {
+      safe.sort((a: any, b: any) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity));
+    } else if (sort === "price_asc") {
+      safe.sort((a: any, b: any) => a.price - b.price);
+    } else if (sort === "price_desc") {
+      safe.sort((a: any, b: any) => b.price - a.price);
+    }
+
+    // Re-paginate after filtering (radius may reduce total)
+    const filteredTotal = safe.length;
+    const paged = safe.slice(skip, skip + perPage);
+
     return NextResponse.json({
-      listings: safe,
-      total,
+      listings: paged,
+      total: filteredTotal,
       page,
       perPage,
-      totalPages: Math.ceil(total / perPage),
+      totalPages: Math.ceil(filteredTotal / perPage),
     });
   } catch (err) {
     console.error("GET /api/listings error:", err);

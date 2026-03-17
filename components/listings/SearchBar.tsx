@@ -212,7 +212,8 @@ export function SearchBar() {
   const [condition, setCondition] = useState(searchParams.get("condition") ?? "");
   const [minPrice,  setMinPrice]  = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice,  setMaxPrice]  = useState(searchParams.get("maxPrice") ?? "");
-  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "50");
+  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "250");
+  const [sort,      setSort]      = useState(searchParams.get("sort") ?? "newest");
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
@@ -222,8 +223,9 @@ export function SearchBar() {
     if (minPrice)         params.set("minPrice",  minPrice);
     if (maxPrice)         params.set("maxPrice",  maxPrice);
     if (radius)           params.set("radius",    radius);
+    if (sort && sort !== "newest") params.set("sort", sort);
     router.push(`/?${params.toString()}`);
-  }, [query, platforms, condition, minPrice, maxPrice, radius, router]);
+  }, [query, platforms, condition, minPrice, maxPrice, radius, sort, router]);
 
   // Auto-apply when platform selection changes — no need to hit Search
   const isFirstRender = useRef(true);
@@ -235,7 +237,7 @@ export function SearchBar() {
 
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
-    setMinPrice(""); setMaxPrice(""); setRadius("50");
+    setMinPrice(""); setMaxPrice(""); setRadius("250"); setSort("newest");
     router.push("/");
   };
 
@@ -308,6 +310,26 @@ export function SearchBar() {
                   onChange={(e) => setMaxPrice(e.target.value)} className="input-base" />
               </div>
             </div>
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <ArrowUpDown className="w-4 h-4" />
+              <span className="text-sm">Sort by</span>
+            </div>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="input-base text-sm py-1.5 flex-1"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="distance_asc">Nearest first</option>
+              <option value="distance_desc">Furthest first</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
           </div>
 
           {/* Radius */}
