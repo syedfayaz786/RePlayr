@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -191,7 +191,9 @@ export function ListingActions({
             {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
           </span>
           {currentStatus === "sold" && soldOutside && (
-            <span className="text-xs text-gray-400">· Outside RePlayr</span>
+            <span className="flex items-center gap-1 text-xs text-gray-400">
+              <Globe className="w-3 h-3" /> Outside RePlayr
+            </span>
           )}
           {currentStatus === "sold" && buyer && (
             <>
