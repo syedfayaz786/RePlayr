@@ -239,6 +239,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
               isSeller={isSeller}
               status={listing.status}
               buyer={isSeller ? ((sale as any)?.buyer ? { id: (sale as any).buyer.id, name: (sale as any).buyer.name } : null) : null}
+              soldOutside={isSeller && listing.status === "sold" && !sale}
               listingData={{
                 title:       listing.title,
                 description: listing.description,

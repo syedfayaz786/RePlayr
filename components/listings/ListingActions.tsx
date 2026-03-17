@@ -32,6 +32,7 @@ interface ListingActionsProps {
   status: string;
   listingData?: ListingData;
   buyer?: { id: string; name?: string | null } | null;
+  soldOutside?: boolean;
 }
 
 export function ListingActions({
@@ -45,6 +46,7 @@ export function ListingActions({
   status,
   listingData,
   buyer,
+  soldOutside,
 }: ListingActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -188,6 +190,9 @@ export function ListingActions({
           }`}>
             {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
           </span>
+          {currentStatus === "sold" && soldOutside && (
+            <span className="text-xs text-gray-400">· Outside RePlayr</span>
+          )}
           {currentStatus === "sold" && buyer && (
             <>
               <span className="text-xs text-gray-500">to</span>
