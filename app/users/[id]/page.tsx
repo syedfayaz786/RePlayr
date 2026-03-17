@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
-import { ListingCard } from "@/components/listings/ListingCard";
 import Image from "next/image";
 import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +24,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
       bio: true,
       location: true,
       createdAt: true,
-      listings: {
+      // listings removed from profile view
+      listings_unused: {
         where: { status: "active" },
         orderBy: { createdAt: "desc" },
         take: 12,
@@ -130,17 +130,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
           </div>
         </div>
 
-        {/* Active listings */}
-        {user.listings.length > 0 && (
-          <div>
-            <h2 className="font-display font-bold text-white text-lg mb-3">Active Listings</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {user.listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing as any} />
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Reviews — categorized by seller/buyer */}
         {user.reviewsReceived.length > 0 && (() => {
@@ -205,7 +195,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
         {user.listings.length === 0 && user.reviewsReceived.length === 0 && (
           <div className="card p-10 text-center">
-            <p className="text-gray-500">This user hasn&apos;t posted any listings or received any reviews yet.</p>
+            <p className="text-gray-500">This user hasn&apos;t received any reviews yet.</p>
           </div>
         )}
 
