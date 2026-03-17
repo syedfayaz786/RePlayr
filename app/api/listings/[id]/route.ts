@@ -78,6 +78,11 @@ export async function PATCH(
     if (lat !== undefined && lat == null) data.fuzzyLat = null;
     if (lng !== undefined && lng == null) data.fuzzyLng = null;
 
+    // When re-activating a sold listing, remove the Sale record
+    if (data.status === "active") {
+      await prisma.sale.deleteMany({ where: { listingId: params.id } }).catch(() => {});
+    }
+
     let updated;
     try {
       updated = await prisma.listing.update({ where: { id: params.id }, data });

@@ -8,11 +8,20 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { listingId, buyerId } = await req.json();
-  if (!listingId || !buyerId) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  if (!listingId) return NextResponse.json({ error: "Missing listingId" }, { status: 400 });
 
   const listing = await prisma.listing.findUnique({ where: { id: listingId } });
   if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   if (listing.sellerId !== session.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (!buyerId) {
+    // Sold outside RePlayr — delete any existing Sale record and just mark sold
+    await prisma.$transaction([
+      prisma.sale.deleteMany({ where: { listingId } }),
+      prisma.listing.update({ where: { id: listingId }, data: { status: "sold" } }),
+    ]);
+    return NextResponse.json({ ok: true });
+  }
 
   const [sale] = await prisma.$transaction([
     prisma.sale.upsert({
@@ -27,7 +36,6 @@ export async function POST(req: Request) {
   ]);
 
   // Send a system notification message so the navbar badge fires for the buyer.
-  // Encode seller+buyer names so the client can show the right text per viewer.
   const sellerName = session.user.name ?? "The seller";
   const buyer = await prisma.user.findUnique({ where: { id: buyerId }, select: { name: true } }).catch(() => null);
   const buyerName = buyer?.name ?? "the buyer";
