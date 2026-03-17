@@ -32,9 +32,10 @@ export async function POST(req: Request) {
         })
       : null;
 
+    const isNew = !existing;
     let review;
     if (existing) {
-      // Update existing
+      // Update existing — no new message sent to avoid duplicates
       review = await prisma.review.update({
         where: { id: existing.id },
         data: {
@@ -59,27 +60,28 @@ export async function POST(req: Request) {
       });
     }
 
-    // Build message in the exact format MessageThread expects for the golden rating card
-    const LABELS: Record<number, string> = { 1:"Poor", 2:"Fair", 3:"Good", 4:"Great", 5:"Excellent!" };
-    const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-    // roleVal is the AUTHOR's role; message says "rated you as X" where X = TARGET's role (opposite)
-    const roleLabel = roleVal === "seller" ? "buyer" : "seller";
-    const strengthsList = Array.isArray(strengths) && strengths.length > 0
-      ? `\n✨ ${strengths.join(" · ")}`
-      : "";
-    const commentPart = comment ? `\n"${comment}"` : "";
+    // Only send rating message on first submission — never on updates
+    if (isNew) {
+      const LABELS: Record<number, string> = { 1:"Poor", 2:"Fair", 3:"Good", 4:"Great", 5:"Excellent!" };
+      const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+      // roleVal is the AUTHOR's role; message says "rated you as X" where X = TARGET's role (opposite)
+      const roleLabel = roleVal === "seller" ? "buyer" : "seller";
+      const strengthsList = Array.isArray(strengths) && strengths.length > 0
+        ? `\n✨ ${strengths.join(" · ")}`
+        : "";
+      const commentPart = comment ? `\n"${comment}"` : "";
 
-    const msgContent = `⭐ Rating received\n${stars} ${LABELS[rating]} — rated you as a ${roleLabel}${strengthsList}${commentPart}`;
+      const msgContent = `⭐ Rating received\n${stars} ${LABELS[rating]} — rated you as a ${roleLabel}${strengthsList}${commentPart}`;
 
-    // Send as a message to targetId so it shows up in their chatbox and triggers navbar badge
-    await prisma.message.create({
-      data: {
-        content:    msgContent,
-        senderId:   session.user.id,
-        receiverId: targetId,
-        listingId:  listingId ?? null,
-      },
-    }).catch(() => {});
+      await prisma.message.create({
+        data: {
+          content:    msgContent,
+          senderId:   session.user.id,
+          receiverId: targetId,
+          listingId:  listingId ?? null,
+        },
+      }).catch(() => {});
+    }
 
     return NextResponse.json({ review, msgContent });
   } catch (err) {
