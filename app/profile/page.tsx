@@ -39,24 +39,33 @@ export default function ProfilePage() {
     if (!file) return;
 
     setUploadingAvatar(true);
+
+    const toBase64 = (f: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+
     try {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const base64 = ev.target?.result as string;
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/avatars" }),
-        });
-        if (!res.ok) throw new Error("Upload failed");
-        const { url } = await res.json();
-        setImage(url);
-        setUploadingAvatar(false);
-        toast.success("Photo uploaded — click Save Profile to apply");
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      toast.error("Failed to upload photo");
+      const base64 = await toBase64(file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/avatars" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error ?? "Upload failed");
+      }
+      const { url } = await res.json();
+      setImage(url);
+      toast.success("Photo uploaded — click Save Profile to apply");
+    } catch (err: any) {
+      console.error("Avatar upload error:", err);
+      toast.error(err?.message ?? "Failed to upload photo");
+    } finally {
       setUploadingAvatar(false);
     }
   };
