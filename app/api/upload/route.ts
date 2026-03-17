@@ -10,8 +10,8 @@ export async function POST(req: Request) {
     const { data, filename, folder: folderParam } = await req.json();
     if (!data) return NextResponse.json({ error: "No image data" }, { status: 400 });
 
-    const cloudName    = process.env.CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
+    const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
       return NextResponse.json({ error: "Cloudinary not configured" }, { status: 500 });
