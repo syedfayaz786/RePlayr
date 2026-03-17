@@ -24,14 +24,14 @@ export function UserLink({ id, name, image, size = "md", showName = true, classN
     <Link href={`/users/${id}`}
       className={`flex items-center gap-2 hover:opacity-80 transition-opacity group ${className}`}>
       {image ? (
-        {image.startsWith("data:") ? (
+        image.startsWith("data:") ? (
           <img src={image} alt={name ?? ""} width={s.avatar} height={s.avatar}
             className="rounded-full flex-shrink-0 object-cover" />
         ) : (
           <Image src={image} alt={name ?? ""} width={s.avatar} height={s.avatar}
-          className="rounded-full flex-shrink-0 group-hover:ring-2 group-hover:ring-brand-500 transition-all"
-          style={{ width: s.avatar, height: s.avatar }} />
-        )}
+            className="rounded-full flex-shrink-0 group-hover:ring-2 group-hover:ring-brand-500 transition-all"
+            style={{ width: s.avatar, height: s.avatar }} />
+        )
       ) : (
         <div style={{ width: s.avatar, height: s.avatar }}
           className={`rounded-full bg-brand-500/20 flex items-center justify-center text-brand-300 font-bold flex-shrink-0 ${s.initials} group-hover:ring-2 group-hover:ring-brand-500 transition-all`}>
