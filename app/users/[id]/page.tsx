@@ -182,7 +182,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
           );
         })()}
 
-        {user.listings.length === 0 && user.reviewsReceived.length === 0 && (
+        {user.reviewsReceived.length === 0 && (
           <div className="card p-10 text-center">
             <p className="text-gray-500">This user hasn&apos;t received any reviews yet.</p>
           </div>
