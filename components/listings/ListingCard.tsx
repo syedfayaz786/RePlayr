@@ -204,6 +204,16 @@ export function ListingCard({ listing }: ListingCardProps) {
           <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
 
+        {/* Distance badge */}
+        {listing.distanceKm !== undefined && (
+          <div className="absolute bottom-10 left-2 z-10 flex items-center gap-1 bg-dark-900/85 backdrop-blur-sm rounded-full px-2 py-0.5">
+            <MapPin className="w-2.5 h-2.5 text-brand-400 flex-shrink-0" />
+            <span className="text-xs font-semibold text-brand-400">
+              {listing.distanceKm < 1 ? `${Math.round(listing.distanceKm * 1000)}m` : `${listing.distanceKm}km`}
+            </span>
+          </div>
+        )}
+
         {/* Price */}
         <div className="absolute bottom-2 left-2 bg-dark-900/90 rounded-md px-2 py-0.5 z-10">
           <span className="font-display font-bold text-brand-400 text-base">
@@ -229,11 +239,7 @@ export function ListingCard({ listing }: ListingCardProps) {
                 <span className="truncate max-w-[80px] sm:max-w-[110px] text-slate-300">{listing.location}</span>
               </>
             )}
-            {listing.distanceKm !== undefined && (
-              <span className="flex-shrink-0 text-brand-400/80 font-medium ml-0.5">
-                · {listing.distanceKm < 1 ? `${Math.round(listing.distanceKm * 1000)}m` : `${listing.distanceKm}km`}
-              </span>
-            )}
+
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {listing.isSeller && listing.views !== undefined && (
