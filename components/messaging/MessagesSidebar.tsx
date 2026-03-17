@@ -233,8 +233,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
               >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <Link href={`/users/${conv.partnerId}`} onClick={e => e.stopPropagation()}
-                    className="block hover:ring-2 hover:ring-brand-500 rounded-full transition-all">
+                  <div className="block rounded-full">
                   {conv.partnerImage ? (
                     <Image src={conv.partnerImage} alt={conv.partnerName ?? ""} width={40} height={40} className="rounded-full" />
                   ) : (
@@ -242,7 +241,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
                       {conv.partnerName?.[0]?.toUpperCase() ?? "?"}
                     </div>
                   )}
-                  </Link>
+                </div>
                   {conv.unread > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
                       {conv.unread > 9 ? "9+" : conv.unread}
@@ -253,10 +252,9 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
-                    <Link href={`/users/${conv.partnerId}`} onClick={e => e.stopPropagation()}
-                      className={`text-sm font-medium truncate hover:text-brand-400 transition-colors ${conv.unread > 0 ? "text-white" : "text-gray-300"}`}>
+                    <span className={`text-sm font-medium truncate ${conv.unread > 0 ? "text-white" : "text-gray-300"}`}>
                       {conv.partnerName}
-                    </Link>
+                    </span>
                     <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                       {formatRelativeTime(conv.lastMessageAt)}
                     </span>
