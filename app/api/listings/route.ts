@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       prisma.listing.findMany({
         where,
         include: {
-          seller: { select: { id: true, name: true, image: true } },
+          seller: { select: { id: true, name: true, image: true, reviewsReceived: { select: { rating: true } } } },
           _count:  { select: { wishlistedBy: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -62,10 +62,18 @@ export async function GET(req: Request) {
       prisma.listing.count({ where }),
     ]);
 
-    // Strip exact coords; expose fuzzy only
+    // Strip exact coords; expose fuzzy only; compute seller avgRating
     const safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
-      return rest;
+      const reviews: { rating: number }[] = rest.seller?.reviewsReceived ?? [];
+      const avgRating = reviews.length
+        ? reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviews.length
+        : undefined;
+      const { reviewsReceived: _dropped, ...sellerClean } = rest.seller ?? {};
+      return {
+        ...rest,
+        seller: { ...sellerClean, avgRating, reviewCount: reviews.length },
+      };
     });
 
     return NextResponse.json({
