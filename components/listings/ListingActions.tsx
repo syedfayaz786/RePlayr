@@ -32,7 +32,6 @@ interface ListingActionsProps {
   isSeller: boolean;
   status: string;
   listingData?: ListingData;
-  buyer?: { id: string; name?: string | null; image?: string | null } | null;
 }
 
 export function ListingActions({
@@ -45,7 +44,6 @@ export function ListingActions({
   isSeller,
   status,
   listingData,
-  buyer,
 }: ListingActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -180,25 +178,15 @@ export function ListingActions({
 
         {/* Status pill */}
         <div className="flex items-center gap-2 flex-wrap">
-          {currentStatus === "sold" && buyer ? (
-            <a
-              href={`/messages?with=${buyer.id}&listing=${listingId}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-blue-500/15 text-blue-300 border-blue-500/30 hover:bg-blue-500/25 transition-colors`}
-              title="Open chat with buyer"
-            >
-              💰 Sold to {buyer.name ?? "buyer"}
-            </a>
-          ) : (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-              currentStatus === "active"
-                ? "bg-green-500/15 text-green-300 border-green-500/30"
-                : currentStatus === "sold"
-                ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
-                : "bg-gray-500/15 text-gray-300 border-gray-500/30"
-            }`}>
-              {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
-            </span>
-          )}
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+            currentStatus === "active"
+              ? "bg-green-500/15 text-green-300 border-green-500/30"
+              : currentStatus === "sold"
+              ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+              : "bg-gray-500/15 text-gray-300 border-gray-500/30"
+          }`}>
+            {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
+          </span>
         </div>
 
         {/* Mark as sold / relist */}
