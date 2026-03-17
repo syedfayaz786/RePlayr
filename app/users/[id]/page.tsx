@@ -24,18 +24,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
       bio: true,
       location: true,
       createdAt: true,
-      // listings removed from profile view
-      listings_unused: {
-        where: { status: "active" },
-        orderBy: { createdAt: "desc" },
-        take: 12,
-        select: {
-          id: true, title: true, price: true, platform: true,
-          condition: true, edition: true, images: true, status: true,
-          createdAt: true, location: true, sellerId: true,
-          _count: { select: { wishlistedBy: true } },
-        },
-      },
+
       reviewsReceived: {
         orderBy: { createdAt: "desc" },
         select: { id: true, rating: true, comment: true, role: true, createdAt: true, author: { select: { id: true, name: true, image: true } } },
