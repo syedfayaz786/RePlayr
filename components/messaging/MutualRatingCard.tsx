@@ -122,24 +122,10 @@ export function MutualRatingCard({
       });
       if (!res.ok) throw new Error();
 
-      // 2. Build a human-readable message to send to the other party
-      const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-      const roleLabel = isSeller ? "buyer" : "seller";
-      const strengthLine = selected.length > 0 ? `\n✨ ${selected.join(" · ")}` : "";
-      const commentLine  = comment.trim() ? `\n"${comment.trim()}"` : "";
-      const msgContent = `⭐ Rating received\n${stars} ${LABELS[rating]} — rated you as a ${roleLabel}${strengthLine}${commentLine}`;
-
-      // 3. Send as a real message so it shows in chat + triggers navbar badge
-      await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ receiverId: targetId, content: msgContent, listingId }),
-      });
-
+      // Reviews API already sends the rating message to the recipient — no separate send needed
       toast.success("Review submitted!");
       setSubmitted(true);
-      // Notify parent (MessageThread) to append the message locally without reload
-      onRatingMessage?.(msgContent);
+      onRatingMessage?.("");
     } catch {
       toast.error("Failed to submit review");
     } finally {
