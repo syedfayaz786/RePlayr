@@ -212,8 +212,8 @@ export function SearchBar() {
   const [condition, setCondition] = useState(searchParams.get("condition") ?? "");
   const [minPrice,  setMinPrice]  = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice,  setMaxPrice]  = useState(searchParams.get("maxPrice") ?? "");
-  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "250");
-  const [sort,      setSort]      = useState(searchParams.get("sort") ?? "newest");
+  const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "");
+  const [sort,      setSort]      = useState(searchParams.get("sort") ?? "distance_asc");
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
@@ -222,7 +222,7 @@ export function SearchBar() {
     if (condition)        params.set("condition", condition);
     if (minPrice)         params.set("minPrice",  minPrice);
     if (maxPrice)         params.set("maxPrice",  maxPrice);
-    if (radius)           params.set("radius",    radius);
+    if (radius && parseInt(radius) > 0) params.set("radius", radius);
     if (sort && sort !== "newest") params.set("sort", sort);
     router.push(`/?${params.toString()}`);
   }, [query, platforms, condition, minPrice, maxPrice, radius, sort, router]);
@@ -237,7 +237,7 @@ export function SearchBar() {
 
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
-    setMinPrice(""); setMaxPrice(""); setRadius("250"); setSort("newest");
+    setMinPrice(""); setMaxPrice(""); setRadius(""); setSort("distance_asc");
     router.push("/");
   };
 
@@ -318,10 +318,10 @@ export function SearchBar() {
               <MapPin className="w-4 h-4" />
               <span className="text-sm">Within</span>
             </div>
-            <input type="range" min="5" max="500" step="5" value={radius}
+            <input type="range" min="0" max="500" step="5" value={radius || "0"}
               onChange={(e) => setRadius(e.target.value)}
               className="flex-1 accent-brand-500" />
-            <span className="text-brand-400 font-semibold text-sm w-20 text-right">{radius} km</span>
+            <span className="text-brand-400 font-semibold text-sm w-20 text-right">{radius ? `${radius} km` : "Any"}</span>
           </div>
 
           {hasFilters && (

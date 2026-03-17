@@ -28,8 +28,9 @@ export async function GET(req: Request) {
   const skip      = (page - 1) * perPage;
   const userLat   = parseFloat(searchParams.get("userLat") ?? "");
   const userLng   = parseFloat(searchParams.get("userLng") ?? "");
-  const radius    = parseFloat(searchParams.get("radius") ?? "250");
-  const sort      = searchParams.get("sort") ?? "newest";
+  const radiusRaw = searchParams.get("radius");
+  const radius    = radiusRaw !== null ? parseFloat(radiusRaw) : null;
+  const sort      = searchParams.get("sort") ?? "distance_asc";
   const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
 
   // Use AND so every filter is required simultaneously —
@@ -85,8 +86,8 @@ export async function GET(req: Request) {
       return { ...rest, ...(distanceKm !== undefined && { distanceKm }) };
     });
 
-    // Filter by radius only for listings that have location data
-    if (hasUserCoords && !isNaN(radius)) {
+    // Filter by radius only when explicitly set
+    if (hasUserCoords && radius !== null && !isNaN(radius)) {
       safe = safe.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
     }
 
