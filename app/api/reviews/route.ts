@@ -59,16 +59,16 @@ export async function POST(req: Request) {
       });
     }
 
-    // Build a star string and message to send to the reviewed party
-    const stars = "⭐".repeat(rating);
+    // Build message in the exact format MessageThread expects for the golden rating card
+    const LABELS: Record<number, string> = { 1:"Poor", 2:"Fair", 3:"Good", 4:"Great", 5:"Excellent!" };
+    const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+    const roleLabel = roleVal === "seller" ? "seller" : "buyer";
     const strengthsList = Array.isArray(strengths) && strengths.length > 0
       ? `\n✨ ${strengths.join(" · ")}`
       : "";
     const commentPart = comment ? `\n"${comment}"` : "";
-    const authorName  = session.user.name ?? "Someone";
-    const roleLabel   = roleVal === "seller" ? "seller" : "buyer";
 
-    const msgContent = `${stars} ${authorName} rated you as a ${roleLabel}!${strengthsList}${commentPart}`;
+    const msgContent = `⭐ Rating received\n${stars} ${LABELS[rating]} — rated you as a ${roleLabel}${strengthsList}${commentPart}`;
 
     // Send as a message to targetId so it shows up in their chatbox and triggers navbar badge
     await prisma.message.create({
