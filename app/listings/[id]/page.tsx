@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, EditionBadge } from "@/components/ui/Badges";
 import { StarRating } from "@/components/ui/StarRating";
+import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { UserLink } from "@/components/ui/UserLink";
 import { MapPin, Clock, Package, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -182,46 +183,15 @@ export default async function ListingPage({ params }: { params: { id: string } }
             )}
 
             {/* Seller reviews */}
-            {listing.seller.reviewsReceived.length > 0 && (() => {
-              const asSellerReviews = listing.seller.reviewsReceived.filter((r: any) => r.role === "buyer");
-              const asBuyerReviews  = listing.seller.reviewsReceived.filter((r: any) => r.role === "seller");
-              const ReviewRow = ({ review }: { review: any }) => {
-                const chips = (() => { try { const p = JSON.parse(review.strengths ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; } })();
-                return (
-                  <div className="border-b border-dark-600 last:border-0 pb-4 last:pb-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <UserLink id={review.author.id ?? ""} name={review.author.name} image={review.author.image} size="sm" />
-                      <StarRating rating={review.rating} size="sm" />
-                    </div>
-                    {chips.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {chips.map((s: string) => (
-                          <span key={s} className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-300">{s}</span>
-                        ))}
-                      </div>
-                    )}
-                    {review.comment && <p className="text-sm text-gray-400 mt-1">{review.comment}</p>}
-                  </div>
-                );
-              };
-              return (
-                <div className="card p-6 space-y-5">
-                  <h3 className="font-semibold text-white">Reviews for {listing.seller.name}</h3>
-                  {asSellerReviews.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-brand-400 mb-3">As a Seller</p>
-                      <div className="space-y-4">{asSellerReviews.map((r: any) => <ReviewRow key={r.id} review={r} />)}</div>
-                    </div>
-                  )}
-                  {asBuyerReviews.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-brand-400 mb-3">As a Buyer</p>
-                      <div className="space-y-4">{asBuyerReviews.map((r: any) => <ReviewRow key={r.id} review={r} />)}</div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {listing.seller.reviewsReceived.length > 0 && (
+              <div className="card p-6">
+                <h3 className="font-semibold text-white mb-4">Reviews for {listing.seller.name}</h3>
+                <ReviewsTabs reviews={listing.seller.reviewsReceived.map((r: any) => ({
+                  ...r,
+                  createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+                }))} />
+              </div>
+            )}
           </div>
 
           {/* Right: Seller card + Actions */}
