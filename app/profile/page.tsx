@@ -2,13 +2,199 @@
 
 import { Navbar } from "@/components/layout/Navbar";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useRef } from "react";
-import { User, MapPin, Save, Star, Camera, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { User, MapPin, Save, Star, Camera, Loader2, X, Check, ZoomIn, ZoomOut } from "lucide-react";
 import toast from "react-hot-toast";
 import { StarRating } from "@/components/ui/StarRating";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Image from "next/image";
 
+// ── Avatar Crop Modal ──────────────────────────────────────────────────────────
+function AvatarCropModal({
+  src,
+  onConfirm,
+  onCancel,
+}: {
+  src: string;
+  onConfirm: (croppedDataUrl: string) => void;
+  onCancel: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  const PREVIEW_SIZE = 280; // px — the circular viewport
+
+  // Load image, compute initial scale to fill the circle
+  useEffect(() => {
+    const img = new window.Image();
+    img.onload = () => {
+      imgRef.current = img;
+      setImgNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+      const shorter = Math.min(img.naturalWidth, img.naturalHeight);
+      const initialScale = PREVIEW_SIZE / shorter;
+      setScale(initialScale);
+      setOffset({ x: 0, y: 0 });
+      setImgLoaded(true);
+    };
+    img.src = src;
+  }, [src]);
+
+  // Draw onto the preview canvas
+  useEffect(() => {
+    if (!imgLoaded || !imgRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = PREVIEW_SIZE;
+    canvas.height = PREVIEW_SIZE;
+
+    const img = imgRef.current;
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+    const x = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
+    const y = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
+
+    ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+    ctx.drawImage(img, x, y, drawW, drawH);
+  }, [imgLoaded, offset, scale]);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragging) return;
+    setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  };
+  const onMouseUp = () => setDragging(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    setDragging(true);
+    setDragStart({ x: t.clientX - offset.x, y: t.clientY - offset.y });
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    setOffset({ x: t.clientX - dragStart.x, y: t.clientY - dragStart.y });
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    setScale((s) => Math.min(10, Math.max(0.1, s - e.deltaY * 0.001)));
+  };
+
+  const handleConfirm = () => {
+    if (!canvasRef.current) return;
+    // Render final 400×400 crop
+    const out = document.createElement("canvas");
+    out.width = 400;
+    out.height = 400;
+    const ctx = out.getContext("2d")!;
+    const img = imgRef.current!;
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+    const x = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
+    const y = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
+    const factor = 400 / PREVIEW_SIZE;
+    ctx.drawImage(img, x * factor, y * factor, drawW * factor, drawH * factor);
+    onConfirm(out.toDataURL("image/jpeg", 0.92));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-dark-800 border border-dark-600 rounded-2xl p-6 flex flex-col items-center gap-5 w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between w-full">
+          <h3 className="text-white font-semibold text-base">Adjust Photo</h3>
+          <button onClick={onCancel} className="text-gray-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-400 -mt-2">Drag to reposition · Scroll to zoom</p>
+
+        {/* Circular crop viewport */}
+        <div
+          ref={containerRef}
+          className="relative select-none"
+          style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE, cursor: dragging ? "grabbing" : "grab" }}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={() => setDragging(false)}
+          onWheel={onWheel}
+        >
+          <canvas
+            ref={canvasRef}
+            width={PREVIEW_SIZE}
+            height={PREVIEW_SIZE}
+            className="rounded-full"
+            style={{ display: "block" }}
+          />
+          {/* Circle border overlay */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)", borderRadius: "50%" }}
+          />
+          <div className="absolute inset-0 rounded-full pointer-events-none ring-2 ring-brand-500/60" />
+        </div>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-3 w-full">
+          <button
+            onClick={() => setScale((s) => Math.max(0.1, s - 0.1))}
+            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-colors"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <input
+            type="range"
+            min={0.1}
+            max={5}
+            step={0.01}
+            value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            className="flex-1 accent-brand-500"
+          />
+          <button
+            onClick={() => setScale((s) => Math.min(5, s + 0.1))}
+            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-colors"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex gap-3 w-full">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl border border-dark-500 text-gray-300 hover:text-white hover:border-dark-400 transition-colors text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="flex-1 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Profile Page ───────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { data: session, update } = useSession();
   const [name, setName] = useState(session?.user?.name ?? "");
@@ -18,6 +204,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,26 +221,26 @@ export default function ProfilePage() {
     }
   }, [session]);
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Step 1: file picked → open crop modal
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    // reset so same file can be re-picked
+    e.target.value = "";
+  };
 
+  // Step 2: crop confirmed → upload cropped canvas data URL
+  const handleCropConfirm = async (croppedDataUrl: string) => {
+    setCropSrc(null);
     setUploadingAvatar(true);
-
-    const toBase64 = (f: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(f);
-      });
-
     try {
-      const base64 = await toBase64(file);
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/avatars" }),
+        body: JSON.stringify({ data: croppedDataUrl, filename: "avatar.jpg", folder: "replayr/avatars" }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -61,7 +248,6 @@ export default function ProfilePage() {
       }
       const { url } = await res.json();
       setImage(url);
-      toast.success("Photo uploaded — click Save Profile to apply");
     } catch (err: any) {
       console.error("Avatar upload error:", err);
       toast.error(err?.message ?? "Failed to upload photo");
@@ -97,6 +283,13 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {cropSrc && (
+        <AvatarCropModal
+          src={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
       <Navbar />
       <PageHeader crumbs={[{ label: "My Profile" }]} />
       <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-8 w-full py-8">
@@ -137,7 +330,7 @@ export default function ProfilePage() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleAvatarChange}
+                    onChange={handleFileChange}
                   />
                 </div>
 
