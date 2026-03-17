@@ -123,7 +123,7 @@ function AvatarCropModal({
         {/* Circular crop viewport */}
         <div
           ref={containerRef}
-          className="relative select-none"
+          className="relative select-none rounded-full ring-2 ring-brand-500/60 overflow-hidden"
           style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE, cursor: dragging ? "grabbing" : "grab" }}
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
@@ -138,15 +138,8 @@ function AvatarCropModal({
             ref={canvasRef}
             width={PREVIEW_SIZE}
             height={PREVIEW_SIZE}
-            className="rounded-full"
             style={{ display: "block" }}
           />
-          {/* Circle border overlay */}
-          <div
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)", borderRadius: "50%" }}
-          />
-          <div className="absolute inset-0 rounded-full pointer-events-none ring-2 ring-brand-500/60" />
         </div>
 
         {/* Zoom controls */}
