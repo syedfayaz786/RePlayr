@@ -118,13 +118,13 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
     }
   }, [paramStr]);
 
-  const fetchListings = useCallback(async (p: number, pp: number) => {
+  const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("page", String(p));
-      params.set("perPage", String(pp));
-      // Never send coords — distance is computed client-side to avoid double-fetch
+      // Fetch all matching listings so client can filter/sort/paginate
+      params.set("page", "1");
+      params.set("perPage", "1000");
       const res = await fetch(`/api/listings?${params.toString()}`);
       const json = await res.json();
       setData(json);
@@ -137,8 +137,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchListings(page, perPage);
-  }, [fetchListings, page, perPage]);
+    fetchListings();
+  }, [fetchListings]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -189,8 +189,12 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
     listings = [...listings].sort((a: any, b: any) => b.price - a.price);
   }
 
-  const start = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const end   = Math.min(page * perPage, total);
+  // Client-side pagination
+  const filteredTotal = listings.length;
+  const clientTotalPages = Math.ceil(filteredTotal / perPage);
+  const pagedListings = listings.slice((page - 1) * perPage, page * perPage);
+  const start = filteredTotal === 0 ? 0 : (page - 1) * perPage + 1;
+  const end   = Math.min(page * perPage, filteredTotal);
 
   return (
     <div ref={gridRef} className="scroll-mt-4">
@@ -204,8 +208,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
           </h2>
           {total > 0 && (
             <p className="text-gray-400 text-sm mt-1">
-              Showing {start}–{end} of {total} listings
-              {totalPages > 1 && ` · Page ${page} of ${totalPages}`}
+              Showing {start}–{end} of {filteredTotal} listings
+              {clientTotalPages > 1 && ` · Page ${page} of ${clientTotalPages}`}
             </p>
           )}
         </div>
@@ -338,7 +342,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         </div>
       ) : listings.length > 0 ? (
         <div key={fadeKey} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 animate-fade-in">
-          {listings.map((listing) => (
+          {pagedListings.map((listing: any) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>
@@ -353,8 +357,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         </div>
       )}
 
-      {!loading && totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+      {!loading && clientTotalPages > 1 && (
+        <PaginationBar page={page} totalPages={clientTotalPages} onPageChange={handlePageChange} />
       )}
     </div>
   );
