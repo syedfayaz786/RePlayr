@@ -119,26 +119,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
                 )}
               </div>
 
-              {/* Sold to banner — only visible to seller, only if buyer is on RePlayr */}
-              {isSeller && listing.status === "sold" && (sale as any)?.buyer && (
-                <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-dark-700/60 border border-green-500/20">
-                  <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                  <span className="text-sm text-gray-400">Sold to</span>
-                  <UserLink
-                    id={(sale as any).buyer.id}
-                    name={(sale as any).buyer.name}
-                    image={(sale as any).buyer.image}
-                    size="sm"
-                    showName
-                  />
-                  <a
-                    href={`/messages?with=${(sale as any).buyer.id}&listing=${listing.id}`}
-                    className="ml-auto text-xs text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1"
-                  >
-                    Open chat →
-                  </a>
-                </div>
-              )}
+
 
               {listing.description && (
                 <div className="bg-dark-700/50 rounded-xl p-4 mb-4">

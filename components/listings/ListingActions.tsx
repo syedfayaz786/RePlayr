@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy } from "lucide-react";
-import { UserLink } from "@/components/ui/UserLink";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -181,26 +180,24 @@ export function ListingActions({
 
         {/* Status pill */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-            currentStatus === "active"
-              ? "bg-green-500/15 text-green-300 border-green-500/30"
-              : currentStatus === "sold"
-              ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
-              : "bg-gray-500/15 text-gray-300 border-gray-500/30"
-          }`}>
-            {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
-          </span>
-          {/* Buyer link — only visible to seller when sold */}
-          {currentStatus === "sold" && buyer && (
+          {currentStatus === "sold" && buyer ? (
             <a
               href={`/messages?with=${buyer.id}&listing=${listingId}`}
-              className="flex items-center gap-2 flex-1 min-w-0 group"
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-blue-500/15 text-blue-300 border-blue-500/30 hover:bg-blue-500/25 transition-colors`}
               title="Open chat with buyer"
             >
-              <span className="text-xs text-gray-500">to</span>
-              <UserLink id={buyer.id} name={buyer.name ?? null} image={buyer.image ?? null} size="sm" showName />
-              <span className="text-xs text-brand-400 group-hover:text-brand-300 transition-colors ml-auto whitespace-nowrap">Chat →</span>
+              💰 Sold to {buyer.name ?? "buyer"}
             </a>
+          ) : (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+              currentStatus === "active"
+                ? "bg-green-500/15 text-green-300 border-green-500/30"
+                : currentStatus === "sold"
+                ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                : "bg-gray-500/15 text-gray-300 border-gray-500/30"
+            }`}>
+              {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
+            </span>
           )}
         </div>
 
