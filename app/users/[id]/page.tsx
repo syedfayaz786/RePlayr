@@ -4,7 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { ListingsReviewsTabs } from "@/components/ui/ListingsReviewsTabs";
-import Image from "next/image";
+import { AvatarLightbox } from "@/components/ui/AvatarLightbox";
 import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -105,8 +105,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
         <div className="card p-6">
           <div className="flex items-start gap-5">
             {user.image ? (
-              <Image src={user.image} alt={user.name ?? ""} width={80} height={80}
-                className="rounded-full flex-shrink-0 object-cover w-20 h-20" />
+              <AvatarLightbox src={user.image} name={user.name ?? ""} />
             ) : (
               <div className="w-20 h-20 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-2xl flex-shrink-0">
                 {user.name?.[0]?.toUpperCase() ?? "?"}
