@@ -112,6 +112,9 @@ export function MessageThread({
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);
   const [localSaleConfirmed, setLocalSaleConfirmed] = useState(saleConfirmed ?? false);
+  // True if sale was confirmed via the chat box (has SALE_CONFIRMED message)
+  // When true, MutualRatingCard handles showing partner's review — standalone rating cards are redundant
+  const hasSaleConfirmedInChat = initialThread.some(m => m.content.includes("SALE_CONFIRMED"));
 
   // Called by MutualRatingCard after submission — adds the rating message to local thread
   // Rating message was sent to recipient via API — sender sees submitted state in rating card,
@@ -445,8 +448,10 @@ export function MessageThread({
           }
 
           // Rating message — only shown to the RECIPIENT (sender already sees it in rating card)
+          // Hidden entirely when sale was confirmed via chat (MutualRatingCard handles it inline)
           if (isRating) {
             if (isMe) return null; // sender doesn't see their own rating as a chat bubble
+            if (hasSaleConfirmedInChat) return null; // MutualRatingCard already shows partner's review
             const lines = msg.content.split("\n");
             // lines[1] = "★★★★☆ Great — rated you as a seller"
             const starLine = lines[1] ?? "";

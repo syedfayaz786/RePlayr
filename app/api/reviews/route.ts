@@ -62,7 +62,8 @@ export async function POST(req: Request) {
     // Build message in the exact format MessageThread expects for the golden rating card
     const LABELS: Record<number, string> = { 1:"Poor", 2:"Fair", 3:"Good", 4:"Great", 5:"Excellent!" };
     const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-    const roleLabel = roleVal === "seller" ? "seller" : "buyer";
+    // roleVal is the AUTHOR's role; message says "rated you as X" where X = TARGET's role (opposite)
+    const roleLabel = roleVal === "seller" ? "buyer" : "seller";
     const strengthsList = Array.isArray(strengths) && strengths.length > 0
       ? `\n✨ ${strengths.join(" · ")}`
       : "";
