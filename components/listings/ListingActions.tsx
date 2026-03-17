@@ -198,10 +198,9 @@ export function ListingActions({
               >
                 {buyer.name ?? "buyer"}
               </a>
-              <span className="text-gray-600 text-xs">·</span>
               <a
                 href={`/messages?with=${buyer.id}&listing=${listingId}`}
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                className="text-xs text-brand-400 hover:text-brand-300 transition-colors ml-auto"
               >
                 Open Chat →
               </a>
