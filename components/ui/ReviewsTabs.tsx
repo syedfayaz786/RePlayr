@@ -8,6 +8,7 @@ type Review = {
   id: string;
   rating: number;
   comment?: string | null;
+  strengths?: string | null;
   role: string;
   createdAt: string;
   author: { id: string; name?: string | null; image?: string | null };
@@ -79,8 +80,21 @@ function ReviewCard({ review }: { review: Review }) {
             }).format(new Date(review.createdAt))}
           </span>
         </div>
+        {(() => {
+          const chips = (() => {
+            try { const p = JSON.parse(review.strengths ?? "[]"); return Array.isArray(p) ? p : []; }
+            catch { return []; }
+          })();
+          return chips.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {chips.map((s: string) => (
+                <span key={s} className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-300">{s}</span>
+              ))}
+            </div>
+          ) : null;
+        })()}
         {review.comment && (
-          <p className="text-sm text-gray-300 mt-1 leading-relaxed">{review.comment}</p>
+          <p className="text-sm text-gray-300 mt-1.5 leading-relaxed">{review.comment}</p>
         )}
       </div>
     </div>

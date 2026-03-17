@@ -30,7 +30,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
       seller: {
         include: {
           reviewsReceived: {
-            select: { id: true, rating: true, comment: true, role: true, createdAt: true, author: { select: { id: true, name: true, image: true } } },
+            select: { id: true, rating: true, comment: true, strengths: true, role: true, createdAt: true, author: { select: { id: true, name: true, image: true } } },
             orderBy: { createdAt: "desc" },
             take: 10,
           },
@@ -185,15 +185,25 @@ export default async function ListingPage({ params }: { params: { id: string } }
             {listing.seller.reviewsReceived.length > 0 && (() => {
               const asSellerReviews = listing.seller.reviewsReceived.filter((r: any) => r.role === "buyer");
               const asBuyerReviews  = listing.seller.reviewsReceived.filter((r: any) => r.role === "seller");
-              const ReviewRow = ({ review }: { review: any }) => (
-                <div className="border-b border-dark-600 last:border-0 pb-4 last:pb-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <UserLink id={review.author.id ?? ""} name={review.author.name} image={review.author.image} size="sm" />
-                    <StarRating rating={review.rating} size="sm" />
+              const ReviewRow = ({ review }: { review: any }) => {
+                const chips = (() => { try { const p = JSON.parse(review.strengths ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; } })();
+                return (
+                  <div className="border-b border-dark-600 last:border-0 pb-4 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <UserLink id={review.author.id ?? ""} name={review.author.name} image={review.author.image} size="sm" />
+                      <StarRating rating={review.rating} size="sm" />
+                    </div>
+                    {chips.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {chips.map((s: string) => (
+                          <span key={s} className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-300">{s}</span>
+                        ))}
+                      </div>
+                    )}
+                    {review.comment && <p className="text-sm text-gray-400 mt-1">{review.comment}</p>}
                   </div>
-                  {review.comment && <p className="text-sm text-gray-400">{review.comment}</p>}
-                </div>
-              );
+                );
+              };
               return (
                 <div className="card p-6 space-y-5">
                   <h3 className="font-semibold text-white">Reviews for {listing.seller.name}</h3>

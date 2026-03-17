@@ -31,6 +31,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
           id: true,
           rating: true,
           comment: true,
+          strengths: true,
           role: true,
           createdAt: true,
           author: { select: { id: true, name: true, image: true } },
