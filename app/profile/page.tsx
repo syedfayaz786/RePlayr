@@ -57,8 +57,8 @@ export default function ProfilePage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <PageHeader crumbs={[{ label: "My Profile" }]} />
-      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-8 w-full py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-8 w-full py-8">
+        <div className="flex flex-col gap-6">
           {/* Profile card */}
           <div className="space-y-4">
             <div className="card p-6">
@@ -137,7 +137,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Reviews */}
-          <div className="lg:col-span-2">
+          <div>
             <h2 className="text-lg font-semibold text-white mb-4">
               Reviews ({reviews.length})
             </h2>
