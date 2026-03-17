@@ -70,48 +70,28 @@ export async function GET(req: Request) {
           _count:  { select: { wishlistedBy: true } },
         },
         orderBy: sort === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" },
-        // Fetch more when doing client-side distance sort/filter
-        take: (sort.startsWith("distance") || hasUserCoords) ? 2000 : perPage,
-        skip: (sort.startsWith("distance") || hasUserCoords) ? 0 : skip,
+        take: perPage,
+        skip,
       }),
       prisma.listing.count({ where }),
     ]);
 
-    // Strip exact coords; expose fuzzy only; compute distance if user coords provided
-    let safe = listings.map((l: any) => {
+    // Strip exact coords; expose fuzzy only (distance computed client-side)
+    const safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
-      const distanceKm = hasUserCoords && rest.fuzzyLat && rest.fuzzyLng
-        ? Math.round(haversineKm(userLat, userLng, rest.fuzzyLat, rest.fuzzyLng) * 10) / 10
-        : undefined;
-      return { ...rest, ...(distanceKm !== undefined && { distanceKm }) };
+      return rest;
     });
 
-    // Filter by radius only when explicitly set
-    if (hasUserCoords && radius !== null && !isNaN(radius)) {
-      safe = safe.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
-    }
-
-    // Sort — DB handles newest/oldest; client-side for distance/price sorts
-    if (sort === "distance_asc" && hasUserCoords) {
-      safe.sort((a: any, b: any) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-    } else if (sort === "distance_desc" && hasUserCoords) {
-      safe.sort((a: any, b: any) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity));
-    } else if (sort === "price_asc") {
-      safe.sort((a: any, b: any) => a.price - b.price);
-    } else if (sort === "price_desc") {
-      safe.sort((a: any, b: any) => b.price - a.price);
-    }
-
-    // Re-paginate after filtering (radius may reduce total)
-    const filteredTotal = safe.length;
-    const paged = safe.slice(skip, skip + perPage);
+    // Price sorts handled client-side too
+    if (sort === "price_asc") safe.sort((a: any, b: any) => a.price - b.price);
+    else if (sort === "price_desc") safe.sort((a: any, b: any) => b.price - a.price);
 
     return NextResponse.json({
-      listings: paged,
-      total: filteredTotal,
+      listings: safe,
+      total,
       page,
       perPage,
-      totalPages: Math.ceil(filteredTotal / perPage),
+      totalPages: Math.ceil(total / perPage),
     });
   } catch (err) {
     console.error("GET /api/listings error:", err);

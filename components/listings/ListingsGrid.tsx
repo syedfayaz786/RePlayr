@@ -100,15 +100,16 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
 
   const paramStr = searchParams.toString();
 
-  // Get user location once on mount
+  // Get user location once — does NOT trigger a re-fetch, distance computed client-side
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {} // silently ignore if denied
+        () => {}
       );
     }
   }, []);
+
   const prevParamStr = useRef(paramStr);
   useEffect(() => {
     if (paramStr !== prevParamStr.current) {
@@ -123,10 +124,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", String(p));
       params.set("perPage", String(pp));
-      if (userCoords) {
-        params.set("userLat", userCoords.lat.toString());
-        params.set("userLng", userCoords.lng.toString());
-      }
+      // Never send coords — distance is computed client-side to avoid double-fetch
       const res = await fetch(`/api/listings?${params.toString()}`);
       const json = await res.json();
       setData(json);
@@ -136,7 +134,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
     } finally {
       setLoading(false);
     }
-  }, [searchParams, userCoords]);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchListings(page, perPage);
@@ -154,9 +152,45 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
 
   const total      = data?.total      ?? 0;
   const totalPages = data?.totalPages ?? 0;
-  const listings   = data?.listings   ?? [];
-  const start      = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const end        = Math.min(page * perPage, total);
+  const rawListings = data?.listings ?? [];
+
+  // Haversine distance (client-side)
+  const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+
+  const sort = searchParams.get("sort") ?? "newest";
+  const radiusRaw = searchParams.get("radius");
+  const radius = radiusRaw ? parseFloat(radiusRaw) : null;
+
+  // Attach distanceKm client-side
+  let listings: any[] = rawListings.map((l: any) => ({
+    ...l,
+    distanceKm: userCoords && l.fuzzyLat && l.fuzzyLng
+      ? Math.round(haversineKm(userCoords.lat, userCoords.lng, l.fuzzyLat, l.fuzzyLng) * 10) / 10
+      : undefined,
+  }));
+
+  // Apply radius filter if set
+  if (userCoords && radius !== null && !isNaN(radius) && radius > 0) {
+    listings = listings.filter((l: any) => l.distanceKm === undefined || l.distanceKm <= radius);
+  }
+
+  // Apply client-side sorts
+  if (sort === "distance_asc" && userCoords) {
+    listings = [...listings].sort((a: any, b: any) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+  } else if (sort === "distance_desc" && userCoords) {
+    listings = [...listings].sort((a: any, b: any) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity));
+  } else if (sort === "price_asc") {
+    listings = [...listings].sort((a: any, b: any) => a.price - b.price);
+  } else if (sort === "price_desc") {
+    listings = [...listings].sort((a: any, b: any) => b.price - a.price);
+  }
+
+  const start = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const end   = Math.min(page * perPage, total);
 
   return (
     <div ref={gridRef} className="scroll-mt-4">
