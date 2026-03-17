@@ -2,8 +2,8 @@
 
 import { Navbar } from "@/components/layout/Navbar";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { User, MapPin, Save, Star } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { User, MapPin, Save, Star, Camera, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { StarRating } from "@/components/ui/StarRating";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -14,8 +14,11 @@ export default function ProfilePage() {
   const [name, setName] = useState(session?.user?.name ?? "");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
+  const [image, setImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (session) {
@@ -25,10 +28,38 @@ export default function ProfilePage() {
           setName(data.name ?? "");
           setBio(data.bio ?? "");
           setLocation(data.location ?? "");
+          setImage(data.image ?? null);
           setReviews(data.reviewsReceived ?? []);
         });
     }
   }, [session]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64 = ev.target?.result as string;
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/avatars" }),
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url } = await res.json();
+        setImage(url);
+        setUploadingAvatar(false);
+        toast.success("Photo uploaded — click Save Profile to apply");
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Failed to upload photo");
+      setUploadingAvatar(false);
+    }
+  };
 
   const saveProfile = async () => {
     setSaving(true);
@@ -36,10 +67,10 @@ export default function ProfilePage() {
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, bio, location }),
+        body: JSON.stringify({ name, bio, location, image }),
       });
       if (res.ok) {
-        await update({ name });
+        await update({ name, image });
         toast.success("Profile saved!");
       }
     } finally {
@@ -53,6 +84,8 @@ export default function ProfilePage() {
     ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length
     : 0;
 
+  const displayImage = image ?? session.user?.image;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -63,19 +96,42 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <div className="card p-6">
               <div className="flex flex-col items-center text-center mb-6">
-                {session.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name ?? ""}
-                    width={80}
-                    height={80}
-                    className="rounded-full mb-3"
+                {/* Avatar with upload button */}
+                <div className="relative mb-3">
+                  {displayImage ? (
+                    <Image
+                      src={displayImage}
+                      alt={name ?? ""}
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover w-20 h-20"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-3xl">
+                      {name?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-500 hover:bg-brand-400 rounded-full flex items-center justify-center transition-colors shadow-lg"
+                    title="Change photo"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-3.5 h-3.5 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
                   />
-                ) : (
-                  <div className="w-20 h-20 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-3xl mb-3">
-                    {session.user?.name?.[0]?.toUpperCase() ?? "?"}
-                  </div>
-                )}
+                </div>
+
                 <h2 className="font-semibold text-white text-lg">{session.user?.name}</h2>
                 <p className="text-gray-400 text-sm">{session.user?.email}</p>
                 {reviews.length > 0 && (
@@ -126,7 +182,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={saveProfile}
-                  disabled={saving}
+                  disabled={saving || uploadingAvatar}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />

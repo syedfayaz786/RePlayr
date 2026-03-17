@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { data, filename } = await req.json();
+    const { data, filename, folder: folderParam } = await req.json();
     if (!data) return NextResponse.json({ error: "No image data" }, { status: 400 });
 
     const cloudName    = process.env.CLOUDINARY_CLOUD_NAME;
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const formData = new FormData();
     formData.append("file", data);
     formData.append("upload_preset", uploadPreset);
-    formData.append("folder", "replayr/listings");
+    formData.append("folder", folderParam ?? "replayr/listings");
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,

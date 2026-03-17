@@ -25,11 +25,11 @@ export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name, bio, location } = await req.json();
+  const { name, bio, location, image } = await req.json();
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
-    data: { name, bio, location },
+    data: { name, bio, location, ...(image !== undefined && { image }) },
   });
 
   return NextResponse.json(user);
