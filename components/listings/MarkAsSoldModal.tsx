@@ -89,11 +89,11 @@ export function MarkAsSoldModal({ listingId, listingTitle, onClose, onSold }: Pr
         if (!res.ok) throw new Error();
         setStep("review");
       } else {
-        const res = await fetch("/api/listings/" + listingId, {
-          method: "PATCH", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "sold" }),
+        // Sold outside RePlayr — delete any existing Sale record via sales API (no buyerId)
+        await fetch("/api/sales", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId }),
         });
-        if (!res.ok) throw new Error();
         toast.success("Marked as sold!");
         onSold(); router.refresh();
       }
