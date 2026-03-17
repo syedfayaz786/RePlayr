@@ -18,13 +18,28 @@ function avgRating(reviews: Review[]) {
   return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 }
 
-function StarAvg({ reviews }: { reviews: Review[] }) {
+function StarAvg({ reviews, active }: { reviews: Review[]; active?: boolean }) {
   if (!reviews.length) return null;
   const avg = avgRating(reviews);
+  const rounded = Math.round(avg);
   return (
-    <span className="flex items-center gap-1 ml-2">
-      <StarRating rating={Math.round(avg)} size="sm" />
-      <span className="text-xs text-gray-400">{avg.toFixed(1)}</span>
+    <span className="flex items-center gap-1 ml-1">
+      {/* Render stars manually so we can control color on active tab */}
+      <span className="flex items-center gap-0.5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <svg key={i} className="w-3 h-3" viewBox="0 0 24 24" fill="none">
+            <polygon
+              points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+              fill={i < rounded ? (active ? "white" : "#22d3ee") : "none"}
+              stroke={i < rounded ? (active ? "white" : "#22d3ee") : (active ? "rgba(255,255,255,0.4)" : "#4b5563")}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ))}
+      </span>
+      <span className={`text-xs font-medium ${active ? "text-white" : "text-gray-400"}`}>{avg.toFixed(1)}</span>
     </span>
   );
 }
@@ -106,13 +121,13 @@ export function ReviewsTabs({ reviews }: { reviews: Review[] }) {
           >
             <span>{tab.label}</span>
             <span
-              className={`text-xs px-1.5 py-0.5 rounded-md ${
-                activeTab === tab.key ? "bg-white/20" : "bg-dark-600"
+              className={`text-xs px-1.5 py-0.5 rounded-md font-semibold ${
+                activeTab === tab.key ? "bg-white/30 text-white" : "bg-dark-600 text-gray-300"
               }`}
             >
               {tab.reviews.length}
             </span>
-            <StarAvg reviews={tab.reviews} />
+            <StarAvg reviews={tab.reviews} active={activeTab === tab.key} />
           </button>
         ))}
       </div>
