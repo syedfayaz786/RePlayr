@@ -87,6 +87,7 @@ function PaginationBar({
 
 export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   const searchParams = useSearchParams();
+  const [userCoords, setUserCoords] = useState<{lat: number; lng: number} | null>(null);
   const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +98,16 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   const [fadeKey, setFadeKey] = useState(0);
 
   const paramStr = searchParams.toString();
+
+  // Get user location once on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // silently ignore if denied
+      );
+    }
+  }, []);
   const prevParamStr = useRef(paramStr);
   useEffect(() => {
     if (paramStr !== prevParamStr.current) {
@@ -120,7 +131,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
     } finally {
       setLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, userCoords]);
 
   useEffect(() => {
     fetchListings(page, perPage);

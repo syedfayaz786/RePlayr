@@ -229,6 +229,11 @@ export function ListingCard({ listing }: ListingCardProps) {
                 <span className="truncate max-w-[80px] sm:max-w-[110px] text-slate-300">{listing.location}</span>
               </>
             )}
+            {listing.distanceKm !== undefined && (
+              <span className="flex-shrink-0 text-brand-400/80 font-medium ml-0.5">
+                · {listing.distanceKm < 1 ? `${Math.round(listing.distanceKm * 1000)}m` : `${listing.distanceKm}km`}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {listing.isSeller && listing.views !== undefined && (

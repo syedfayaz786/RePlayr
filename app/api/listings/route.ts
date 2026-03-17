@@ -8,6 +8,14 @@ function fuzzyCoord(exact: number): number {
   return parseFloat((exact + delta).toFixed(6));
 }
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q         = searchParams.get("q");
@@ -18,6 +26,8 @@ export async function GET(req: Request) {
   const perPage   = Math.min(parseInt(searchParams.get("perPage") ?? "50") || 50, 200);
   const page      = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
   const skip      = (page - 1) * perPage;
+  const userLat   = parseFloat(searchParams.get("userLat") ?? "");
+  const userLng   = parseFloat(searchParams.get("userLng") ?? "");
 
   // Use AND so every filter is required simultaneously —
   // prevents OR(text search) from swallowing platform/condition filters
@@ -62,10 +72,14 @@ export async function GET(req: Request) {
       prisma.listing.count({ where }),
     ]);
 
-    // Strip exact coords; expose fuzzy only
+    // Strip exact coords; expose fuzzy only; compute distance if user coords provided
+    const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
     const safe = listings.map((l: any) => {
       const { latitude, longitude, ...rest } = l;
-      return rest;
+      const distanceKm = hasUserCoords && rest.fuzzyLat && rest.fuzzyLng
+        ? Math.round(haversineKm(userLat, userLng, rest.fuzzyLat, rest.fuzzyLng) * 10) / 10
+        : undefined;
+      return { ...rest, ...(distanceKm !== undefined && { distanceKm }) };
     });
 
     return NextResponse.json({
