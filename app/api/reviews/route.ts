@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    return NextResponse.json({ review, msgContent });
+    return NextResponse.json({ review });
   } catch (err) {
     console.error("Review POST error:", err);
     return NextResponse.json({ error: "Failed to save review", detail: String(err) }, { status: 500 });
