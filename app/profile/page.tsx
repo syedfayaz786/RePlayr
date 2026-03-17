@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AvatarPickerModal } from "@/components/ui/AvatarPickerModal";
 import Image from "next/image";
 
 // ── Avatar Crop Modal ──────────────────────────────────────────────────────────
@@ -200,6 +201,7 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -284,6 +286,13 @@ export default function ProfilePage() {
           onCancel={() => setCropSrc(null)}
         />
       )}
+      {showAvatarPicker && (
+        <AvatarPickerModal
+          currentImage={image}
+          onSelect={(url) => setImage(url)}
+          onClose={() => setShowAvatarPicker(false)}
+        />
+      )}
       <Navbar />
       <PageHeader crumbs={[{ label: "My Profile" }]} />
       <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-8 w-full py-8">
@@ -295,13 +304,17 @@ export default function ProfilePage() {
                 {/* Avatar with upload button */}
                 <div className="relative mb-3">
                   {displayImage ? (
-                    <Image
-                      src={displayImage}
-                      alt={name ?? ""}
-                      width={80}
-                      height={80}
-                      className="rounded-full object-cover w-20 h-20"
-                    />
+                    displayImage.startsWith("data:") ? (
+                      <img src={displayImage} alt={name ?? ""} className="rounded-full object-cover w-20 h-20" />
+                    ) : (
+                      <Image
+                        src={displayImage}
+                        alt={name ?? ""}
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover w-20 h-20"
+                      />
+                    )
                   ) : (
                     <div className="w-20 h-20 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-3xl">
                       {name?.[0]?.toUpperCase() ?? "?"}
@@ -311,7 +324,7 @@ export default function ProfilePage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
                     className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-500 hover:bg-brand-400 rounded-full flex items-center justify-center transition-colors shadow-lg"
-                    title="Change photo"
+                    title="Upload photo"
                   >
                     {uploadingAvatar ? (
                       <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
@@ -327,6 +340,12 @@ export default function ProfilePage() {
                     onChange={handleFileChange}
                   />
                 </div>
+                <button
+                  onClick={() => setShowAvatarPicker(true)}
+                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors mt-1"
+                >
+                  Choose avatar
+                </button>
 
                 <h2 className="font-semibold text-white text-lg">{session.user?.name}</h2>
                 <p className="text-gray-400 text-sm">{session.user?.email}</p>
