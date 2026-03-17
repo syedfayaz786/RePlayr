@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   const userLng   = parseFloat(searchParams.get("userLng") ?? "");
   const radiusRaw = searchParams.get("radius");
   const radius    = radiusRaw !== null ? parseFloat(radiusRaw) : null;
-  const sort      = searchParams.get("sort") ?? "distance_asc";
+  const sort      = searchParams.get("sort") ?? "newest";
   const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
 
   // Use AND so every filter is required simultaneously —

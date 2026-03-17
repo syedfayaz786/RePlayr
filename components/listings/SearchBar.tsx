@@ -213,7 +213,7 @@ export function SearchBar() {
   const [minPrice,  setMinPrice]  = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice,  setMaxPrice]  = useState(searchParams.get("maxPrice") ?? "");
   const [radius,    setRadius]    = useState(searchParams.get("radius") ?? "");
-  const [sort,      setSort]      = useState(searchParams.get("sort") ?? "distance_asc");
+  const [sort,      setSort]      = useState(searchParams.get("sort") ?? "newest");
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
@@ -237,7 +237,7 @@ export function SearchBar() {
 
   const clearFilters = () => {
     setQuery(""); setPlatforms([]); setCondition("");
-    setMinPrice(""); setMaxPrice(""); setRadius(""); setSort("distance_asc");
+    setMinPrice(""); setMaxPrice(""); setRadius(""); setSort("newest");
     router.push("/");
   };
 
