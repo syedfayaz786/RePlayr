@@ -279,14 +279,14 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
           else params.delete("platform");
           params.delete("page");
           // Use router push to update URL without full reload
-          router.push(`/?${params.toString()}`);
+          router.push(`/?${params.toString()}`, { scroll: false });
         };
 
         const clearAll = () => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("platform");
           params.delete("page");
-          router.push(`/?${params.toString()}`);
+          router.push(`/?${params.toString()}`, { scroll: false });
         };
 
         return (
@@ -329,7 +329,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   if (e.target.value === "newest") params.delete("sort");
                   else params.set("sort", e.target.value);
                   params.delete("page");
-                  router.push(`/?${params.toString()}`);
+                  router.push(`/?${params.toString()}`, { scroll: false });
                 }}
                 className="bg-dark-700 border border-dark-500 text-gray-300 text-sm rounded-lg px-3 py-1.5 hover:border-brand-500/50 focus:outline-none focus:border-brand-500 transition-colors"
               >
@@ -339,6 +339,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                 <option value="distance_desc">Furthest first</option>
                 <option value="price_asc">Price: Low → High</option>
                 <option value="price_desc">Price: High → Low</option>
+                <option value="rating_desc">Seller Rating: High → Low</option>
+                <option value="rating_asc">Seller Rating: Low → High</option>
               </select>
             </div>
           </div>
