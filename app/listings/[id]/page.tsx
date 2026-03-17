@@ -33,7 +33,6 @@ export default async function ListingPage({ params }: { params: { id: string } }
           reviewsReceived: {
             select: { id: true, rating: true, comment: true, strengths: true, role: true, createdAt: true, author: { select: { id: true, name: true, image: true } } },
             orderBy: { createdAt: "desc" },
-            take: 10,
           },
           _count: { select: { listings: true, reviewsReceived: true } },
         },
