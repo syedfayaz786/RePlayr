@@ -198,7 +198,7 @@ export function ListingActions({
               title="Open chat with buyer"
             >
               <span className="text-xs text-gray-500">to</span>
-              <UserLink id={buyer.id} name={buyer.name} image={buyer.image} size="sm" showName />
+              <UserLink id={buyer.id} name={buyer.name ?? null} image={buyer.image ?? null} size="sm" showName />
               <span className="text-xs text-brand-400 group-hover:text-brand-300 transition-colors ml-auto whitespace-nowrap">Chat →</span>
             </a>
           )}
