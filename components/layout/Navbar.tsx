@@ -30,7 +30,8 @@ function useUnreadCount(enabled: boolean) {
 }
 
 export function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const authLoading = status === "loading";
   const [menuOpen, setMenuOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const unread = useUnreadCount(!!session);
@@ -52,7 +53,14 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
-            {session ? (
+            {authLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-24 rounded-xl bg-dark-700 animate-pulse" />
+                <div className="h-8 w-20 rounded-xl bg-dark-700 animate-pulse" />
+                <div className="h-8 w-20 rounded-xl bg-dark-700 animate-pulse" />
+                <div className="h-8 w-24 rounded-xl bg-dark-700 animate-pulse" />
+              </div>
+            ) : session ? (
               <>
                 <Link href="/listings/new" className="btn-primary flex items-center gap-2 py-2">
                   <Plus className="w-4 h-4" />
@@ -147,7 +155,7 @@ export function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-dark-600 bg-dark-800 px-4 py-4 space-y-2">
-          {session ? (
+          {authLoading ? null : session ? (
             <>
               <Link href="/listings/new" className="btn-primary flex items-center gap-2 w-full justify-center" onClick={() => setMenuOpen(false)}>
                 <Plus className="w-4 h-4" />Sell a Game
