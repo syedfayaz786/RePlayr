@@ -111,6 +111,7 @@ export function MessageThread({
   const [input, setInput]               = useState("");
   const [showEmoji, setShowEmoji]       = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [uploadError, setUploadError]     = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);
@@ -233,10 +234,27 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
     inputRef.current?.focus();
   };
 
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg","image/png","image/webp","image/gif","image/heic","image/heif"];
+  const MAX_IMAGE_MB = 20;
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    setUploadError("");
+
+    // Client-side validation
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type) && file.type !== "") {
+      setUploadError("Only images are allowed (JPG, PNG, GIF, WEBP, HEIC)");
+      setTimeout(() => setUploadError(""), 4000);
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setUploadError(`File too large — max ${MAX_IMAGE_MB} MB`);
+      setTimeout(() => setUploadError(""), 4000);
+      return;
+    }
+
     setImageUploading(true);
     try {
       const reader = new FileReader();
@@ -250,11 +268,14 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/messages" }),
       });
-      if (!res.ok) throw new Error();
       const uploadResult = await res.json();
-      if (!res.ok) { toast.error(uploadResult.error ?? "Upload failed"); setImageUploading(false); return; }
+      if (!res.ok) {
+        setUploadError(uploadResult.error ?? "Upload failed");
+        setTimeout(() => setUploadError(""), 4000);
+        setImageUploading(false);
+        return;
+      }
       const { url } = uploadResult;
-      // Send as a special image message
       const content = `📷IMAGE:${url}`;
       setSending(true);
       const tempMsg: Message = {
@@ -274,7 +295,8 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
       const saved = await msgRes.json();
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...saved, createdAt: saved.createdAt } : m));
     } catch {
-      toast.error("Failed to send image");
+      setUploadError("Failed to send image — please try again");
+      setTimeout(() => setUploadError(""), 4000);
     } finally {
       setImageUploading(false);
       setSending(false);
@@ -637,7 +659,14 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
 
       {/* ── Input ── */}
       <div className="p-3 border-t border-dark-600 flex-shrink-0 relative">
-        {/* Emoji picker */}
+        {/* Inline upload error */}
+        {uploadError && (
+          <div className="absolute bottom-full left-0 right-0 mx-3 mb-1 flex items-center gap-2 bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs rounded-xl px-3 py-2">
+            <span className="text-sm">⚠️</span>
+            {uploadError}
+          </div>
+        )}
+      {/* Emoji picker */}
         {showEmoji && (
           <div className="absolute bottom-full left-0 mb-2 bg-dark-800 border border-dark-600 rounded-2xl shadow-2xl z-20 w-80 overflow-hidden flex flex-col" style={{maxHeight: "340px"}}>
             {/* Category tabs */}
