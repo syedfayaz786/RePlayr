@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import { Send, Package, Check, CheckCheck, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Send, Package, Check, CheckCheck, X, ChevronUp, ChevronDown, Smile, ImageIcon, Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -109,6 +109,9 @@ export function MessageThread({
     setMessages(initialThread);
   }, [initialThread]);
   const [input, setInput]               = useState("");
+  const [showEmoji, setShowEmoji]       = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);
   const [localSaleConfirmed, setLocalSaleConfirmed] = useState(saleConfirmed ?? false);
@@ -210,6 +213,65 @@ export function MessageThread({
     const id = setInterval(poll, 5000);
     return () => clearInterval(id);
   }, [partnerId, listingId, messages]);
+
+  const EMOJIS = [
+    "😀","😂","😍","🥰","😎","🤩","😜","🤔","😏","🙄",
+    "👍","👎","❤️","🔥","💯","🎮","🕹️","👾","🎲","🏆",
+    "💰","💸","🤝","👏","🙌","😤","😩","🤦","🤷","💪",
+    "✅","❌","⭐","🌟","💎","🚀","⚡","🎯","🔑","📦",
+  ];
+
+  const insertEmoji = (emoji: string) => {
+    setInput(prev => prev + emoji);
+    setShowEmoji(false);
+    inputRef.current?.focus();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setImageUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/messages" }),
+      });
+      if (!res.ok) throw new Error();
+      const { url } = await res.json();
+      // Send as a special image message
+      const content = `📷IMAGE:${url}`;
+      setSending(true);
+      const tempMsg: Message = {
+        id: "temp-" + Date.now(),
+        content,
+        senderId: currentUserId,
+        createdAt: new Date().toISOString(),
+        read: false,
+      };
+      setMessages(prev => [...prev, tempMsg]);
+      const msgRes = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receiverId: partnerId, content, listingId: listingId ?? undefined }),
+      });
+      if (!msgRes.ok) throw new Error();
+      const saved = await msgRes.json();
+      setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...saved, createdAt: saved.createdAt } : m));
+    } catch {
+      toast.error("Failed to send image");
+    } finally {
+      setImageUploading(false);
+      setSending(false);
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || sending) return;
@@ -552,8 +614,41 @@ export function MessageThread({
       </div>
 
       {/* ── Input ── */}
-      <div className="p-4 border-t border-dark-600 flex-shrink-0">
-        <div className="flex gap-2">
+      <div className="p-3 border-t border-dark-600 flex-shrink-0 relative">
+        {/* Emoji picker */}
+        {showEmoji && (
+          <div className="absolute bottom-full left-3 mb-2 bg-dark-800 border border-dark-600 rounded-2xl p-3 shadow-2xl z-20 w-72">
+            <div className="grid grid-cols-8 gap-1">
+              {EMOJIS.map(emoji => (
+                <button
+                  key={emoji}
+                  onClick={() => insertEmoji(emoji)}
+                  className="text-xl hover:bg-dark-700 rounded-lg p-1 transition-colors leading-none"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          {/* Emoji button */}
+          <button
+            onClick={() => setShowEmoji(v => !v)}
+            className={`flex-shrink-0 p-2 rounded-xl transition-colors ${showEmoji ? "bg-brand-500/20 text-brand-400" : "text-gray-400 hover:text-white hover:bg-dark-700"}`}
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+          {/* Image button */}
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            disabled={imageUploading}
+            className="flex-shrink-0 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-dark-700 transition-colors disabled:opacity-50"
+          >
+            {imageUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
+          </button>
+          <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          {/* Text input */}
           <input
             ref={inputRef}
             type="text"
@@ -562,11 +657,12 @@ export function MessageThread({
             onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
             placeholder="Type a message..."
             className="input-base flex-1"
+            onClick={() => setShowEmoji(false)}
           />
           <button
             onClick={sendMessage}
-            disabled={!input.trim() || sending}
-            className="btn-primary px-4"
+            disabled={(!input.trim() && !sending) || sending}
+            className="btn-primary px-4 flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>
