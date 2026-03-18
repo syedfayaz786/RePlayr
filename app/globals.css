@@ -40,6 +40,12 @@
   ::-webkit-scrollbar-track { background: #060714; }
   ::-webkit-scrollbar-thumb { background: #2e3258; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+  /* Sleek emoji picker scrollbar */
+  .emoji-scroll::-webkit-scrollbar       { width: 3px; }
+  .emoji-scroll::-webkit-scrollbar-track { background: transparent; }
+  .emoji-scroll::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.35); border-radius: 99px; }
+  .emoji-scroll::-webkit-scrollbar-thumb:hover { background: rgba(6,182,212,0.6); }
 }
 
 @layer components {
