@@ -335,7 +335,7 @@ export default function ProfilePage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp,.avif"
                     className="hidden"
                     onChange={handleFileChange}
                   />

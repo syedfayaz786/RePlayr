@@ -251,7 +251,9 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
         body: JSON.stringify({ data: base64, filename: file.name, folder: "replayr/messages" }),
       });
       if (!res.ok) throw new Error();
-      const { url } = await res.json();
+      const uploadResult = await res.json();
+      if (!res.ok) { toast.error(uploadResult.error ?? "Upload failed"); setImageUploading(false); return; }
+      const { url } = uploadResult;
       // Send as a special image message
       const content = `📷IMAGE:${url}`;
       setSending(true);
@@ -683,7 +685,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
           >
             {imageUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
           </button>
-          <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          <input ref={imageInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.heif" className="hidden" onChange={handleImageUpload} />
           {/* Text input */}
           <input
             ref={inputRef}
