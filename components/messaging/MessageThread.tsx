@@ -457,6 +457,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
             : [];
           return messages.map((msg, idx) => {
           const isMe = msg.senderId === currentUserId;
+          const isImage = msg.content.startsWith("📷IMAGE:");
           const isRating = msg.content.startsWith("⭐ Rating received");
           const isOldRating = !isRating && msg.content.includes("rated you as a");
           const isSystem = msg.content.startsWith("🎉");
