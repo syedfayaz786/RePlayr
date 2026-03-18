@@ -588,23 +588,36 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
               )}
 
               {/* Bubble */}
-              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm transition-all ${
-                isMe
-                  ? "bg-brand-500 text-white rounded-br-sm"
-                  : "bg-dark-700 text-gray-100 rounded-bl-sm"
-              } ${isCurrentMatch ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-dark-900" : msgMatches ? "ring-1 ring-amber-400/40" : ""}`}>
-                <p className="whitespace-pre-wrap leading-relaxed">
-                  <HighlightText text={msg.content} query={searchQuery} />
-                </p>
-                <div className="text-xs mt-1 opacity-60 flex items-center gap-1 justify-end">
-                  {formatRelativeTime(msg.createdAt)}
-                  {isMe && (
-                    isLastMine && lastSeen
-                      ? <CheckCheck className="w-3 h-3 text-brand-200" />
-                      : <Check className="w-3 h-3 opacity-60" />
-                  )}
+              {isImage ? (
+                <div className="relative overflow-hidden rounded-2xl max-w-[240px] cursor-pointer"
+                  onClick={() => window.open(msg.content.replace("📷IMAGE:", ""), "_blank")}>
+                  <img
+                    src={msg.content.replace("📷IMAGE:", "")}
+                    alt="shared image"
+                    className="max-w-[240px] max-h-[300px] object-cover block hover:opacity-90 transition-opacity"
+                  />
+                  <div className="absolute bottom-1.5 right-2 text-xs text-white/80 flex items-center gap-1 drop-shadow-md">
+                    {formatRelativeTime(msg.createdAt)}
+                    {isMe && (isLastMine && lastSeen ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3 opacity-60" />)}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm transition-all ${
+                  isMe ? "bg-brand-500 text-white rounded-br-sm" : "bg-dark-700 text-gray-100 rounded-bl-sm"
+                } ${isCurrentMatch ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-dark-900" : msgMatches ? "ring-1 ring-amber-400/40" : ""}`}>
+                  <p className="whitespace-pre-wrap leading-relaxed">
+                    <HighlightText text={msg.content} query={searchQuery} />
+                  </p>
+                  <div className="text-xs mt-1 opacity-60 flex items-center gap-1 justify-end">
+                    {formatRelativeTime(msg.createdAt)}
+                    {isMe && (
+                      isLastMine && lastSeen
+                        ? <CheckCheck className="w-3 h-3 text-brand-200" />
+                        : <Check className="w-3 h-3 opacity-60" />
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Seen label under my last message */}
               {isMe && isLastMine && lastSeen && (
