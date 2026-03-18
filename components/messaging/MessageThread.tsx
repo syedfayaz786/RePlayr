@@ -718,9 +718,9 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
           <button
             onClick={() => imageInputRef.current?.click()}
             disabled={imageUploading}
-            className="flex-shrink-0 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-dark-700 transition-colors disabled:opacity-50"
+            className="flex-shrink-0 p-2 rounded-xl text-brand-400 hover:text-brand-300 hover:bg-dark-700 transition-colors disabled:opacity-50"
           >
-            {imageUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
+            {imageUploading ? <Loader2 className="w-5 h-5 animate-spin text-brand-400" /> : <ImageIcon className="w-5 h-5" />}
           </button>
           <input ref={imageInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.heif" className="hidden" onChange={handleImageUpload} />
           {/* Text input */}
