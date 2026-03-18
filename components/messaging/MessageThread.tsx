@@ -625,7 +625,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
         {showEmoji && (
           <div className="absolute bottom-full left-0 mb-2 bg-dark-800 border border-dark-600 rounded-2xl shadow-2xl z-20 w-80 overflow-hidden flex flex-col" style={{maxHeight: "340px"}}>
             {/* Category tabs */}
-            <div className="flex overflow-x-auto border-b border-dark-600 px-2 pt-2 gap-1 flex-shrink-0" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
+            <div className="flex overflow-x-auto border-b border-dark-600 px-2 pt-2 gap-1 flex-shrink-0" style={{scrollbarWidth:"thin",scrollbarColor:"rgba(6,182,212,0.3) transparent"}}>
               {EMOJI_CATEGORIES.map((cat, i) => (
                 <button key={i} onClick={() => {
                   const el = document.getElementById(`emoji-cat-${i}`);
