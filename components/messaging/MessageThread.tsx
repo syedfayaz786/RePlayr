@@ -148,8 +148,10 @@ export function MessageThread({
   // Scroll to bottom on new messages (only when not searching)
   useEffect(() => {
     if (!searchQuery?.trim()) {
-      const container = scrollContainerRef.current;
-      if (container) container.scrollTop = container.scrollHeight;
+      // Small timeout ensures images/content have started rendering before scroll
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 50);
     }
   }, [messages, searchQuery]);
 
@@ -619,6 +621,12 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
                     src={msg.content.replace("📷IMAGE:", "")}
                     alt="shared image"
                     className="max-w-[240px] max-h-[300px] object-cover block hover:opacity-90 transition-opacity"
+                    onLoad={() => {
+                      if (!searchQuery?.trim()) {
+                        const container = scrollContainerRef.current;
+                        if (container) container.scrollTop = container.scrollHeight;
+                      }
+                    }}
                   />
                   <div className="absolute bottom-1.5 right-2 text-xs text-white/80 flex items-center gap-1 drop-shadow-md">
                     {formatRelativeTime(msg.createdAt)}
