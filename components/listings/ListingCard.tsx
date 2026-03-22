@@ -205,9 +205,9 @@ export function ListingCard({ listing }: ListingCardProps) {
         </button>
 
         {/* Price + Distance */}
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between z-10">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between z-10 px-2 pb-2">
           <div className="bg-dark-900/90 rounded-md px-2 py-0.5">
-            <span className="font-display font-bold text-brand-400 text-base">
+            <span className="font-display font-bold text-base" style={{color:"var(--accent)"}}>
               {formatPrice(listing.price)}
             </span>
           </div>
