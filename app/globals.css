@@ -173,7 +173,7 @@
   }
 
   .card-hover {
-    @apply rounded-2xl overflow-hidden transition-all duration-250 cursor-pointer;
+    @apply rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer;
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     box-shadow: 0 4px 24px rgba(0,0,0,0.3);
