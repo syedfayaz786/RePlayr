@@ -204,6 +204,7 @@
 
   .card-hover {
     @apply overflow-hidden cursor-pointer;
+    position: relative;
     transition: transform 200ms cubic-bezier(0.34,1.2,0.64,1), border-color 200ms ease, box-shadow 200ms ease;
     border-radius: 14px;
     background: var(--bg-surface);
@@ -365,8 +366,7 @@
   border-radius: 8px;
 }
 
-/* Ripple on card click */
-.card-hover { position: relative; overflow: hidden; }
+/* Spotlight on card hover */
 .card-hover::before {
   content: '';
   position: absolute;
