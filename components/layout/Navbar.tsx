@@ -31,7 +31,7 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 glass">
-      <div className="max-w-screen-xl mx-auto px-5 sm:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8">
         <div className="flex items-center justify-between h-14">
 
           {/* Logo */}
