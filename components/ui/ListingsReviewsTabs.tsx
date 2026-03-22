@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 
@@ -37,49 +37,67 @@ interface Props {
 
 export function ListingsReviewsTabs({ listings, reviews }: Props) {
   const [activeTab, setActiveTab] = useState<"listings" | "reviews">("listings");
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [ind, setInd] = useState({ left: 0, width: 0 });
 
   const tabs = [
     { key: "listings" as const, label: "Active Listings", count: listings.length },
     { key: "reviews"  as const, label: "Reviews",         count: reviews.length  },
   ];
 
+  const activeIdx = tabs.findIndex(t => t.key === activeTab);
+
+  useEffect(() => {
+    const el = tabRefs.current[activeIdx];
+    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
+  }, [activeIdx]);
+
   return (
     <div>
-      {/* Tab bar — floating segmented control */}
-      <div className="inline-flex w-full mb-6 p-1.5 rounded-2xl"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}>
-        {tabs.map((tab) => {
+      {/* Tab bar */}
+      <div className="relative flex mb-8" style={{borderBottom: "1px solid rgba(255,255,255,0.06)"}}>
+        {tabs.map((tab, i) => {
           const isActive = activeTab === tab.key;
           return (
             <button
               key={tab.key}
+              ref={el => { tabRefs.current[i] = el; }}
               onClick={() => setActiveTab(tab.key)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium transition-all duration-200"
+              className="flex items-center gap-2 pb-3 pr-6 text-sm transition-colors duration-200"
               style={{
-                borderRadius: 12,
-                background: isActive ? "linear-gradient(135deg, #00F0FF, #7C3AED)" : "transparent",
-                color: isActive ? "#041018" : "#8FA3B8",
-                boxShadow: isActive ? "0 4px 20px rgba(0,240,255,0.2)" : "none",
-                transform: isActive ? "translateY(-1px)" : "translateY(0)",
+                color: isActive ? "#EAF2FF" : "#5C6B7A",
+                fontWeight: isActive ? 500 : 400,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                outline: "none",
+                letterSpacing: "-0.01em",
               }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#EAF2FF"; }}
-              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#8FA3B8"; }}
+              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#9FB0C3"; }}
+              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#5C6B7A"; }}
             >
-              <span className="tracking-tight">{tab.label}</span>
-              <span className="text-[11px] px-1.5 py-0.5 rounded-md font-semibold"
+              {tab.label}
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium tabular-nums"
                 style={{
-                  background: isActive ? "rgba(4,16,24,0.2)" : "rgba(255,255,255,0.06)",
-                  color: isActive ? "#041018" : "#5C6B7A",
+                  background: isActive ? "rgba(0,240,255,0.08)" : "rgba(255,255,255,0.04)",
+                  color: isActive ? "#00F0FF" : "#3d4f66",
                 }}>
                 {tab.count}
               </span>
             </button>
           );
         })}
+        {/* Sliding indicator */}
+        <div className="absolute bottom-0 h-px"
+          style={{
+            left: ind.left,
+            width: ind.width,
+            background: "linear-gradient(90deg, #00F0FF, #7C3AED)",
+            boxShadow: "0 0 6px rgba(0,240,255,0.25)",
+            borderRadius: 99,
+            transition: "left 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        />
       </div>
 
       {/* Listings tab */}
