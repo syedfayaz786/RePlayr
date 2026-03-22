@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -336,7 +336,10 @@ export function ListingActions({
       {/* Message Modal */}
       {showMessageModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card w-full max-w-md p-6">
+          <div className="card w-full max-w-md p-6 relative">
+            <button onClick={() => setShowMessageModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
             <h3 className="font-display font-bold text-white text-xl mb-1">
               Message {sellerName}
             </h3>
@@ -373,7 +376,10 @@ export function ListingActions({
       {/* Offer Modal */}
       {showOfferModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card w-full max-w-md p-6">
+          <div className="card w-full max-w-md p-6 relative">
+            <button onClick={() => setShowOfferModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
             <h3 className="font-display font-bold text-white text-xl mb-1">Make an Offer</h3>
             <p className="text-gray-400 text-sm mb-4">
               Listed for{" "}
