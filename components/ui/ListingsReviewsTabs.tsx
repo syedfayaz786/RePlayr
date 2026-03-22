@@ -45,26 +45,41 @@ export function ListingsReviewsTabs({ listings, reviews }: Props) {
 
   return (
     <div>
-      {/* Tab bar */}
-      <div className="flex gap-1 mb-6 bg-dark-800 rounded-xl p-1 border border-dark-600">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.key
-                ? "bg-brand-500 text-white shadow"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <span>{tab.label}</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded-md font-semibold ${
-              activeTab === tab.key ? "bg-white/30 text-white" : "bg-dark-600 text-gray-300"
-            }`}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
+      {/* Tab bar — floating segmented control */}
+      <div className="inline-flex w-full mb-6 p-1.5 rounded-2xl"
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.06)",
+        }}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium transition-all duration-200"
+              style={{
+                borderRadius: 12,
+                background: isActive ? "linear-gradient(135deg, #00F0FF, #7C3AED)" : "transparent",
+                color: isActive ? "#041018" : "#8FA3B8",
+                boxShadow: isActive ? "0 4px 20px rgba(0,240,255,0.2)" : "none",
+                transform: isActive ? "translateY(-1px)" : "translateY(0)",
+              }}
+              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#EAF2FF"; }}
+              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.color = "#8FA3B8"; }}
+            >
+              <span className="tracking-tight">{tab.label}</span>
+              <span className="text-[11px] px-1.5 py-0.5 rounded-md font-semibold"
+                style={{
+                  background: isActive ? "rgba(4,16,24,0.2)" : "rgba(255,255,255,0.06)",
+                  color: isActive ? "#041018" : "#5C6B7A",
+                }}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Listings tab */}
