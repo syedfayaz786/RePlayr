@@ -37,7 +37,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)"}}>
+              style={{background: "linear-gradient(135deg, #06b6d4 0%, #6366f1 100%)"}}>
               <Gamepad2 className="w-4 h-4 text-white" />
             </div>
             <span className="font-display font-bold text-base tracking-tight" style={{color: "var(--text-primary)"}}>
@@ -102,7 +102,7 @@ export function Navbar() {
                       )
                     ) : (
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                        style={{background: "linear-gradient(135deg, #3b82f6, #6366f1)"}}>
+                        style={{background: "linear-gradient(135deg, #06b6d4, #6366f1)"}}>
                         {session.user?.name?.[0]?.toUpperCase() ?? "U"}
                       </div>
                     )}
