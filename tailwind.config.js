@@ -8,22 +8,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Geist', 'Inter', 'sans-serif'],
-        body:    ['Inter', 'sans-serif'],
-      },
-      fontSize: {
-        // Type scale — 8px grid
-        'hero':    ['48px', { lineHeight: '1.08', letterSpacing: '-0.04em', fontWeight: '800' }],
-        'hero-sm': ['36px', { lineHeight: '1.1',  letterSpacing: '-0.03em', fontWeight: '700' }],
-        'display': ['30px', { lineHeight: '1.15', letterSpacing: '-0.03em', fontWeight: '700' }],
-        'title':   ['22px', { lineHeight: '1.2',  letterSpacing: '-0.025em',fontWeight: '600' }],
-        'heading': ['18px', { lineHeight: '1.3',  letterSpacing: '-0.02em', fontWeight: '600' }],
-        'base-lg': ['16px', { lineHeight: '1.65', letterSpacing: '-0.01em', fontWeight: '400' }],
-        'base':    ['15px', { lineHeight: '1.65', letterSpacing: '-0.01em', fontWeight: '400' }],
-        'sm':      ['14px', { lineHeight: '1.6',  letterSpacing: '0',       fontWeight: '400' }],
-        'xs':      ['12px', { lineHeight: '1.5',  letterSpacing: '0.01em',  fontWeight: '400' }],
-        'label':   ['11px', { lineHeight: '1.4',  letterSpacing: '0.06em',  fontWeight: '500' }],
-        'caption': ['11px', { lineHeight: '1.4',  letterSpacing: '0.02em',  fontWeight: '400' }],
+        display: ['var(--font-display)', 'sans-serif'],
+        body:    ['var(--font-body)',    'sans-serif'],
       },
       colors: {
         brand: {

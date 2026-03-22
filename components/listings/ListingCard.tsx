@@ -53,7 +53,6 @@ export function ListingCard({ listing }: ListingCardProps) {
   const { data: session } = useSession();
   const [wishlisted, setWishlisted] = useState(listing.isWishlisted ?? false);
   const [loading, setLoading]       = useState(false);
-  const [heartbeat, setHeartbeat]   = useState(false);
   const [imgIndex, setImgIndex]     = useState(0);
 
   const images = (() => {
@@ -83,7 +82,6 @@ export function ListingCard({ listing }: ListingCardProps) {
       });
       if (res.ok) {
         setWishlisted(!wishlisted);
-        if (!wishlisted) { setHeartbeat(true); setTimeout(() => setHeartbeat(false), 400); }
         toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist!");
       }
     } catch {
@@ -203,7 +201,7 @@ export function ListingCard({ listing }: ListingCardProps) {
               : "bg-dark-800/80 text-slate-300 hover:bg-brand-500/20 hover:text-brand-400 backdrop-blur-sm"
           }`}
         >
-          <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-current" : ""} ${heartbeat ? "animate-heartbeat" : ""}`} />
+          <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
 
         {/* Price + Distance */}

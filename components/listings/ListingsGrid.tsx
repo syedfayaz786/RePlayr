@@ -355,7 +355,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
           ))}
         </div>
       ) : listings.length > 0 ? (
-        <div key={fadeKey} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 animate-stagger">
+        <div key={fadeKey} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 animate-fade-in">
           {pagedListings.map((listing: any) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}

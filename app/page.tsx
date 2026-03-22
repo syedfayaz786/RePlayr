@@ -44,35 +44,33 @@ export default async function HomePage({
           {/* Purple glow right */}
           <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] rounded-full opacity-20" style={{background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)", filter: "blur(60px)"}} />
           {/* Subtle cyan glow centre-bottom */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[80px] opacity-10" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(40px)"}} />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[100px] opacity-15" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(40px)"}} />
+          {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: "linear-gradient(rgba(6,182,212,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.8) 1px, transparent 1px)", backgroundSize: "40px 40px"}} />
           {/* Bottom fade to page bg */}
-          <div className="absolute bottom-0 left-0 right-0 h-12" style={{background: "linear-gradient(to bottom, transparent, #05070A)"}} />
+          <div className="absolute bottom-0 left-0 right-0 h-12" style={{background: "linear-gradient(to bottom, transparent, #080a18)"}} />
         </div>
 
         <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-8 text-center">
-          <h1 className="font-display font-extrabold text-white mb-3"
-            style={{fontSize:"clamp(32px,5vw,52px)", lineHeight:1.06, letterSpacing:"-0.04em"}}>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
             Local Game Trading,{" "}
             <span className="gradient-text">Made Easy</span>
           </h1>
-          <p className="font-body mb-5" style={{
-            fontSize:12, fontWeight:500, letterSpacing:"0.12em",
-            textTransform:"uppercase", color:"var(--text-muted)"
-          }}>
-            Trade<span className="mx-2" style={{color:"var(--accent)"}}>·</span>
-            Play<span className="mx-2" style={{color:"var(--accent)"}}>·</span>
+          <p className="text-xs font-bold tracking-[0.25em] uppercase text-gray-400 mt-2 mb-4">
+            Trade<span className="text-brand-500 mx-1.5">·</span>
+            Play<span className="text-brand-500 mx-1.5">·</span>
             Repeat
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             {[
               { icon: Gamepad2,    label: "Active",  value: stats.totalListings },
               { icon: Users,       label: "Gamers",  value: stats.totalUsers },
               { icon: ShieldCheck, label: "Trusted", value: "100%" },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-2">
-                <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{color:"var(--accent)"}} />
-                <span className="font-display font-semibold text-sm" style={{color:"var(--text-primary)", letterSpacing:"-0.02em"}}>{value}</span>
-                <span style={{fontSize:13, color:"var(--text-muted)", letterSpacing:"-0.01em"}}>{label}</span>
+              <div key={label} className="flex items-center gap-1.5">
+                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-400 flex-shrink-0" />
+                <span className="text-brand-300 font-bold text-sm">{value}</span>
+                <span className="text-gray-300 text-xs">{label}</span>
               </div>
             ))}
           </div>
