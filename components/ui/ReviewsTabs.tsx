@@ -43,7 +43,7 @@ function StarAvg({ reviews, active }: { reviews: Review[]; active?: boolean }) {
             <polygon
               points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
               fill={i < rounded ? (active ? "#041018" : "#00F0FF") : "none"}
-              stroke={i < rounded ? (active ? "#041018" : "#00F0FF") : (active ? "rgba(4,16,24,0.3)" : "rgba(255,255,255,0.12)"}}
+              stroke={i < rounded ? (active ? "#041018" : "#00F0FF") : (active ? "rgba(4,16,24,0.3)" : "rgba(255,255,255,0.12)")}
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             />
           </svg>
