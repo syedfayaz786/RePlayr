@@ -36,7 +36,7 @@ export function Navbar() {
             <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-105"
               style={{
                 background: "linear-gradient(135deg, #00F0FF, #7C3AED)",
-                boxShadow: "0 0 14px rgba(0,240,255,0.3)"
+                boxShadow: "0 0 10px rgba(0,240,255,0.15)"
               }}>
               <Gamepad2 className="w-4 h-4 text-white" />
             </div>
@@ -71,7 +71,7 @@ export function Navbar() {
                     <MessageSquare className="w-4 h-4" />
                     {unread > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center text-black"
-                        style={{background:"var(--accent)", boxShadow:"0 0 8px rgba(0,240,255,0.6)"}}>
+                        style={{background:"var(--accent)", boxShadow:"0 0 6px rgba(0,240,255,0.3)"}}>
                         {unread > 99 ? "99+" : unread}
                       </span>
                     )}
@@ -124,7 +124,7 @@ export function Navbar() {
                       style={{
                         background:"var(--bg-elevated)",
                         border:"1px solid var(--border-default)",
-                        boxShadow:"0 24px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,240,255,0.06)"
+                        boxShadow:"0 16px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)"
                       }}>
                       <Link href="/profile"
                         className="flex items-center gap-3 px-4 py-3 text-sm transition-all duration-150"
