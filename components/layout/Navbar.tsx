@@ -29,14 +29,13 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 glass">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-12">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-105"
               style={{
-                background: "linear-gradient(135deg, #00F0FF, #7C3AED)",
-                boxShadow: "0 0 10px rgba(0,240,255,0.15)"
+                background: "linear-gradient(135deg, #00e8f5, #8b5cf6)"
               }}>
               <Gamepad2 className="w-4 h-4 text-white" />
             </div>
@@ -71,7 +70,7 @@ export function Navbar() {
                     <MessageSquare className="w-4 h-4" />
                     {unread > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center text-black"
-                        style={{background:"var(--accent)", boxShadow:"0 0 6px rgba(0,240,255,0.3)"}}>
+                        style={{background:"var(--accent)", boxShadow:"none"}}>
                         {unread > 99 ? "99+" : unread}
                       </span>
                     )}
@@ -94,9 +93,8 @@ export function Navbar() {
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 transition-all duration-200"
                     style={{
-                      background: userMenuOpen ? "var(--bg-elevated)" : "transparent",
-                      border: `1px solid ${userMenuOpen ? "var(--border-accent)" : "transparent"}`,
-                      boxShadow: userMenuOpen ? "0 0 16px rgba(0,240,255,0.08)" : "none"
+                      background: userMenuOpen ? "rgba(255,255,255,0.06)" : "transparent",
+                      border: `1px solid ${userMenuOpen ? "rgba(255,255,255,0.1)" : "transparent"}`,
                     }}>
                     {session.user?.image ? (
                       session.user.image.startsWith("data:") ? (
@@ -124,7 +122,7 @@ export function Navbar() {
                       style={{
                         background:"var(--bg-elevated)",
                         border:"1px solid var(--border-default)",
-                        boxShadow:"0 16px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)"
+                        boxShadow:"0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)"
                       }}>
                       <Link href="/profile"
                         className="flex items-center gap-3 px-4 py-3 text-sm transition-all duration-150"

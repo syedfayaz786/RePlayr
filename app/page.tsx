@@ -44,11 +44,9 @@ export default async function HomePage({
           {/* Purple glow right */}
           <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] rounded-full opacity-20" style={{background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)", filter: "blur(60px)"}} />
           {/* Subtle cyan glow centre-bottom */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[100px] opacity-15" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(40px)"}} />
-          {/* Grid overlay */}
-          <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: "linear-gradient(rgba(6,182,212,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.8) 1px, transparent 1px)", backgroundSize: "40px 40px"}} />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[80px] opacity-10" style={{background: "radial-gradient(ellipse, #06b6d4 0%, transparent 70%)", filter: "blur(40px)"}} />
           {/* Bottom fade to page bg */}
-          <div className="absolute bottom-0 left-0 right-0 h-12" style={{background: "linear-gradient(to bottom, transparent, #080a18)"}} />
+          <div className="absolute bottom-0 left-0 right-0 h-12" style={{background: "linear-gradient(to bottom, transparent, #05070A)"}} />
         </div>
 
         <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-8 text-center">
