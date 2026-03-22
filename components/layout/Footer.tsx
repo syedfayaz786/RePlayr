@@ -3,52 +3,119 @@ import { Gamepad2, Github, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-dark-600 bg-dark-800 mt-20">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer style={{
+      borderTop: "1px solid rgba(255,255,255,0.05)",
+      background: "var(--bg-surface)",
+      marginTop: 0,
+    }}>
+      <div style={{maxWidth: 1200, margin: "0 auto", padding: "56px 24px 40px"}}>
+
+        {/* Top section — brand + nav columns */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+
+          {/* Brand */}
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
-                <Gamepad2 className="w-5 h-5 text-white" />
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+                style={{background: "linear-gradient(135deg, #00e8f5, #8b5cf6)"}}>
+                <Gamepad2 className="w-4 h-4 text-white" />
               </div>
-              <span className="font-display font-bold text-xl text-white">
+              <span className="font-display font-bold text-base" style={{letterSpacing: "-0.02em", color: "var(--text-primary)"}}>
                 Re<span className="gradient-text">Playr</span>
               </span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              The local marketplace for game disc trading. Buy, sell, and trade video games with people in your community.
+            <p style={{
+              fontSize: 14,
+              lineHeight: 1.65,
+              color: "var(--text-muted)",
+              maxWidth: 280,
+              letterSpacing: "-0.01em",
+            }}>
+              The local marketplace for physical game disc trading. Buy, sell, and trade with players near you.
             </p>
           </div>
+
+          {/* Marketplace links */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Marketplace</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/?platform=PlayStation+5" className="hover:gradient-text transition-colors">PlayStation Games</Link></li>
-              <li><Link href="/?platform=Xbox+Series+X%2FS" className="hover:gradient-text transition-colors">Xbox Games</Link></li>
-              <li><Link href="/?platform=Nintendo+Switch" className="hover:gradient-text transition-colors">Nintendo Games</Link></li>
-              <li><Link href="/listings/new" className="hover:gradient-text transition-colors">Post a Listing</Link></li>
+            <p className="font-body font-medium mb-4" style={{
+              fontSize: 11,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+            }}>
+              Marketplace
+            </p>
+            <ul className="space-y-2.5">
+              {[
+                { label: "PlayStation Games", href: "/?platform=PlayStation+5" },
+                { label: "Xbox Games",        href: "/?platform=Xbox+Series+X%2FS" },
+                { label: "Nintendo Games",    href: "/?platform=Nintendo+Switch" },
+                { label: "Post a Listing",    href: "/listings/new" },
+              ].map(({ label, href }) => (
+                <li key={label}>
+                  <Link href={href} className="link-hover transition-colors duration-150"
+                    style={{fontSize: 14, color: "var(--text-secondary)", letterSpacing: "-0.01em"}}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
+
+          {/* Account links */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Account</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/auth/signup" className="hover:gradient-text transition-colors">Sign Up</Link></li>
-              <li><Link href="/auth/login" className="hover:gradient-text transition-colors">Log In</Link></li>
-              <li><Link href="/profile" className="hover:gradient-text transition-colors">My Profile</Link></li>
-              <li><Link href="/wishlist" className="hover:gradient-text transition-colors">Wishlist</Link></li>
+            <p className="font-body font-medium mb-4" style={{
+              fontSize: 11,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+            }}>
+              Account
+            </p>
+            <ul className="space-y-2.5">
+              {[
+                { label: "Sign Up",    href: "/auth/signup" },
+                { label: "Log In",     href: "/auth/login" },
+                { label: "My Profile", href: "/profile" },
+                { label: "Wishlist",   href: "/wishlist" },
+              ].map(({ label, href }) => (
+                <li key={label}>
+                  <Link href={href} className="link-hover transition-colors duration-150"
+                    style={{fontSize: 14, color: "var(--text-secondary)", letterSpacing: "-0.01em"}}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
-        <div className="border-t border-dark-600 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">© 2025 RePlayr. All rights reserved.</p>
+
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.05)"}}>
+          <p style={{fontSize: 13, color: "var(--text-muted)", letterSpacing: "-0.01em"}}>
+            © {new Date().getFullYear()} RePlayr. All rights reserved.
+          </p>
           <div className="flex items-center gap-4">
-            <a href="https://github.com" className="text-gray-500 hover:text-white transition-colors">
-              <Github className="w-5 h-5" />
-            </a>
-            <a href="https://twitter.com" className="text-gray-500 hover:text-white transition-colors">
-              <Twitter className="w-5 h-5" />
-            </a>
+            {[
+              { href: "https://github.com",  Icon: Github },
+              { href: "https://twitter.com", Icon: Twitter },
+            ].map(({ href, Icon }) => (
+              <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+                className="transition-colors duration-150"
+                style={{color: "var(--text-muted)"}}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}>
+                <Icon className="w-4 h-4" />
+              </a>
+            ))}
           </div>
         </div>
+
       </div>
     </footer>
   );
