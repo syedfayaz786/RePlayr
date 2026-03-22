@@ -33,14 +33,14 @@ export function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
               style={{
                 background: "linear-gradient(135deg, #00F0FF, #7C3AED)",
                 boxShadow: "0 0 10px rgba(0,240,255,0.15)"
               }}>
-              <Gamepad2 className="w-4 h-4 text-white" />
+              <Gamepad2 className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-[15px] tracking-tight" style={{color:"var(--text-primary)"}}>
+            <span className="font-display font-bold text-[20px]" style={{color:"var(--text-primary)", letterSpacing:"-0.03em"}}>
               Re<span className="gradient-text">Playr</span>
             </span>
           </Link>
