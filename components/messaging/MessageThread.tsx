@@ -710,7 +710,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
           {/* Emoji button */}
           <button
             onClick={() => setShowEmoji(v => !v)}
-            className={`flex-shrink-0 p-2 rounded-xl transition-colors ${showEmoji ? "bg-brand-500/20 text-brand-400" : "text-gray-400 hover:text-white hover:bg-dark-700"}`}
+            className={`flex-shrink-0 p-2 rounded-xl transition-colors ${showEmoji ? "bg-brand-500/20 text-brand-400" : "text-brand-400 hover:text-brand-300 hover:bg-dark-700"}`}
           >
             <Smile className="w-5 h-5" />
           </button>
