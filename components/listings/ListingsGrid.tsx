@@ -53,7 +53,7 @@ function PaginationBar({
     <div className="flex items-center justify-center gap-2 mt-12">
       <button
         onClick={() => onPageChange(page - 1)} disabled={page <= 1}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dark-500 bg-dark-700 text-gray-300 hover:border-brand-500/60 hover:text-brand-300 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/08 bg-dark-700 text-gray-400 hover:border-white/20 hover:text-white transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <ChevronLeft className="w-4 h-4" /> Prev
       </button>
@@ -67,8 +67,8 @@ function PaginationBar({
               onClick={() => onPageChange(p)}
               className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all ${
                 p === page
-                  ? "bg-brand-500 text-white shadow-lg shadow-brand-500/25"
-                  : "bg-dark-700 border border-dark-500 text-gray-300 hover:border-brand-500/60 hover:text-brand-300"
+                  ? "text-white font-semibold" + ' ' + "bg-[#1a2236] border border-white/15"
+                  : "bg-dark-700 border border-dark-500 text-gray-400 hover:border-white/20 hover:text-white"
               }`}
             >
               {p}
@@ -78,7 +78,7 @@ function PaginationBar({
       </div>
       <button
         onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dark-500 bg-dark-700 text-gray-300 hover:border-brand-500/60 hover:text-brand-300 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/08 bg-dark-700 text-gray-400 hover:border-white/20 hover:text-white transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Next <ChevronRight className="w-4 h-4" />
       </button>
@@ -229,7 +229,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
         <div className="flex items-center gap-3">
           {!isSearching && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <TrendingUp className="w-4 h-4 text-brand-400" />
+              <TrendingUp className="w-4 h-4 text-slate-400" />
               <span className="text-slate-300">Updated live</span>
             </div>
           )}
@@ -242,8 +242,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   onClick={() => handlePerPage(size)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                     perPage === size
-                      ? "bg-brand-500 text-white"
-                      : "bg-dark-700 border border-dark-500 text-slate-300 hover:border-brand-500/50 hover:text-white"
+                      ? "bg-white/10 border border-white/20 text-white font-semibold"
+                      : "bg-transparent border border-white/06 text-slate-400 hover:border-white/15 hover:text-white"
                   }`}
                 >
                   {size}
@@ -296,8 +296,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
               onClick={clearAll}
               className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
                 activePlatforms.length === 0
-                  ? "bg-brand-500 border-brand-500 text-white font-semibold"
-                  : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
+                  ? "bg-white/10 border-white/20 text-white font-semibold"
+                  : "bg-transparent border-white/08 text-gray-400 hover:border-white/15 hover:text-white"
               }`}
             >
               All
@@ -311,8 +311,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   onClick={() => toggle(value)}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
                     isActive
-                      ? "bg-brand-500 border-brand-500 text-white font-semibold"
-                      : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
+                      ? "bg-white/10 border-white/20 text-white font-semibold"
+                      : "bg-transparent border-white/08 text-gray-400 hover:border-white/15 hover:text-white"
                   }`}
                 >
                   {label}
