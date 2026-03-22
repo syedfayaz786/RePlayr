@@ -12,33 +12,40 @@ module.exports = {
         body:    ['var(--font-body)',    'sans-serif'],
       },
       colors: {
+        // Brand: amber-orange — premium, action, "sell/buy/win"
         brand: {
-          50:  '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
+          50:  '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316',  // PRIMARY ACCENT
+          600: '#ea6c0a',
+          700: '#c2540a',
+          800: '#9a3c07',
+          900: '#7c2d05',
         },
-        accent: {
-          400: '#fb7185',
-          500: '#f43f5e',
-          600: '#e11d48',
+        // Violet: interactive states, links, focus rings
+        violet: {
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
         },
+        // Surface scale: warm charcoal (NOT blue-tinted)
         dark: {
-          950: '#040508',
-          900: '#080910',
-          800: '#0e1016',
-          700: '#13151e',
-          600: '#191c28',
-          500: '#222538',
-          400: '#2e334d',
-          300: '#3d4468',
+          950: '#0a0a09',
+          900: '#111110',  // page background
+          800: '#1a1917',  // card surface
+          700: '#232220',  // elevated card / input bg
+          600: '#2c2b28',  // overlay / dropdown
+          500: '#3a3835',  // dividers
+          400: '#56544f',  // muted borders
+          300: '#79776f',  // placeholder text
         },
+        // Semantic
+        success: '#22c55e',
+        error:   '#ef4444',
+        warning: '#f59e0b',
       },
       animation: {
         'fade-in':    'fadeIn 0.18s ease-out',
@@ -47,9 +54,9 @@ module.exports = {
         'shimmer':    'shimmer 2.5s linear infinite',
       },
       keyframes: {
-        fadeIn:    { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        fadeIn:    { from: { opacity: '0', transform: 'translateY(6px)' },  to: { opacity: '1', transform: 'translateY(0)' } },
         slideUp:   { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-        pulseGlow: { '0%,100%': { boxShadow: '0 0 20px rgba(6,182,212,0.2)' }, '50%': { boxShadow: '0 0 40px rgba(6,182,212,0.45)' } },
+        pulseGlow: { '0%,100%': { boxShadow: '0 0 20px rgba(249,115,22,0.2)' }, '50%': { boxShadow: '0 0 40px rgba(249,115,22,0.4)' } },
         shimmer:   { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } },
       },
     },
