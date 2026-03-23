@@ -123,7 +123,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
               </div>
               {!isOwnProfile && session && (
                 <ProfileSafetyButtons userId={user.id} userName={user.name} />
-              </div>
+              )}
 
               {avgRating > 0 && (
                 <div className="flex items-center gap-1.5 mt-1">
