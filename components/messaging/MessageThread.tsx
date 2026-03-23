@@ -8,6 +8,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
+import { ChatSafetyMenu } from "@/components/safety/ChatSafetyMenu";
 
 // Highlight matching text within a string
 function HighlightText({ text, query }: { text: string; query?: string | null }) {
@@ -116,6 +117,16 @@ export function MessageThread({
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);
   const [localSaleConfirmed, setLocalSaleConfirmed] = useState(saleConfirmed ?? false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedBy, setBlockedBy] = useState(false);
+
+  // Check block status on mount
+  useEffect(() => {
+    fetch(`/api/blocks?userId=${partnerId}`)
+      .then(r => r.json())
+      .then(d => { setIsBlocked(d.blocked ?? false); setBlockedBy(d.blockedBy ?? false); })
+      .catch(() => {});
+  }, [partnerId]);
 
   // Called by MutualRatingCard after submission — adds the rating message to local thread
   // Rating message was sent to recipient via API — sender sees submitted state in rating card,
@@ -306,7 +317,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || isBlocked || blockedBy) return;
     const content = input.trim();
     setInput("");
     setSending(true);
@@ -362,6 +373,11 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
 
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <ChatSafetyMenu
+            partnerId={partnerId}
+            partnerName={partnerName}
+            onBlocked={() => setIsBlocked(true)}
+          />
           {deleteButton}
         </div>
       </div>
@@ -675,6 +691,14 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
 
       {/* ── Input ── */}
       <div className="p-3 border-t border-dark-600 flex-shrink-0 relative">
+        {(isBlocked || blockedBy) && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-2xl"
+            style={{background: "rgba(8,9,16,0.92)", backdropFilter: "blur(4px)"}}>
+            <p className="text-sm font-medium" style={{color: "var(--text-muted)"}}>
+              {isBlocked ? "You blocked this user — messaging disabled" : "You cannot message this user"}
+            </p>
+          </div>
+        )}
         {/* Inline upload error */}
         {uploadError && (
           <div className="absolute bottom-full left-0 right-0 mx-3 mb-1 flex items-center gap-2 bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs rounded-xl px-3 py-2">

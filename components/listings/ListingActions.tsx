@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe, X } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe, X, Flag, ShieldOff } from "lucide-react";
+import { ReportModal } from "@/components/safety/ReportModal";
+import { BlockModal } from "@/components/safety/BlockModal";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -63,6 +65,8 @@ export function ListingActions({
   const [markingStatus, setMarkingStatus] = useState(false);
   const [showSoldModal, setShowSoldModal] = useState(false);
   const [showRelistModal, setShowRelistModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   const requireAuth = () => {
     if (!session) {
@@ -331,9 +335,31 @@ export function ListingActions({
             Share
           </button>
         </div>
+
+        {/* Safety actions — only shown to non-sellers */}
+        {!isSeller && session && (
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all duration-150 hover:bg-white/05"
+              style={{color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.06)"}}
+            >
+              <Flag className="w-3 h-3" style={{color: "#ef4444"}} />
+              Report listing
+            </button>
+            <button
+              onClick={() => setShowBlockModal(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all duration-150 hover:bg-white/05"
+              style={{color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.06)"}}
+            >
+              <ShieldOff className="w-3 h-3" style={{color: "#f97316"}} />
+              Block seller
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Message Modal */}
+      {/* Message Modal */}}
       {showMessageModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="card w-full max-w-md p-6 relative">
@@ -425,6 +451,21 @@ export function ListingActions({
             </div>
           </div>
         </div>
+      )}
+      {showReportModal && (
+        <ReportModal
+          type="listing"
+          targetId={listingId}
+          targetName={listingTitle}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+      {showBlockModal && (
+        <BlockModal
+          userId={sellerId}
+          userName={sellerName}
+          onClose={() => setShowBlockModal(false)}
+        />
       )}
     </>
   );

@@ -33,9 +33,33 @@ export async function GET(req: Request) {
   const sort      = searchParams.get("sort") ?? "newest";
   const hasUserCoords = !isNaN(userLat) && !isNaN(userLng);
 
+  // Exclude listings from users who blocked the current user or were blocked by them
+  let blockedUserIds: string[] = [];
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id) {
+    const blocks = await prisma.block.findMany({
+      where: {
+        OR: [
+          { blockerId: session.user.id },
+          { blockedId: session.user.id },
+        ],
+      },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockSet = new Set<string>();
+    blocks.forEach(b => {
+      if (b.blockerId === session.user.id) blockSet.add(b.blockedId);
+      else blockSet.add(b.blockerId);
+    });
+    blockedUserIds = Array.from(blockSet);
+  }
+
   // Use AND so every filter is required simultaneously —
   // prevents OR(text search) from swallowing platform/condition filters
   const AND: any[] = [{ status: "active" }];
+  if (blockedUserIds.length > 0) {
+    AND.push({ sellerId: { notIn: blockedUserIds } });
+  }
 
   if (q) AND.push({
     OR: [

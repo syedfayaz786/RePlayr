@@ -17,6 +17,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
   }
 
+  // Block enforcement — reject if either party has blocked the other
+  const blockExists = await prisma.block.findFirst({
+    where: {
+      OR: [
+        { blockerId: session.user.id, blockedId: receiverId },
+        { blockerId: receiverId,      blockedId: session.user.id },
+      ],
+    },
+  });
+  if (blockExists) {
+    return NextResponse.json({ error: "blocked", blocked: true }, { status: 403 });
+  }
+
   const message = await prisma.message.create({
     data: {
       content:    content.trim(),

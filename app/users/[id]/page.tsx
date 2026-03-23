@@ -5,6 +5,7 @@ import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { ListingsReviewsTabs } from "@/components/ui/ListingsReviewsTabs";
 import { AvatarLightbox } from "@/components/ui/AvatarLightbox";
+import { ProfileSafetyButtons } from "@/components/safety/ProfileSafetyButtons";
 import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -119,6 +120,9 @@ export default async function UserProfilePage({ params }: { params: { id: string
                     Edit Profile
                   </a>
                 )}
+              </div>
+              {!isOwnProfile && session && (
+                <ProfileSafetyButtons userId={user.id} userName={user.name} />
               </div>
 
               {avgRating > 0 && (
