@@ -359,7 +359,7 @@ export function ListingActions({
         )}
       </div>
 
-      {/* Message Modal */}}
+      {/* Message Modal */}
       {showMessageModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="card w-full max-w-md p-6 relative">
