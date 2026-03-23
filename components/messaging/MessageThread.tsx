@@ -128,6 +128,19 @@ export function MessageThread({
       .catch(() => {});
   }, [partnerId]);
 
+  const handleUnblock = async () => {
+    try {
+      await fetch("/api/blocks", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blockedId: partnerId }),
+      });
+      setIsBlocked(false);
+    } catch {
+      // silently fail — user can try again
+    }
+  };
+
   // Called by MutualRatingCard after submission — adds the rating message to local thread
   // Rating message was sent to recipient via API — sender sees submitted state in rating card,
   // not a chat bubble. So we don't append to local messages here.
@@ -692,11 +705,26 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
       {/* ── Input ── */}
       <div className="p-3 border-t border-dark-600 flex-shrink-0 relative">
         {(isBlocked || blockedBy) && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-2xl"
+          <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 rounded-b-2xl"
             style={{background: "rgba(8,9,16,0.92)", backdropFilter: "blur(4px)"}}>
-            <p className="text-sm font-medium" style={{color: "var(--text-muted)"}}>
-              {isBlocked ? "You blocked this user — messaging disabled" : "You cannot message this user"}
+            <p className="text-sm" style={{color: "var(--text-muted)"}}>
+              {isBlocked ? "You blocked this user" : "You cannot message this user"}
             </p>
+            {isBlocked && (
+              <button
+                onClick={handleUnblock}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150"
+                style={{
+                  background: "rgba(0,240,255,0.1)",
+                  border: "1px solid rgba(0,240,255,0.2)",
+                  color: "var(--accent)",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,240,255,0.18)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,240,255,0.1)"; }}
+              >
+                Unblock
+              </button>
+            )}
           </div>
         )}
         {/* Inline upload error */}

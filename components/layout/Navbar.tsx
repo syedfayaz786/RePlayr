@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { Gamepad2, Heart, MessageSquare, Plus, User, LogOut, Menu, X, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Gamepad2, Heart, MessageSquare, Plus, User, LogOut, Menu, X, ChevronDown, LayoutDashboard, ShieldOff } from "lucide-react";
 import Image from "next/image";
 
 function useUnreadCount(enabled: boolean) {
@@ -133,6 +133,14 @@ export function Navbar() {
                         onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background="transparent"; el.style.color="var(--text-secondary)"; }}
                         onClick={() => setUserMenuOpen(false)}>
                         <User className="w-3.5 h-3.5" />My Profile
+                      </Link>
+                      <Link href="/settings/blocked"
+                        className="flex items-center gap-3 px-4 py-3 text-sm transition-all duration-150"
+                        style={{color:"var(--text-secondary)"}}
+                        onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background="var(--bg-overlay)"; el.style.color="var(--text-primary)"; }}
+                        onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background="transparent"; el.style.color="var(--text-secondary)"; }}
+                        onClick={() => setUserMenuOpen(false)}>
+                        <ShieldOff className="w-3.5 h-3.5" />Blocked Users
                       </Link>
                       <div style={{height:"1px", background:"var(--border-subtle)"}} />
                       <button onClick={() => signOut({ callbackUrl:"/auth/login" })}
