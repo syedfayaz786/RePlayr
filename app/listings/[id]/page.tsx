@@ -43,6 +43,38 @@ export default async function ListingPage({ params }: { params: { id: string } }
 
   if (!listing) notFound();
 
+  // Check if the current user has blocked (or been blocked by) this seller
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id && session.user.id !== listing.sellerId) {
+    const blockExists = await prisma.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: session.user.id, blockedId: listing.sellerId },
+          { blockerId: listing.sellerId, blockedId: session.user.id },
+        ],
+      },
+    });
+    if (blockExists) {
+      return (
+        <div className="min-h-screen flex flex-col" style={{background:"var(--bg-base)"}}>
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center text-center p-8">
+            <div>
+              <p className="text-4xl mb-4">🚫</p>
+              <h2 className="font-display font-bold text-white mb-2" style={{fontSize:20,letterSpacing:"-0.02em"}}>
+                Listing unavailable
+              </h2>
+              <p style={{fontSize:14, color:"var(--text-muted)", marginBottom:24}}>
+                This listing is no longer available to you.
+              </p>
+              <Link href="/" className="btn-primary">Browse listings</Link>
+            </div>
+          </main>
+        </div>
+      );
+    }
+  }
+
   const images = (() => {
     try {
       let parsed = JSON.parse(listing.images);

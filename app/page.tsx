@@ -5,6 +5,7 @@ import { SearchBar } from "@/components/listings/SearchBar";
 import { ListingsGrid } from "@/components/listings/ListingsGrid";
 import { prisma } from "@/lib/prisma";
 import { Gamepad2, Users, ShieldCheck } from "lucide-react";
+import { BlockedToast } from "@/components/safety/BlockedToast";
 
 async function getStats() {
   try {
@@ -93,6 +94,7 @@ export default async function HomePage({
         </Suspense>
       </main>
 
+      <Suspense><BlockedToast /></Suspense>
       <Footer />
     </div>
   );

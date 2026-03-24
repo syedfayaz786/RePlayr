@@ -465,6 +465,10 @@ export function ListingActions({
           userId={sellerId}
           userName={sellerName}
           onClose={() => setShowBlockModal(false)}
+          onBlocked={() => {
+            setShowBlockModal(false);
+            router.push("/?blocked=1");
+          }}
         />
       )}
     </>

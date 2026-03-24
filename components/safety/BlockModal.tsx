@@ -24,7 +24,7 @@ export function BlockModal({ userId, userName, onClose, onBlocked }: Props) {
         body: JSON.stringify({ blockedId: userId }),
       });
       if (!res.ok) throw new Error();
-      toast.success(`${userName ?? "User"} has been blocked`);
+      toast.success("User blocked");
       onBlocked?.();
       onClose();
     } catch {
