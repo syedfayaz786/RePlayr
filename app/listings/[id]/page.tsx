@@ -44,7 +44,6 @@ export default async function ListingPage({ params }: { params: { id: string } }
   if (!listing) notFound();
 
   // Check if the current user has blocked (or been blocked by) this seller
-  const session = await getServerSession(authOptions);
   if (session?.user?.id && session.user.id !== listing.sellerId) {
     const blockExists = await prisma.block.findFirst({
       where: {
