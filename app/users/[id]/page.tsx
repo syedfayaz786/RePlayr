@@ -72,14 +72,25 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   const isOwnProfile = session?.user?.id === user.id;
 
-  // Check block status
+  // Check block status in both directions
   let viewerHasBlocked = false;
+  let viewerIsBlocked = false;
   if (session?.user?.id && !isOwnProfile) {
-    const block = await prisma.block.findUnique({
-      where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: user.id } },
-    });
-    viewerHasBlocked = !!block;
+    const [blockerRecord, blockedByRecord] = await Promise.all([
+      prisma.block.findUnique({
+        where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: user.id } },
+      }),
+      prisma.block.findUnique({
+        where: { blockerId_blockedId: { blockerId: user.id, blockedId: session.user.id } },
+      }),
+    ]);
+    viewerHasBlocked = !!blockerRecord;
+    viewerIsBlocked = !!blockedByRecord;
   }
+
+  // Hide listings if viewer blocked this user OR this user blocked the viewer
+  const hideListings = viewerHasBlocked || viewerIsBlocked;
+
   const avgRating = user.reviewsReceived.length
     ? user.reviewsReceived.reduce((sum, r) => sum + r.rating, 0) / user.reviewsReceived.length
     : 0;
@@ -89,7 +100,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     createdAt: r.createdAt.toISOString(),
   }));
 
-  const listingsForClient = viewerHasBlocked ? [] : user.listings.map((l) => ({
+  const listingsForClient = hideListings ? [] : user.listings.map((l) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
     seller: { id: user.id, name: user.name, image: user.image },
@@ -131,7 +142,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 )}
               </div>
               {!isOwnProfile && session && (
-                <ProfileSafetyButtons userId={user.id} userName={user.name} isBlocked={viewerHasBlocked} />
+                <ProfileSafetyButtons userId={user.id} userName={user.name} isBlocked={viewerHasBlocked} isBlockedBy={viewerIsBlocked} />
               )}
 
               {avgRating > 0 && (

@@ -10,9 +10,10 @@ interface Props {
   userId: string;
   userName?: string | null;
   isBlocked?: boolean;
+  isBlockedBy?: boolean;
 }
 
-export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlocked = false }: Props) {
+export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlocked = false, isBlockedBy = false }: Props) {
   const [showReport, setShowReport] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [blocked, setBlocked] = useState(initialBlocked);
@@ -37,7 +38,16 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
 
   return (
     <>
-      <div className="flex items-center gap-2 mt-3">
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
+        {isBlockedBy && (
+          <span
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ color: "#f97316", border: "1px solid rgba(249,115,22,0.2)", background: "rgba(249,115,22,0.06)" }}
+          >
+            <ShieldOff className="w-3 h-3" />
+            This user has blocked you
+          </span>
+        )}
         <button
           onClick={() => setShowReport(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:bg-white/05"
