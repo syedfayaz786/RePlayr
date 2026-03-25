@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
+import { EyeOff } from "lucide-react";
 
 type Listing = {
   id: string;
@@ -33,16 +34,31 @@ type Review = {
 interface Props {
   listings: Listing[];
   reviews: Review[];
+  isBlocked?: boolean;
+  activeListingsCount?: number;
+  userId?: string;
 }
 
-export function ListingsReviewsTabs({ listings, reviews }: Props) {
+export function ListingsReviewsTabs({
+  listings: initialListings,
+  reviews,
+  isBlocked: initialBlocked = false,
+  activeListingsCount = 0,
+  userId,
+}: Props) {
   const [activeTab, setActiveTab] = useState<"listings" | "reviews">("listings");
+  const [isBlocked, setIsBlocked] = useState(initialBlocked);
+  const [listings, setListings] = useState(initialListings);
+  const [loadingListings, setLoadingListings] = useState(false);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [ind, setInd] = useState({ left: 0, width: 0 });
 
+  // Always show real count on tab badge, even when blocked
+  const displayCount = isBlocked ? activeListingsCount : listings.length;
+
   const tabs = [
-    { key: "listings" as const, label: "Active Listings", count: listings.length },
-    { key: "reviews"  as const, label: "Reviews",         count: reviews.length  },
+    { key: "listings" as const, label: "Active Listings", count: displayCount },
+    { key: "reviews"  as const, label: "Reviews",         count: reviews.length },
   ];
 
   const activeIdx = tabs.findIndex(t => t.key === activeTab);
@@ -52,9 +68,30 @@ export function ListingsReviewsTabs({ listings, reviews }: Props) {
     if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
   }, [activeIdx]);
 
+  // Exposed so ProfileSafetyButtons can trigger it via a CustomEvent
+  useEffect(() => {
+    if (!userId) return;
+    const handler = async (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.userId !== userId) return;
+      setIsBlocked(false);
+      setLoadingListings(true);
+      try {
+        const res = await fetch(`/api/users/${userId}/listings`);
+        if (res.ok) {
+          const data = await res.json();
+          setListings(data.listings);
+        }
+      } catch { /* ignore */ }
+      finally { setLoadingListings(false); }
+    };
+    window.addEventListener("user-unblocked", handler);
+    return () => window.removeEventListener("user-unblocked", handler);
+  }, [userId]);
+
   return (
     <div>
-      {/* Tab bar — Dribbble style */}
+      {/* Tab bar */}
       <div className="relative flex mb-8" style={{borderBottom: "1px solid rgba(255,255,255,0.05)"}}>
         {tabs.map((tab, i) => {
           const isActive = activeTab === tab.key;
@@ -98,9 +135,7 @@ export function ListingsReviewsTabs({ listings, reviews }: Props) {
                   }}
                 />
               )}
-
               <span style={{position:"relative", zIndex:1}}>{tab.label}</span>
-
               <span style={{
                 position: "relative",
                 zIndex: 1,
@@ -136,7 +171,22 @@ export function ListingsReviewsTabs({ listings, reviews }: Props) {
 
       {/* Listings tab */}
       {activeTab === "listings" && (
-        listings.length === 0 ? (
+        isBlocked ? (
+          <div className="card p-10 text-center">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{background:"rgba(249,115,22,0.08)", border:"1px solid rgba(249,115,22,0.15)"}}>
+                <EyeOff className="w-4 h-4" style={{color:"#f97316"}} />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-white mb-1">Listings hidden</p>
+            <p className="text-xs" style={{color:"var(--text-muted)"}}>
+              Unblock this user to browse their active listings.
+            </p>
+          </div>
+        ) : loadingListings ? (
+          <div className="card p-10 text-center text-gray-500 text-sm">Loading listings…</div>
+        ) : listings.length === 0 ? (
           <div className="card p-10 text-center text-gray-500 text-sm">No active listings</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">

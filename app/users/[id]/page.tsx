@@ -2,11 +2,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { StarRating } from "@/components/ui/StarRating";
-import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { ListingsReviewsTabs } from "@/components/ui/ListingsReviewsTabs";
 import { AvatarLightbox } from "@/components/ui/AvatarLightbox";
 import { ProfileSafetyButtons } from "@/components/safety/ProfileSafetyButtons";
-import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart } from "lucide-react";
+import { MapPin, Calendar, Package, Star, ShoppingBag, ChevronRight, Home, ShoppingCart, Layers } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -88,8 +87,10 @@ export default async function UserProfilePage({ params }: { params: { id: string
     viewerIsBlocked = !!blockedByRecord;
   }
 
-  // Hide listings if viewer blocked this user OR this user blocked the viewer
   const hideListings = viewerHasBlocked || viewerIsBlocked;
+
+  // Active listings count is always the real number (used in tab badge even when blocked)
+  const activeListingsCount = user.listings.length;
 
   const avgRating = user.reviewsReceived.length
     ? user.reviewsReceived.reduce((sum, r) => sum + r.rating, 0) / user.reviewsReceived.length
@@ -169,7 +170,11 @@ export default async function UserProfilePage({ params }: { params: { id: string
               <div className="flex gap-5 mt-4 flex-wrap">
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.listings}</div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1"><Package className="w-3 h-3" />Listings</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1"><Package className="w-3 h-3" />Total Listings</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">{activeListingsCount}</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1"><Layers className="w-3 h-3" />Active</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.salesAsSeller}</div>
@@ -192,6 +197,9 @@ export default async function UserProfilePage({ params }: { params: { id: string
         <ListingsReviewsTabs
           listings={listingsForClient}
           reviews={reviewsForClient}
+          isBlocked={hideListings}
+          activeListingsCount={activeListingsCount}
+          userId={user.id}
         />
       </main>
     </div>

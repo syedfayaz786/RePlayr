@@ -29,6 +29,8 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
       });
       setBlocked(false);
       toast.success("User unblocked");
+      // Notify ListingsReviewsTabs to refresh without a page reload
+      window.dispatchEvent(new CustomEvent("user-unblocked", { detail: { userId } }));
     } catch {
       toast.error("Failed to unblock");
     } finally {
@@ -48,6 +50,7 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
             This user has blocked you
           </span>
         )}
+
         <button
           onClick={() => setShowReport(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:bg-white/05"
