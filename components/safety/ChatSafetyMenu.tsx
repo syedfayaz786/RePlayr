@@ -17,7 +17,6 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
   const [showBlock, setShowBlock] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -30,14 +29,68 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
 
   return (
     <>
+      <style>{`
+        .chat-menu-trigger {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          color: var(--text-muted);
+          background: transparent;
+          transition: background 160ms ease, color 160ms ease, transform 150ms ease;
+          outline: none;
+        }
+        .chat-menu-trigger:hover {
+          background: rgba(255,255,255,0.07);
+          color: #fff;
+          transform: scale(1.08);
+        }
+        .chat-menu-trigger.is-open {
+          background: rgba(255,255,255,0.07);
+          color: #fff;
+        }
+
+        .chat-menu-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 16px;
+          font-size: 13px;
+          cursor: pointer;
+          border: none;
+          background: transparent;
+          text-align: left;
+          transition: background 150ms ease, color 150ms ease;
+          color: var(--text-secondary);
+          outline: none;
+        }
+        .chat-menu-item .menu-icon {
+          flex-shrink: 0;
+          transition: transform 180ms ease;
+        }
+        .chat-menu-item:hover .menu-icon {
+          transform: scale(1.2);
+        }
+
+        .chat-menu-item-report:hover {
+          background: rgba(239,68,68,0.07);
+          color: #fca5a5;
+        }
+        .chat-menu-item-block:hover {
+          background: rgba(249,115,22,0.07);
+          color: #fdba74;
+        }
+      `}</style>
+
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen(v => !v)}
-          className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 hover:text-white"
-          style={{
-            color: "var(--text-muted)",
-            background: open ? "rgba(255,255,255,0.06)" : "transparent",
-          }}
+          className={`chat-menu-trigger${open ? " is-open" : ""}`}
           title="More options"
         >
           <MoreHorizontal className="w-4 h-4" />
@@ -54,19 +107,17 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
           >
             <button
               onClick={() => { setOpen(false); setShowReport(true); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 hover:bg-white/05"
-              style={{ color: "var(--text-secondary)" }}
+              className="chat-menu-item chat-menu-item-report"
             >
-              <Flag className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#ef4444" }} />
+              <Flag className="w-3.5 h-3.5 menu-icon" style={{ color: "#ef4444" }} />
               Report user
             </button>
             <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
             <button
               onClick={() => { setOpen(false); setShowBlock(true); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 hover:bg-white/05"
-              style={{ color: "var(--text-secondary)" }}
+              className="chat-menu-item chat-menu-item-block"
             >
-              <ShieldOff className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#f97316" }} />
+              <ShieldOff className="w-3.5 h-3.5 menu-icon" style={{ color: "#f97316" }} />
               Block user
             </button>
           </div>

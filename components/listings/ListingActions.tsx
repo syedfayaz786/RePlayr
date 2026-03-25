@@ -338,24 +338,64 @@ export function ListingActions({
 
         {/* Safety actions — only shown to non-sellers */}
         {!isSeller && session && (
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => setShowReportModal(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all duration-150 hover:bg-white/05"
-              style={{color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.06)"}}
-            >
-              <Flag className="w-3 h-3" style={{color: "#ef4444"}} />
-              Report listing
-            </button>
-            <button
-              onClick={() => setShowBlockModal(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all duration-150 hover:bg-white/05"
-              style={{color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.06)"}}
-            >
-              <ShieldOff className="w-3 h-3" style={{color: "#f97316"}} />
-              Block seller
-            </button>
-          </div>
+          <>
+            <style>{`
+              .listing-safety-btn {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                padding: 8px 0;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                border: 1px solid rgba(255,255,255,0.07);
+                background: rgba(255,255,255,0.02);
+                color: var(--text-muted);
+                transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
+                outline: none;
+              }
+              .listing-safety-btn:hover {
+                transform: translateY(-1px);
+              }
+              .listing-safety-btn .ls-icon {
+                transition: transform 200ms ease;
+              }
+              .listing-safety-btn:hover .ls-icon {
+                transform: scale(1.2);
+              }
+              .listing-safety-btn-report:hover {
+                background: rgba(239,68,68,0.08);
+                border-color: rgba(239,68,68,0.25);
+                color: #fca5a5;
+                box-shadow: 0 0 12px rgba(239,68,68,0.1);
+              }
+              .listing-safety-btn-block:hover {
+                background: rgba(249,115,22,0.08);
+                border-color: rgba(249,115,22,0.25);
+                color: #fdba74;
+                box-shadow: 0 0 12px rgba(249,115,22,0.1);
+              }
+            `}</style>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="listing-safety-btn listing-safety-btn-report"
+              >
+                <Flag className="w-3 h-3 ls-icon" style={{color: "#ef4444"}} />
+                Report listing
+              </button>
+              <button
+                onClick={() => setShowBlockModal(true)}
+                className="listing-safety-btn listing-safety-btn-block"
+              >
+                <ShieldOff className="w-3 h-3 ls-icon" style={{color: "#f97316"}} />
+                Block seller
+              </button>
+            </div>
+          </>
         )}
       </div>
 
