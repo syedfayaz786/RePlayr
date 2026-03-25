@@ -71,6 +71,15 @@ export default async function UserProfilePage({ params }: { params: { id: string
   if (!user) notFound();
 
   const isOwnProfile = session?.user?.id === user.id;
+
+  // Check block status
+  let viewerHasBlocked = false;
+  if (session?.user?.id && !isOwnProfile) {
+    const block = await prisma.block.findUnique({
+      where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: user.id } },
+    });
+    viewerHasBlocked = !!block;
+  }
   const avgRating = user.reviewsReceived.length
     ? user.reviewsReceived.reduce((sum, r) => sum + r.rating, 0) / user.reviewsReceived.length
     : 0;
@@ -80,7 +89,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     createdAt: r.createdAt.toISOString(),
   }));
 
-  const listingsForClient = user.listings.map((l) => ({
+  const listingsForClient = viewerHasBlocked ? [] : user.listings.map((l) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
     seller: { id: user.id, name: user.name, image: user.image },
@@ -122,7 +131,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 )}
               </div>
               {!isOwnProfile && session && (
-                <ProfileSafetyButtons userId={user.id} userName={user.name} />
+                <ProfileSafetyButtons userId={user.id} userName={user.name} isBlocked={viewerHasBlocked} />
               )}
 
               {avgRating > 0 && (
