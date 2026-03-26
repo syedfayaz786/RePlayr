@@ -16,7 +16,9 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [popupPos, setPopupPos]     = useState({ top: 0, left: 0 });
-  const btnRef   = useRef<HTMLButtonElement | HTMLSpanElement>(null);
+  const btnRef     = useRef<HTMLButtonElement>(null);
+  const spanRef    = useRef<HTMLSpanElement>(null);
+  const activeRef  = variant === "full" ? spanRef : btnRef;
   const popupRef = useRef<HTMLDivElement>(null);
   const router   = useRouter();
 
@@ -24,11 +26,11 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
   const openPopup = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
+    if (activeRef.current) {
+      const rect = activeRef.current.getBoundingClientRect();
       setPopupPos({
-        top:  rect.top - 8,   // will shift up via transform
-        left: rect.right - 208, // 208 = popup width, align right edge
+        top:  rect.top - 8,
+        left: rect.right - 208,
       });
     }
     setConfirming((v) => !v);
@@ -40,7 +42,7 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
     const handler = (e: MouseEvent) => {
       if (
         popupRef.current && !popupRef.current.contains(e.target as Node) &&
-        btnRef.current  && !btnRef.current.contains(e.target as Node)
+        activeRef.current  && !activeRef.current.contains(e.target as Node)
       ) {
         setConfirming(false);
       }
@@ -117,7 +119,7 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
     return (
       <>
         <span
-          ref={btnRef as React.RefObject<HTMLSpanElement>}
+          ref={spanRef}
           onClick={openPopup}
           className="flex items-center gap-2 w-full cursor-pointer text-sm"
           style={{ color: "inherit" }}
