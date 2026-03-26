@@ -37,6 +37,11 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
     }
   };
 
+  const handleBlocked = () => {
+    setBlocked(true);
+    window.dispatchEvent(new CustomEvent("user-blocked", { detail: { userId } }));
+  };
+
   return (
     <>
       <style>{`
@@ -55,28 +60,32 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
           color: var(--text-muted);
           outline: none;
         }
-        .safety-btn:hover {
-          transform: translateY(-1px);
-        }
-        .safety-btn .btn-icon {
-          transition: transform 200ms ease;
-        }
-        .safety-btn:hover .btn-icon {
-          transform: scale(1.2);
-        }
+        .safety-btn:hover { transform: translateY(-1px); }
+        .safety-btn .btn-icon { transition: transform 200ms ease; }
+        .safety-btn:hover .btn-icon { transform: scale(1.2); }
 
-        .safety-btn-report:hover {
-          background: rgba(239,68,68,0.08);
-          border-color: rgba(239,68,68,0.25);
+        .safety-btn-report {
+          background: rgba(239,68,68,0.06);
+          border-color: rgba(239,68,68,0.15);
           color: #fca5a5;
-          box-shadow: 0 0 12px rgba(239,68,68,0.1);
+        }
+        .safety-btn-report:hover {
+          background: rgba(239,68,68,0.12);
+          border-color: rgba(239,68,68,0.3);
+          color: #fca5a5;
+          box-shadow: 0 0 12px rgba(239,68,68,0.12);
         }
 
-        .safety-btn-block:hover {
-          background: rgba(249,115,22,0.08);
-          border-color: rgba(249,115,22,0.25);
+        .safety-btn-block {
+          background: rgba(249,115,22,0.06);
+          border-color: rgba(249,115,22,0.15);
           color: #fdba74;
-          box-shadow: 0 0 12px rgba(249,115,22,0.1);
+        }
+        .safety-btn-block:hover {
+          background: rgba(249,115,22,0.12);
+          border-color: rgba(249,115,22,0.3);
+          color: #fdba74;
+          box-shadow: 0 0 12px rgba(249,115,22,0.12);
         }
 
         .safety-btn-unblock {
@@ -109,28 +118,18 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
           </span>
         )}
 
-        <button
-          onClick={() => setShowReport(true)}
-          className="safety-btn safety-btn-report"
-        >
+        <button onClick={() => setShowReport(true)} className="safety-btn safety-btn-report">
           <Flag className="w-3 h-3 btn-icon" style={{ color: "#ef4444" }} />
           Report
         </button>
 
         {blocked ? (
-          <button
-            onClick={handleUnblock}
-            disabled={unblocking}
-            className="safety-btn safety-btn-unblock"
-          >
+          <button onClick={handleUnblock} disabled={unblocking} className="safety-btn safety-btn-unblock">
             <ShieldCheck className="w-3 h-3 btn-icon" />
             {unblocking ? "Unblocking…" : "Unblock"}
           </button>
         ) : (
-          <button
-            onClick={() => setShowBlock(true)}
-            className="safety-btn safety-btn-block"
-          >
+          <button onClick={() => setShowBlock(true)} className="safety-btn safety-btn-block">
             <ShieldOff className="w-3 h-3 btn-icon" style={{ color: "#f97316" }} />
             Block
           </button>
@@ -150,7 +149,7 @@ export function ProfileSafetyButtons({ userId, userName, isBlocked: initialBlock
           userId={userId}
           userName={userName ?? undefined}
           onClose={() => setShowBlock(false)}
-          onBlocked={() => setBlocked(true)}
+          onBlocked={handleBlocked}
         />
       )}
     </>

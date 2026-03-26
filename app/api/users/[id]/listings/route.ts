@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const listings = await prisma.listing.findMany({
-    where: { sellerId: params.id, status: "active" },
+    where: { sellerId: params.id, status: { in: ["active", "pending"] } },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

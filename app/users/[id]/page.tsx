@@ -27,7 +27,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
       location: true,
       createdAt: true,
       listings: {
-        where: { status: "active" },
+        where: { status: { in: ["active", "pending"] } },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -89,7 +89,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   const hideListings = viewerHasBlocked || viewerIsBlocked;
 
-  // Active listings count is always the real number (used in tab badge even when blocked)
+  // Count active + pending listings (what's visible on the profile)
   const activeListingsCount = user.listings.length;
 
   const avgRating = user.reviewsReceived.length
@@ -174,7 +174,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{activeListingsCount}</div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1"><Layers className="w-3 h-3" />Active</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1"><Layers className="w-3 h-3" />Listed</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-white">{user._count.salesAsSeller}</div>

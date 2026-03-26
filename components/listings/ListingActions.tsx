@@ -351,31 +351,30 @@ export function ListingActions({
                 font-size: 12px;
                 font-weight: 500;
                 cursor: pointer;
-                border: 1px solid rgba(255,255,255,0.07);
-                background: rgba(255,255,255,0.02);
-                color: var(--text-muted);
                 transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
                 outline: none;
               }
-              .listing-safety-btn:hover {
-                transform: translateY(-1px);
-              }
-              .listing-safety-btn .ls-icon {
-                transition: transform 200ms ease;
-              }
-              .listing-safety-btn:hover .ls-icon {
-                transform: scale(1.2);
+              .listing-safety-btn:hover { transform: translateY(-1px); }
+              .listing-safety-btn .ls-icon { transition: transform 200ms ease; }
+              .listing-safety-btn:hover .ls-icon { transform: scale(1.2); }
+              .listing-safety-btn-report {
+                border: 1px solid rgba(239,68,68,0.2);
+                background: rgba(239,68,68,0.06);
+                color: #fca5a5;
               }
               .listing-safety-btn-report:hover {
-                background: rgba(239,68,68,0.08);
-                border-color: rgba(239,68,68,0.25);
-                color: #fca5a5;
+                background: rgba(239,68,68,0.12);
+                border-color: rgba(239,68,68,0.35);
                 box-shadow: 0 0 12px rgba(239,68,68,0.1);
               }
-              .listing-safety-btn-block:hover {
-                background: rgba(249,115,22,0.08);
-                border-color: rgba(249,115,22,0.25);
+              .listing-safety-btn-block {
+                border: 1px solid rgba(249,115,22,0.2);
+                background: rgba(249,115,22,0.06);
                 color: #fdba74;
+              }
+              .listing-safety-btn-block:hover {
+                background: rgba(249,115,22,0.12);
+                border-color: rgba(249,115,22,0.35);
                 box-shadow: 0 0 12px rgba(249,115,22,0.1);
               }
             `}</style>

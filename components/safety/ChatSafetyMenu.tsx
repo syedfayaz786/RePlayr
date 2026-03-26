@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MoreHorizontal, Flag, ShieldOff } from "lucide-react";
+import { MoreHorizontal, Flag, ShieldOff, Trash2 } from "lucide-react";
 import { ReportModal } from "@/components/safety/ReportModal";
 import { BlockModal } from "@/components/safety/BlockModal";
 
@@ -9,9 +9,10 @@ interface Props {
   partnerId: string;
   partnerName: string;
   onBlocked?: () => void;
+  deleteButton?: React.ReactNode;
 }
 
-export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
+export function ChatSafetyMenu({ partnerId, partnerName, onBlocked, deleteButton }: Props) {
   const [open, setOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
@@ -31,59 +32,48 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
     <>
       <style>{`
         .chat-menu-trigger {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          color: var(--text-muted);
-          background: transparent;
+          display: flex; align-items: center; justify-content: center;
+          width: 32px; height: 32px; border-radius: 8px; border: none;
+          cursor: pointer; color: var(--text-muted); background: transparent;
           transition: background 160ms ease, color 160ms ease, transform 150ms ease;
           outline: none;
         }
-        .chat-menu-trigger:hover {
-          background: rgba(255,255,255,0.07);
-          color: #fff;
-          transform: scale(1.08);
+        .chat-menu-trigger:hover, .chat-menu-trigger.is-open {
+          background: rgba(255,255,255,0.07); color: #fff; transform: scale(1.08);
         }
-        .chat-menu-trigger.is-open {
-          background: rgba(255,255,255,0.07);
-          color: #fff;
-        }
-
         .chat-menu-item {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 16px;
-          font-size: 13px;
-          cursor: pointer;
-          border: none;
-          background: transparent;
-          text-align: left;
+          width: 100%; display: flex; align-items: center; gap: 10px;
+          padding: 10px 16px; font-size: 13px; cursor: pointer;
+          border: none; background: transparent; text-align: left;
           transition: background 150ms ease, color 150ms ease;
-          color: var(--text-secondary);
-          outline: none;
+          color: var(--text-secondary); outline: none;
         }
-        .chat-menu-item .menu-icon {
-          flex-shrink: 0;
-          transition: transform 180ms ease;
-        }
-        .chat-menu-item:hover .menu-icon {
-          transform: scale(1.2);
-        }
+        .chat-menu-item .menu-icon { flex-shrink: 0; transition: transform 180ms ease; }
+        .chat-menu-item:hover .menu-icon { transform: scale(1.18); }
 
+        .chat-menu-item-report {
+          color: #fca5a5;
+          background: rgba(239,68,68,0.04);
+        }
         .chat-menu-item-report:hover {
-          background: rgba(239,68,68,0.07);
+          background: rgba(239,68,68,0.1);
           color: #fca5a5;
         }
-        .chat-menu-item-block:hover {
-          background: rgba(249,115,22,0.07);
+        .chat-menu-item-block {
           color: #fdba74;
+          background: rgba(249,115,22,0.04);
+        }
+        .chat-menu-item-block:hover {
+          background: rgba(249,115,22,0.1);
+          color: #fdba74;
+        }
+        .chat-menu-item-delete {
+          color: #f87171;
+          background: rgba(239,68,68,0.04);
+        }
+        .chat-menu-item-delete:hover {
+          background: rgba(239,68,68,0.1);
+          color: #f87171;
         }
       `}</style>
 
@@ -120,6 +110,15 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked }: Props) {
               <ShieldOff className="w-3.5 h-3.5 menu-icon" style={{ color: "#f97316" }} />
               Block user
             </button>
+            {deleteButton && (
+              <>
+                <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
+                <div className="chat-menu-item chat-menu-item-delete" onClick={() => setOpen(false)}>
+                  <Trash2 className="w-3.5 h-3.5 menu-icon" style={{ color: "#ef4444" }} />
+                  {deleteButton}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

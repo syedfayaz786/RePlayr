@@ -230,6 +230,16 @@ export function ListingCard({ listing }: ListingCardProps) {
         <div className="flex items-center gap-1 flex-wrap mb-2">
           <PlatformBadge platform={listing.platform} showLogo={true} short={true} />
           <ConditionBadge condition={listing.condition} />
+          {listing.status === "pending" && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/25 leading-tight">
+              Pending
+            </span>
+          )}
+          {listing.status === "active" && !listing.isSeller && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-green-500/12 text-green-400 border border-green-500/20 leading-tight">
+              Active
+            </span>
+          )}
         </div>
         <div className="flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-1 min-w-0">

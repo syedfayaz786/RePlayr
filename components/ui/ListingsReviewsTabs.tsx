@@ -50,14 +50,17 @@ export function ListingsReviewsTabs({
   const [isBlocked, setIsBlocked] = useState(initialBlocked);
   const [listings, setListings] = useState(initialListings);
   const [loadingListings, setLoadingListings] = useState(false);
+  // Track the real count separately so it never flashes 0 during transitions
+  const [knownCount, setKnownCount] = useState(activeListingsCount);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [ind, setInd] = useState({ left: 0, width: 0 });
 
-  // Always show real count on tab badge, even when blocked
-  const displayCount = isBlocked ? activeListingsCount : listings.length;
+  // Badge count: when blocked use knownCount (never drops to 0 mid-transition),
+  // when not blocked use the fetched listings length
+  const displayCount = isBlocked ? knownCount : listings.length;
 
   const tabs = [
-    { key: "listings" as const, label: "Active Listings", count: displayCount },
+    { key: "listings" as const, label: "Listings", count: displayCount },
     { key: "reviews"  as const, label: "Reviews",         count: reviews.length },
   ];
 
@@ -68,26 +71,43 @@ export function ListingsReviewsTabs({
     if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
   }, [activeIdx]);
 
-  // Exposed so ProfileSafetyButtons can trigger it via a CustomEvent
   useEffect(() => {
     if (!userId) return;
-    const handler = async (e: Event) => {
+
+    // Unblock: fetch listings then reveal them (count stays stable throughout)
+    const handleUnblocked = async (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.userId !== userId) return;
-      setIsBlocked(false);
       setLoadingListings(true);
       try {
         const res = await fetch(`/api/users/${userId}/listings`);
         if (res.ok) {
           const data = await res.json();
+          // Update listings first, THEN flip isBlocked so count never hits 0
           setListings(data.listings);
+          setKnownCount(data.listings.length);
+          setIsBlocked(false);
         }
       } catch { /* ignore */ }
       finally { setLoadingListings(false); }
     };
-    window.addEventListener("user-unblocked", handler);
-    return () => window.removeEventListener("user-unblocked", handler);
-  }, [userId]);
+
+    // Block: immediately hide listings, keep count visible
+    const handleBlocked = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.userId !== userId) return;
+      setKnownCount(listings.length); // save current count before hiding
+      setListings([]);
+      setIsBlocked(true);
+    };
+
+    window.addEventListener("user-unblocked", handleUnblocked);
+    window.addEventListener("user-blocked", handleBlocked);
+    return () => {
+      window.removeEventListener("user-unblocked", handleUnblocked);
+      window.removeEventListener("user-blocked", handleBlocked);
+    };
+  }, [userId, listings.length]);
 
   return (
     <div>
@@ -181,7 +201,7 @@ export function ListingsReviewsTabs({
             </div>
             <p className="text-sm font-medium text-white mb-1">Listings hidden</p>
             <p className="text-xs" style={{color:"var(--text-muted)"}}>
-              Unblock this user to browse their active listings.
+              Unblock this user to browse their listings.
             </p>
           </div>
         ) : loadingListings ? (

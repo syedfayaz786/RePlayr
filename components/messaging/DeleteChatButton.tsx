@@ -16,7 +16,7 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [popupPos, setPopupPos]     = useState({ top: 0, left: 0 });
-  const btnRef   = useRef<HTMLButtonElement>(null);
+  const btnRef   = useRef<HTMLButtonElement | HTMLSpanElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const router   = useRouter();
 
@@ -113,16 +113,17 @@ export function DeleteChatButton({ partnerId, listingId, variant = "icon" }: Del
     : null;
 
   if (variant === "full") {
+    // Renders as an inline text+icon trigger for embedding inside a dropdown menu item
     return (
       <>
-        <button
-          ref={btnRef}
+        <span
+          ref={btnRef as React.RefObject<HTMLSpanElement>}
           onClick={openPopup}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all text-xs font-medium"
+          className="flex items-center gap-2 w-full cursor-pointer text-sm"
+          style={{ color: "inherit" }}
         >
-          <Trash2 className="w-3.5 h-3.5" />
-          Delete Chat
-        </button>
+          Delete chat
+        </span>
         {popup}
       </>
     );

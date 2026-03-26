@@ -390,8 +390,8 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
             partnerId={partnerId}
             partnerName={partnerName}
             onBlocked={() => setIsBlocked(true)}
+            deleteButton={deleteButton}
           />
-          {deleteButton}
         </div>
       </div>
 
