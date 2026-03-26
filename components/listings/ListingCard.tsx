@@ -25,6 +25,7 @@ interface ListingCardProps {
       name?: string | null;
       image?: string | null;
     };
+    status?: string;
     _count?: { wishlistedBy: number };
     isWishlisted?: boolean;
     distanceKm?: number;
