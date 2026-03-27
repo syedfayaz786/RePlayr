@@ -320,11 +320,21 @@ export function ListingActions({
   const isSold    = currentStatus === "sold";
   const isPending = currentStatus === "pending";
 
+  const buyerStatusConfig = {
+    available: { label: "● Available", pill: "bg-green-500/15 text-green-300 border-green-500/30" },
+    pending:   { label: "⏳ Pending",   pill: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+    sold:      { label: "💰 Sold",      pill: "bg-gray-500/15 text-gray-300 border-gray-500/30"  },
+  };
+  const buyerCfg = buyerStatusConfig[currentStatus as keyof typeof buyerStatusConfig] ?? buyerStatusConfig.available;
+
   return (
     <>
       <div className="card p-4 sm:p-6 space-y-3">
-        <div className="text-2xl font-display font-bold text-brand-400 mb-2">
-          {formatPrice(listingPrice)}
+        {/* Status pill */}
+        <div className="flex items-center justify-center">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${buyerCfg.pill}`}>
+            {buyerCfg.label}
+          </span>
         </div>
 
         {isSold ? (
