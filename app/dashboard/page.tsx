@@ -12,7 +12,7 @@ import { MyListingsGrid } from "@/components/dashboard/MyListingsGrid";
 import { SavesPanel } from "@/components/dashboard/SavesPanel";
 import { OffersPanel } from "@/components/dashboard/OffersPanel";
 
-type FilterParam = "all" | "active" | "sold" | "views" | "saves" | "offers";
+type FilterParam = "all" | "active" | "available" | "pending" | "sold" | "views" | "saves" | "offers";
 
 export default async function DashboardPage({
   searchParams,
@@ -168,7 +168,7 @@ export default async function DashboardPage({
     },
   ];
 
-  const isGridFilter = ["all", "active", "sold", "views"].includes(filter);
+  const isGridFilter = ["all", "active", "available", "pending", "sold", "views"].includes(filter);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -224,7 +224,7 @@ export default async function DashboardPage({
             <Suspense fallback={null}>
               <MyListingsGrid
                 listings={serialisedListings}
-                initialFilter={filter as "all" | "active" | "sold" | "views"}
+                initialFilter={filter as "all" | "active" | "available" | "pending" | "sold" | "views"}
               />
             </Suspense>
           </div>
