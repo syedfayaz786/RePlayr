@@ -78,9 +78,13 @@ export async function PATCH(
     if (lat !== undefined && lat == null) data.fuzzyLat = null;
     if (lng !== undefined && lng == null) data.fuzzyLng = null;
 
-    // When re-activating a sold listing, remove the Sale record
-    if (data.status === "active") {
-      await prisma.sale.deleteMany({ where: { listingId: params.id } }).catch(() => {});
+    // When re-activating a sold/pending listing, remove the Sale record
+    if (data.status === "active" || data.status === "available" || data.status === "pending") {
+      // Map "available" UI value → "active" DB value for backward compat
+      if (data.status === "available") data.status = "active";
+      if (data.status !== "pending") {
+        await prisma.sale.deleteMany({ where: { listingId: params.id } }).catch(() => {});
+      }
     }
 
     let updated;

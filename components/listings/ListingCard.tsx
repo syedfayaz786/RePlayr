@@ -236,9 +236,9 @@ export function ListingCard({ listing }: ListingCardProps) {
               Pending
             </span>
           )}
-          {listing.status === "active" && !listing.isSeller && (
+          {(listing.status === "active" || listing.status === "available") && !listing.isSeller && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-green-500/12 text-green-400 border border-green-500/20 leading-tight">
-              Active
+              Available
             </span>
           )}
         </div>

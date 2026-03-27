@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown, Clock } from "lucide-react";
 
 type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
 type Listing = ListingCardListing & {
@@ -16,7 +16,7 @@ type Listing = ListingCardListing & {
   buyerReview?: { id: string; rating: number; authorId: string } | null;
 };
 
-type Filter  = "all" | "active" | "sold" | "views";
+type Filter  = "all" | "available" | "pending" | "sold" | "views";
 type SortKey = "newest" | "oldest" | "price_desc" | "price_asc" | "views_desc" | "title_asc";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -29,27 +29,34 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 const EMPTY_MESSAGES: Record<Filter, { title: string; body: string }> = {
-  all:    { title: "No listings yet",        body: "Post your first game and start selling!" },
-  active: { title: "No active listings",      body: "All your listings are sold or inactive." },
-  sold:   { title: "Nothing sold yet",        body: "Your sold games will appear here." },
-  views:  { title: "No views yet",            body: "Listings with at least one view will appear here." },
+  all:       { title: "No listings yet",       body: "Post your first game and start selling!" },
+  available: { title: "No available listings", body: "All your listings are sold or pending."  },
+  pending:   { title: "No pending listings",   body: "Mark a listing as pending when you're in talks with a buyer." },
+  sold:      { title: "Nothing sold yet",      body: "Your sold games will appear here."        },
+  views:     { title: "No views yet",          body: "Listings with at least one view will appear here." },
 };
 
-
+// treat "active" (legacy DB value) same as "available"
+function isAvailable(s: string) { return s === "active" || s === "available"; }
 
 export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[]; initialFilter?: Filter }) {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const [filter,   setFilter]   = useState<Filter>  ((searchParams.get("filter") as Filter)  ?? initialFilter ?? "all");
-  const [sort,     setSort]     = useState<SortKey>  ((searchParams.get("sort")   as SortKey) ?? "newest");
+  // map legacy "active" filter from URL to "available"
+  const rawFilter = searchParams.get("filter") as Filter | null;
+  const resolvedFilter: Filter = rawFilter === "active" ? "available" : (rawFilter ?? initialFilter ?? "all");
+
+  const [filter,   setFilter]   = useState<Filter>(resolvedFilter);
+  const [sort,     setSort]     = useState<SortKey>((searchParams.get("sort") as SortKey) ?? "newest");
   const [sortOpen, setSortOpen] = useState(false);
 
   useEffect(() => {
     const f = searchParams.get("filter") as Filter | null;
     const s = searchParams.get("sort")   as SortKey | null;
-    if (f && f !== filter) setFilter(f);
-    if (s && s !== sort)   setSort(s);
+    const resolved = f === "active" ? "available" : (f ?? "all");
+    if (resolved !== filter) setFilter(resolved as Filter);
+    if (s && s !== sort) setSort(s);
   }, [searchParams]);
 
   const updateFilter = (f: Filter) => {
@@ -68,16 +75,18 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
   };
 
   const counts = {
-    all:    listings.length,
-    active: listings.filter((l) => l.status === "active").length,
-    sold:   listings.filter((l) => l.status === "sold" || l.sale).length,
-    views:  listings.filter((l) => (l.views ?? 0) > 0).length,
+    all:       listings.length,
+    available: listings.filter((l) => isAvailable(l.status)).length,
+    pending:   listings.filter((l) => l.status === "pending").length,
+    sold:      listings.filter((l) => l.status === "sold" || l.sale).length,
+    views:     listings.filter((l) => (l.views ?? 0) > 0).length,
   };
 
   const filtered = listings.filter((l) => {
-    if (filter === "active") return l.status === "active";
-    if (filter === "sold")   return l.status === "sold" || l.sale;
-    if (filter === "views")  return (l.views ?? 0) > 0;
+    if (filter === "available") return isAvailable(l.status);
+    if (filter === "pending")   return l.status === "pending";
+    if (filter === "sold")      return l.status === "sold" || l.sale;
+    if (filter === "views")     return (l.views ?? 0) > 0;
     return true;
   });
 
@@ -93,21 +102,18 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
   });
 
   const tabs: { key: Filter; label: string; icon: React.ReactNode; color: string }[] = [
-    { key: "all",    label: "All",    icon: <Tag className="w-3.5 h-3.5" />,          color: "brand" },
-    { key: "active", label: "Active", icon: <Zap className="w-3.5 h-3.5" />,          color: "brand" },
-    { key: "sold",   label: "Sold",   icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "green" },
-    { key: "views",  label: "Viewed", icon: <Eye className="w-3.5 h-3.5" />,          color: "sky"   },
+    { key: "all",       label: "All",       icon: <Tag className="w-3.5 h-3.5" />,          color: "brand" },
+    { key: "available", label: "Available", icon: <Zap className="w-3.5 h-3.5" />,          color: "brand" },
+    { key: "pending",   label: "Pending",   icon: <Clock className="w-3.5 h-3.5" />,        color: "amber" },
+    { key: "sold",      label: "Sold",      icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "green" },
+    { key: "views",     label: "Viewed",    icon: <Eye className="w-3.5 h-3.5" />,          color: "sky"   },
   ];
 
   const activeStyle: Record<string, string> = {
     brand: "bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/20",
+    amber: "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20",
     green: "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20",
     sky:   "bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20",
-  };
-  const badgeStyle: Record<string, string> = {
-    brand: "bg-white/20 text-white",
-    green: "bg-white/20 text-white",
-    sky:   "bg-white/20 text-white",
   };
 
   const currentSortLabel = SORT_OPTIONS.find(o => o.key === sort)?.label ?? "Newest first";
@@ -127,7 +133,7 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
                 {icon}
                 {label}
                 <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                  isActive ? badgeStyle[color] : "bg-dark-700 text-gray-500"
+                  isActive ? "bg-white/20 text-white" : "bg-dark-700 text-gray-500"
                 }`}>{counts[key]}</span>
               </button>
             );
@@ -171,35 +177,39 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-          {sorted.map((listing) => {
-            return (
-              <div key={listing.id} className="relative">
-                <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
+          {sorted.map((listing) => (
+            <div key={listing.id} className="relative">
+              <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
 
-                {/* Sold — greyscale + dim overlay + centred badge */}
-                {listing.status === "sold" && (
-                  <>
-                    {/* Greyscale + dim over entire tile */}
-                    <div className="absolute inset-0 rounded-xl pointer-events-none"
-                      style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
+              {/* Sold overlay */}
+              {listing.status === "sold" && (
+                <>
+                  <div className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
+                  <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-500/30 backdrop-blur-sm border border-gray-400/40 text-gray-300 shadow-lg">
+                      Sold
+                    </span>
+                  </div>
+                </>
+              )}
 
-                    {/* SOLD badge centred on image area */}
-                    <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
-                      <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/30 backdrop-blur-sm border border-green-400/60 text-green-300 shadow-lg shadow-green-500/20">
-                        Sold
-                      </span>
-                    </div>
-                  </>
-                )}
+              {/* Pending overlay */}
+              {listing.status === "pending" && (
+                <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/25 backdrop-blur-sm border border-amber-400/50 text-amber-300 shadow-lg">
+                    Pending
+                  </span>
+                </div>
+              )}
 
-                {/* Edit button */}
-                <Link href={`/listings/${listing.id}/edit`}
-                  className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
-                  Edit
-                </Link>
-              </div>
-            );
-          })}
+              {/* Edit button */}
+              <Link href={`/listings/${listing.id}/edit`}
+                className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
+                Edit
+              </Link>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -56,7 +56,7 @@ export async function GET(req: Request) {
 
   // Use AND so every filter is required simultaneously —
   // prevents OR(text search) from swallowing platform/condition filters
-  const AND: any[] = [{ status: "active" }];
+  const AND: any[] = [{ status: { in: ["active", "pending"] } }];
   if (blockedUserIds.length > 0) {
     AND.push({ sellerId: { notIn: blockedUserIds } });
   }

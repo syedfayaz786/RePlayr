@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, CheckCircle2, RotateCcw, Copy, Globe, X, Flag, ShieldOff } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, Share2, Check, Edit, RotateCcw, Copy, Globe, X, Flag, ShieldOff, Clock, AlertTriangle } from "lucide-react";
 import { ReportModal } from "@/components/safety/ReportModal";
 import { BlockModal } from "@/components/safety/BlockModal";
 import toast from "react-hot-toast";
@@ -21,7 +21,7 @@ interface ListingData {
   edition: string | null;
   condition: string;
   location: string | null;
-  images: string; // JSON string
+  images: string;
 }
 
 interface ListingActionsProps {
@@ -36,6 +36,11 @@ interface ListingActionsProps {
   listingData?: ListingData;
   buyer?: { id: string; name?: string | null; image?: string | null } | null;
   soldOutside?: boolean;
+}
+
+// Normalize: treat "active" and "available" as the same
+function normalizeStatus(s: string) {
+  return s === "active" ? "available" : s;
 }
 
 export function ListingActions({
@@ -61,7 +66,7 @@ export function ListingActions({
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState(status);
+  const [currentStatus, setCurrentStatus] = useState(normalizeStatus(status));
   const [markingStatus, setMarkingStatus] = useState(false);
   const [showSoldModal, setShowSoldModal] = useState(false);
   const [showRelistModal, setShowRelistModal] = useState(false);
@@ -99,11 +104,7 @@ export function ListingActions({
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          receiverId: sellerId,
-          listingId,
-          content: messageText,
-        }),
+        body: JSON.stringify({ receiverId: sellerId, listingId, content: messageText }),
       });
       if (res.ok) {
         toast.success("Message sent!");
@@ -159,14 +160,18 @@ export function ListingActions({
   const updateStatus = async (newStatus: string) => {
     setMarkingStatus(true);
     try {
+      // Send "active" to API (DB value), map from our UI status
+      const dbStatus = newStatus === "available" ? "active" : newStatus;
       const res = await fetch(`/api/listings/${listingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: dbStatus }),
       });
       if (res.ok) {
         setCurrentStatus(newStatus);
-        toast.success(newStatus === "sold" ? "🎉 Marked as sold!" : "Listing is now active");
+        if (newStatus === "available") toast.success("Listing is now available");
+        else if (newStatus === "pending") toast.success("Listing marked as pending");
+        else if (newStatus === "sold") toast.success("🎉 Marked as sold!");
         router.refresh();
       } else {
         toast.error("Failed to update status");
@@ -178,112 +183,142 @@ export function ListingActions({
     }
   };
 
+  // ── SELLER VIEW ──────────────────────────────────────────────────────────
   if (isSeller) {
+    const statusConfig = {
+      available: { label: "● Available", pill: "bg-green-500/15 text-green-300 border-green-500/30" },
+      pending:   { label: "⏳ Pending",   pill: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+      sold:      { label: "💰 Sold",      pill: "bg-gray-500/15 text-gray-300 border-gray-500/30"  },
+    };
+    const cfg = statusConfig[currentStatus as keyof typeof statusConfig] ?? statusConfig.available;
+
     return (
       <>
-      <div className="card p-4 sm:p-6 space-y-3">
-        <h3 className="font-semibold text-white text-sm">Your Listing</h3>
+        <div className="card p-4 sm:p-6 space-y-3">
+          <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
-        {/* Status pill */}
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-            currentStatus === "active"
-              ? "bg-green-500/15 text-green-300 border-green-500/30"
-              : currentStatus === "sold"
-              ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
-              : "bg-gray-500/15 text-gray-300 border-gray-500/30"
-          }`}>
-            {currentStatus === "active" ? "● Active" : currentStatus === "sold" ? "💰 Sold" : "○ Inactive"}
-          </span>
-          {currentStatus === "sold" && soldOutside && (
-            <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
-              <Globe className="w-3 h-3" /> Outside RePlayr
+          {/* Status pill */}
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.pill}`}>
+              {cfg.label}
             </span>
-          )}
-          {currentStatus === "sold" && buyer && (
+            {currentStatus === "sold" && soldOutside && (
+              <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
+                <Globe className="w-3 h-3" /> Outside RePlayr
+              </span>
+            )}
+            {currentStatus === "sold" && buyer && (
+              <>
+                <span className="text-xs text-gray-500">to</span>
+                <a href={`/users/${buyer.id}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                  {buyer.image ? (
+                    <Image src={buyer.image} alt={buyer.name ?? ""} width={18} height={18} className="rounded-full object-cover w-[18px] h-[18px] flex-shrink-0" />
+                  ) : (
+                    <div className="w-[18px] h-[18px] rounded-full bg-brand-500/30 flex items-center justify-center text-brand-300 text-[9px] font-bold flex-shrink-0">
+                      {buyer.name?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                  )}
+                  <span className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
+                    {buyer.name ?? "buyer"}
+                  </span>
+                </a>
+              </>
+            )}
+          </div>
+
+          {/* Action buttons by status */}
+          {currentStatus === "available" && (
             <>
-              <span className="text-xs text-gray-500">to</span>
-              <a
-                href={`/users/${buyer.id}`}
-                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              <button
+                onClick={() => updateStatus("pending")}
+                disabled={markingStatus}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-amber-200 disabled:opacity-50"
               >
-                {buyer.image ? (
-                  <Image src={buyer.image} alt={buyer.name ?? ""} width={18} height={18} className="rounded-full object-cover w-[18px] h-[18px] flex-shrink-0" />
-                ) : (
-                  <div className="w-[18px] h-[18px] rounded-full bg-brand-500/30 flex items-center justify-center text-brand-300 text-[9px] font-bold flex-shrink-0">
-                    {buyer.name?.[0]?.toUpperCase() ?? "?"}
-                  </div>
-                )}
-                <span className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
-                  {buyer.name ?? "buyer"}
-                </span>
-              </a>
+                <Clock className="w-4 h-4" />
+                {markingStatus ? "Updating…" : "Mark as Pending"}
+              </button>
+              <button
+                onClick={() => setShowSoldModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
+              >
+                Mark as Sold
+              </button>
+              <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
+                <Edit className="w-4 h-4" />Edit Listing
+              </Link>
+            </>
+          )}
+
+          {currentStatus === "pending" && (
+            <>
+              <button
+                onClick={() => updateStatus("available")}
+                disabled={markingStatus}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
+              >
+                <RotateCcw className="w-4 h-4" />
+                {markingStatus ? "Updating…" : "Mark as Available"}
+              </button>
+              <button
+                onClick={() => setShowSoldModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
+              >
+                Mark as Sold
+              </button>
+              <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
+                <Edit className="w-4 h-4" />Edit Listing
+              </Link>
+            </>
+          )}
+
+          {currentStatus === "sold" && (
+            <>
+              <button
+                onClick={() => setShowRelistModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 text-brand-300 hover:text-brand-200"
+              >
+                <Copy className="w-4 h-4" />
+                Relist as New
+              </button>
+              <button
+                onClick={() => updateStatus("available")}
+                disabled={markingStatus}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
+              >
+                <RotateCcw className="w-4 h-4" />
+                {markingStatus ? "Updating…" : "Mark as Available"}
+              </button>
+              {buyer && (
+                <a
+                  href={`/messages?with=${buyer.id}&listing=${listingId}`}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-dark-700 hover:bg-dark-600 border border-dark-500 text-gray-300 hover:text-white"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Open Chat with Buyer
+                </a>
+              )}
             </>
           )}
         </div>
 
-        {/* Mark as sold / relist */}
-        {currentStatus === "active" ? (
-          <>
-            <button
-              onClick={() => setShowSoldModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-300 hover:text-blue-200"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Mark as Sold
-            </button>
-            <Link href={`/listings/${listingId}/edit`} className="btn-secondary flex items-center gap-2 justify-center w-full">
-              <Edit className="w-4 h-4" />Edit Listing
-            </Link>
-          </>
-        ) : currentStatus === "sold" ? (
-          <>
-            <button
-              onClick={() => setShowRelistModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 text-brand-300 hover:text-brand-200"
-            >
-              <Copy className="w-4 h-4" />
-              Relist as New
-            </button>
-            <button
-              onClick={() => updateStatus("active")}
-              disabled={markingStatus}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
-            >
-              <RotateCcw className="w-4 h-4" />
-              {markingStatus ? "Updating…" : "Mark as Available"}
-            </button>
-            {buyer && (
-              <a
-                href={`/messages?with=${buyer.id}&listing=${listingId}`}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-dark-700 hover:bg-dark-600 border border-dark-500 text-gray-300 hover:text-white"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Open Chat with Buyer
-              </a>
-            )}
-          </>
-        ) : null}
-      </div>
-
-      {showSoldModal && (
-        <MarkAsSoldModal
-          listingId={listingId}
-          listingTitle={listingTitle}
-          onClose={() => setShowSoldModal(false)}
-          onSold={() => { setCurrentStatus("sold"); setShowSoldModal(false); }}
-        />
-      )}
-
-      {showRelistModal && listingData && (
-        <RelistModal
-          listingData={listingData}
-          onClose={() => setShowRelistModal(false)}
-        />
-      )}
-    </>
+        {showSoldModal && (
+          <MarkAsSoldModal
+            listingId={listingId}
+            listingTitle={listingTitle}
+            onClose={() => setShowSoldModal(false)}
+            onSold={() => { setCurrentStatus("sold"); setShowSoldModal(false); }}
+          />
+        )}
+        {showRelistModal && listingData && (
+          <RelistModal listingData={listingData} onClose={() => setShowRelistModal(false)} />
+        )}
+      </>
     );
   }
+
+  // ── BUYER VIEW ───────────────────────────────────────────────────────────
+  const isSold    = currentStatus === "sold";
+  const isPending = currentStatus === "pending";
 
   return (
     <>
@@ -292,12 +327,22 @@ export function ListingActions({
           {formatPrice(listingPrice)}
         </div>
 
-        {status !== "active" ? (
+        {isSold ? (
           <div className="bg-dark-700 rounded-xl p-4 text-center text-gray-400 text-sm">
             This listing is no longer available
           </div>
         ) : (
           <>
+            {/* Pending warning banner */}
+            {isPending && (
+              <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/8 border border-amber-500/25">
+                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-300 leading-relaxed">
+                  This item is currently pending with another buyer. You can still message the seller.
+                </p>
+              </div>
+            )}
+
             <button
               onClick={() => { if (requireAuth()) setShowMessageModal(true); }}
               className="btn-primary w-full flex items-center justify-center gap-2"
@@ -336,60 +381,30 @@ export function ListingActions({
           </button>
         </div>
 
-        {/* Safety actions — only shown to non-sellers */}
+        {/* Safety actions */}
         {!isSeller && session && (
           <>
             <style>{`
               .listing-safety-btn {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                padding: 8px 0;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 500;
-                cursor: pointer;
+                flex: 1; display: flex; align-items: center; justify-content: center;
+                gap: 6px; padding: 8px 0; border-radius: 12px; font-size: 12px;
+                font-weight: 500; cursor: pointer; outline: none;
                 transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
-                outline: none;
               }
               .listing-safety-btn:hover { transform: translateY(-1px); }
               .listing-safety-btn .ls-icon { transition: transform 200ms ease; }
               .listing-safety-btn:hover .ls-icon { transform: scale(1.2); }
-              .listing-safety-btn-report {
-                border: 1px solid rgba(239,68,68,0.2);
-                background: rgba(239,68,68,0.06);
-                color: #fca5a5;
-              }
-              .listing-safety-btn-report:hover {
-                background: rgba(239,68,68,0.12);
-                border-color: rgba(239,68,68,0.35);
-                box-shadow: 0 0 12px rgba(239,68,68,0.1);
-              }
-              .listing-safety-btn-block {
-                border: 1px solid rgba(249,115,22,0.2);
-                background: rgba(249,115,22,0.06);
-                color: #fdba74;
-              }
-              .listing-safety-btn-block:hover {
-                background: rgba(249,115,22,0.12);
-                border-color: rgba(249,115,22,0.35);
-                box-shadow: 0 0 12px rgba(249,115,22,0.1);
-              }
+              .listing-safety-btn-report { border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: #fca5a5; }
+              .listing-safety-btn-report:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); box-shadow: 0 0 12px rgba(239,68,68,0.1); }
+              .listing-safety-btn-block { border: 1px solid rgba(249,115,22,0.2); background: rgba(249,115,22,0.06); color: #fdba74; }
+              .listing-safety-btn-block:hover { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.35); box-shadow: 0 0 12px rgba(249,115,22,0.1); }
             `}</style>
             <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="listing-safety-btn listing-safety-btn-report"
-              >
+              <button onClick={() => setShowReportModal(true)} className="listing-safety-btn listing-safety-btn-report">
                 <Flag className="w-3 h-3 ls-icon" style={{color: "#ef4444"}} />
                 Report listing
               </button>
-              <button
-                onClick={() => setShowBlockModal(true)}
-                className="listing-safety-btn listing-safety-btn-block"
-              >
+              <button onClick={() => setShowBlockModal(true)} className="listing-safety-btn listing-safety-btn-block">
                 <ShieldOff className="w-3 h-3 ls-icon" style={{color: "#f97316"}} />
                 Block seller
               </button>
@@ -405,12 +420,14 @@ export function ListingActions({
             <button onClick={() => setShowMessageModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-display font-bold text-white text-xl mb-1">
-              Message {sellerName}
-            </h3>
-            <p className="text-gray-400 text-sm mb-4">
-              About: <span className="text-white">{listingTitle}</span>
-            </p>
+            <h3 className="font-display font-bold text-white text-xl mb-1">Message {sellerName}</h3>
+            <p className="text-gray-400 text-sm mb-4">About: <span className="text-white">{listingTitle}</span></p>
+            {isPending && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/8 border border-amber-500/20 mb-3">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <p className="text-xs text-amber-300">This item is currently pending</p>
+              </div>
+            )}
             <textarea
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
@@ -420,17 +437,8 @@ export function ListingActions({
               autoFocus
             />
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowMessageModal(false)}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sendMessage}
-                disabled={loading || !messageText.trim()}
-                className="btn-primary flex-1"
-              >
+              <button onClick={() => setShowMessageModal(false)} className="btn-secondary flex-1">Cancel</button>
+              <button onClick={sendMessage} disabled={loading || !messageText.trim()} className="btn-primary flex-1">
                 {loading ? "Sending..." : "Send Message"}
               </button>
             </div>
@@ -447,68 +455,39 @@ export function ListingActions({
             </button>
             <h3 className="font-display font-bold text-white text-xl mb-1">Make an Offer</h3>
             <p className="text-gray-400 text-sm mb-4">
-              Listed for{" "}
-              <span className="text-brand-400 font-semibold">{formatPrice(listingPrice)}</span>
+              Listed for <span className="text-brand-400 font-semibold">{formatPrice(listingPrice)}</span>
             </p>
             <div className="mb-4">
               <label className="label-base">Your Offer (CAD)</label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
-                  type="number"
-                  value={offerAmount}
-                  onChange={(e) => setOfferAmount(e.target.value)}
-                  placeholder="0.00"
-                  min="1"
-                  step="0.01"
-                  className="input-base pl-11"
-                  autoFocus
+                  type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)}
+                  placeholder="0.00" min="1" step="0.01" className="input-base pl-11" autoFocus
                 />
               </div>
             </div>
             <div className="mb-4">
               <label className="label-base">Message (optional)</label>
-              <textarea
-                value={offerMessage}
-                onChange={(e) => setOfferMessage(e.target.value)}
-                placeholder="Add a note to your offer..."
-                rows={3}
-                className="input-base resize-none"
-              />
+              <textarea value={offerMessage} onChange={(e) => setOfferMessage(e.target.value)}
+                placeholder="Add a note to your offer..." rows={3} className="input-base resize-none" />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowOfferModal(false)} className="btn-secondary flex-1">
-                Cancel
-              </button>
-              <button
-                onClick={sendOffer}
-                disabled={loading || !offerAmount}
-                className="btn-primary flex-1"
-              >
+              <button onClick={() => setShowOfferModal(false)} className="btn-secondary flex-1">Cancel</button>
+              <button onClick={sendOffer} disabled={loading || !offerAmount} className="btn-primary flex-1">
                 {loading ? "Sending..." : "Send Offer"}
               </button>
             </div>
           </div>
         </div>
       )}
+
       {showReportModal && (
-        <ReportModal
-          type="listing"
-          targetId={listingId}
-          targetName={listingTitle}
-          onClose={() => setShowReportModal(false)}
-        />
+        <ReportModal type="listing" targetId={listingId} targetName={listingTitle} onClose={() => setShowReportModal(false)} />
       )}
       {showBlockModal && (
-        <BlockModal
-          userId={sellerId}
-          userName={sellerName}
-          onClose={() => setShowBlockModal(false)}
-          onBlocked={() => {
-            setShowBlockModal(false);
-            router.push("/?blocked=1");
-          }}
-        />
+        <BlockModal userId={sellerId} userName={sellerName} onClose={() => setShowBlockModal(false)}
+          onBlocked={() => { setShowBlockModal(false); router.push("/?blocked=1"); }} />
       )}
     </>
   );

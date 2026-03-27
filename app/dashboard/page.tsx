@@ -113,7 +113,7 @@ export default async function DashboardPage({
   }));
 
   const stats = {
-    active:        listings.filter((l) => l.status === "active").length,
+    active:        listings.filter((l) => l.status === "active" || l.status === "available").length,
     sold:          listings.filter((l) => l.status === "sold" || l.sale).length,
     totalViews:    listings.reduce((s, l) => s + (l.views ?? 0), 0),
     totalSaves:    listings.reduce((s, l) => s + l._count.wishlistedBy, 0),

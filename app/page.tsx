@@ -10,7 +10,7 @@ import { BlockedToast } from "@/components/safety/BlockedToast";
 async function getStats() {
   try {
     const [totalListings, totalUsers] = await Promise.all([
-      prisma.listing.count({ where: { status: "active" } }),
+      prisma.listing.count({ where: { status: { in: ["active", "pending"] } } }),
       prisma.user.count(),
     ]);
     return { totalListings, totalUsers };

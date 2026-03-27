@@ -144,8 +144,13 @@ export default async function ListingPage({ params }: { params: { id: string } }
               <div className="flex items-center gap-2 text-brand-400 text-2xl sm:text-3xl font-display font-bold mb-4 sm:mb-6">
                 {formatPrice(listing.price)}
                 {listing.status === "sold" && (
-                  <span className="ml-2 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-green-500/15 border border-green-500/30 text-green-400">
+                  <span className="ml-2 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-gray-500/15 border border-gray-500/30 text-gray-400">
                     Sold
+                  </span>
+                )}
+                {listing.status === "pending" && (
+                  <span className="ml-2 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                    Pending
                   </span>
                 )}
               </div>
