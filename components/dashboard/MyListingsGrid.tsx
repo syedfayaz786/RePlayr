@@ -36,26 +36,29 @@ const EMPTY_MESSAGES: Record<Filter, { title: string; body: string }> = {
   views:     { title: "No views yet",          body: "Listings with at least one view will appear here." },
 };
 
-// treat "active" (legacy DB value) same as "available"
+// treat legacy DB value "active" as "available"
 function isAvailable(s: string) { return s === "active" || s === "available"; }
+
+// normalise any incoming filter value — map "active" → "available"
+function normalise(f: string | null): Filter {
+  if (!f) return "all";
+  if (f === "active") return "available";
+  if (["all", "available", "pending", "sold", "views"].includes(f)) return f as Filter;
+  return "all";
+}
 
 export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[]; initialFilter?: Filter }) {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  // map legacy "active" filter from URL to "available"
-  const rawFilter = searchParams.get("filter") as Filter | null;
-  const resolvedFilter: Filter = rawFilter === "active" ? "available" : (rawFilter ?? initialFilter ?? "all");
-
-  const [filter,   setFilter]   = useState<Filter>(resolvedFilter);
+  const [filter,   setFilter]   = useState<Filter>(normalise(searchParams.get("filter")) ?? initialFilter ?? "all");
   const [sort,     setSort]     = useState<SortKey>((searchParams.get("sort") as SortKey) ?? "newest");
   const [sortOpen, setSortOpen] = useState(false);
 
   useEffect(() => {
-    const f = searchParams.get("filter") as Filter | null;
-    const s = searchParams.get("sort")   as SortKey | null;
-    const resolved = f === "active" ? "available" : (f ?? "all");
-    if (resolved !== filter) setFilter(resolved as Filter);
+    const f = normalise(searchParams.get("filter"));
+    const s = searchParams.get("sort") as SortKey | null;
+    if (f !== filter) setFilter(f);
     if (s && s !== sort) setSort(s);
   }, [searchParams]);
 

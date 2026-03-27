@@ -224,7 +224,7 @@ export default async function DashboardPage({
             <Suspense fallback={null}>
               <MyListingsGrid
                 listings={serialisedListings}
-                initialFilter={filter as "all" | "active" | "available" | "pending" | "sold" | "views"}
+                initialFilter={filter as "all" | "available" | "pending" | "sold" | "views"}
               />
             </Suspense>
           </div>
