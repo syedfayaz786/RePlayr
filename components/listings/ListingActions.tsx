@@ -188,7 +188,7 @@ export function ListingActions({
     const statusConfig = {
       available: { label: "● Available", pill: "bg-green-500/15 text-green-300 border-green-500/30" },
       pending:   { label: "⏳ Pending",   pill: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
-      sold:      { label: "💰 Sold",      pill: "bg-gray-500/15 text-gray-300 border-gray-500/30"  },
+      sold:      { label: "Sold",         pill: "bg-green-500/15 text-green-400 border-green-500/30"  },
     };
     const cfg = statusConfig[currentStatus as keyof typeof statusConfig] ?? statusConfig.available;
 
@@ -199,9 +199,18 @@ export function ListingActions({
 
           {/* Status pill */}
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.pill}`}>
-              {cfg.label}
-            </span>
+            {currentStatus === "sold" ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-green-500/15 text-green-400 border-green-500/30">
+                <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+                Sold
+              </span>
+            ) : (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.pill}`}>
+                {cfg.label}
+              </span>
+            )}
             {currentStatus === "sold" && soldOutside && (
               <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
                 <Globe className="w-3 h-3" /> Outside RePlayr
