@@ -259,7 +259,15 @@ export default async function MessagesPage({
                   <Link href={`/listings/${activeListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
                     {activeListing.title}
                   </Link>
-                  <p className="text-2xl font-bold text-brand-400 mt-1">${Number(activeListing.price).toFixed(2)}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
+                    {(() => {
+                      const s = activeListing.status === "active" ? "available" : activeListing.status;
+                      if (s === "available") return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25">Available</span>;
+                      if (s === "pending")   return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">Pending</span>;
+                      if (s === "sold")      return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/25">Sold</span>;
+                    })()}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">

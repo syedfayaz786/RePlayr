@@ -424,16 +424,6 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
               <span className="text-xs text-gray-400">{pinnedListing.platform}</span>
               <span className="text-xs text-gray-500">·</span>
               <span className="text-xs text-gray-400">{pinnedListing.condition}</span>
-              {/* Status pill */}
-              {localListingStatus === "available" && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-green-500/15 text-green-400 border border-green-500/25 leading-tight">Available</span>
-              )}
-              {localListingStatus === "pending" && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/25 leading-tight">Pending</span>
-              )}
-              {localListingStatus === "sold" && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-gray-500/15 text-gray-400 border border-gray-500/25 leading-tight">Sold</span>
-              )}
             </div>
           </div>
           <div className="flex-shrink-0 flex items-center gap-2">
