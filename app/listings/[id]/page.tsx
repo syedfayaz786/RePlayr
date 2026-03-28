@@ -6,7 +6,6 @@ import { formatPrice, formatDate } from "@/lib/utils";
 import { PlatformBadge, ConditionBadge, EditionBadge } from "@/components/ui/Badges";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
-import { UserLink } from "@/components/ui/UserLink";
 import { MapPin, Clock, Package, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -143,16 +142,6 @@ export default async function ListingPage({ params }: { params: { id: string } }
 
               <div className="flex items-center gap-2 text-brand-400 text-2xl sm:text-3xl font-display font-bold mb-4 sm:mb-6">
                 {formatPrice(listing.price)}
-                {listing.status === "sold" && (
-                  <span className="ml-2 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-gray-500/15 border border-gray-500/30 text-gray-400">
-                    Sold
-                  </span>
-                )}
-                {listing.status === "pending" && (
-                  <span className="ml-2 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">
-                    Pending
-                  </span>
-                )}
               </div>
 
 
@@ -232,15 +221,30 @@ export default async function ListingPage({ params }: { params: { id: string } }
           {/* Right: Seller card + Actions */}
           <div className="space-y-4">
             {/* Seller */}
-            <div className="card p-6">
-              <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Seller</h3>
-              <UserLink id={listing.sellerId} name={listing.seller.name} image={listing.seller.image} size="lg" className="mb-4" />
-              <div className="ml-14 -mt-3 mb-4">
-                <StarRating rating={Math.round(avgRating)} size="sm" />
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {listing.seller._count.reviewsReceived} reviews · {listing.seller._count.listings} listings
+            <div className="card overflow-hidden">
+              <h3 className="font-semibold text-white px-6 pt-6 pb-4 text-sm uppercase tracking-wider">Seller</h3>
+              <Link href={`/users/${listing.sellerId}`} className="flex items-stretch gap-0 hover:opacity-90 transition-opacity px-6 pb-6">
+                {/* Avatar — tall, fills the row */}
+                <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-dark-700 border border-dark-600">
+                  {listing.seller.image ? (
+                    <Image src={listing.seller.image} alt={listing.seller.name ?? ""} width={80} height={80} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-brand-400 bg-brand-500/10">
+                      {listing.seller.name?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                  )}
                 </div>
-              </div>
+                {/* Info */}
+                <div className="ml-4 flex flex-col justify-center min-w-0">
+                  <p className="font-semibold text-white text-base truncate hover:text-brand-300 transition-colors">
+                    {listing.seller.name}
+                  </p>
+                  <StarRating rating={Math.round(avgRating)} size="sm" />
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {listing.seller._count.reviewsReceived} reviews · {listing.seller._count.listings} listings
+                  </p>
+                </div>
+              </Link>
             </div>
 
             {/* Actions panel */}
