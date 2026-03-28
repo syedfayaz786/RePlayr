@@ -115,12 +115,14 @@ export function PendingToBuyerButton({ listingId, buyerName, currentStatus, onSt
         onClick={() => setConfirming(true)}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-medium ${
           isPending
-            ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30"
+            ? "bg-green-500/10 border-green-500/25 text-green-400 hover:bg-green-500/20 hover:border-green-500/40"
             : "bg-amber-500/10 border-amber-500/25 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/40"
         }`}
       >
-        <Clock className="w-3.5 h-3.5" />
-        {isPending ? "Mark Available" : "Mark Pending"}
+        {isPending
+          ? <><svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/></svg> Mark Available</>
+          : <><Clock className="w-3.5 h-3.5" /> Mark Pending</>
+        }
       </button>
       {popup}
     </>
