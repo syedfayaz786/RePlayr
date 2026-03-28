@@ -427,31 +427,46 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
             </div>
           </div>
           <div className="flex-shrink-0 flex items-center gap-2">
-            {localSaleConfirmed && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/25">
-                <svg className="w-3.5 h-3.5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                </svg>
-                <span className="text-xs font-semibold text-green-400">{isSeller ? "Sold" : "Sold to you"}</span>
+            {localSaleConfirmed ? (
+              /* Sold state — show pill + buyer name only */
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-green-500/15 border border-green-500/30 text-green-400">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  {isSeller ? "Sold" : "Sold to you"}
+                </span>
+                {isSeller && soldToBuyerId && (
+                  <>
+                    <span className="text-xs text-gray-500">to</span>
+                    <a href={`/users/${soldToBuyerId}`} className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
+                      {soldToBuyerName ?? partnerName}
+                    </a>
+                  </>
+                )}
               </div>
-            )}
-            {isSeller && soldToBuyerId && soldToListingId && !localSaleConfirmed && (
-              <PendingToBuyerButton
-                listingId={soldToListingId}
-                buyerName={soldToBuyerName ?? partnerName}
-                currentStatus={localListingStatus}
-                onStatusChange={setLocalListingStatus}
-              />
-            )}
-            {isSeller && soldToBuyerId && soldToListingId && (
-              <SoldToBuyerButton
-                listingId={soldToListingId}
-                buyerId={soldToBuyerId}
-                buyerName={soldToBuyerName ?? partnerName}
-                alreadySold={alreadySold ?? false}
-                sellerName={sellerDisplayName ?? "You"}
-                onSaleConfirmed={handleSaleConfirmed}
-              />
+            ) : (
+              /* Not sold — show pending toggle + sold button */
+              <>
+                {isSeller && soldToBuyerId && soldToListingId && (
+                  <PendingToBuyerButton
+                    listingId={soldToListingId}
+                    buyerName={soldToBuyerName ?? partnerName}
+                    currentStatus={localListingStatus}
+                    onStatusChange={setLocalListingStatus}
+                  />
+                )}
+                {isSeller && soldToBuyerId && soldToListingId && (
+                  <SoldToBuyerButton
+                    listingId={soldToListingId}
+                    buyerId={soldToBuyerId}
+                    buyerName={soldToBuyerName ?? partnerName}
+                    alreadySold={alreadySold ?? false}
+                    sellerName={sellerDisplayName ?? "You"}
+                    onSaleConfirmed={handleSaleConfirmed}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

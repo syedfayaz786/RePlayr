@@ -120,7 +120,7 @@ export function PendingToBuyerButton({ listingId, buyerName, currentStatus, onSt
         }`}
       >
         <Clock className="w-3.5 h-3.5" />
-        {isPending ? "Pending" : "Mark Pending"}
+        {isPending ? "Mark Available" : "Mark Pending"}
       </button>
       {popup}
     </>
