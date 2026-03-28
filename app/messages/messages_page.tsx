@@ -262,13 +262,13 @@ export default async function MessagesPage({
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
                     {(activeListing.status === "available" || activeListing.status === "active") && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25 leading-none">Available</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Available</span>
                     )}
                     {activeListing.status === "pending" && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 leading-none">Pending</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }}>Pending</span>
                     )}
                     {activeListing.status === "sold" && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/25 leading-none">Sold</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(107,114,128,0.15)", color: "#9ca3af", border: "1px solid rgba(107,114,128,0.3)" }}>Sold</span>
                     )}
                   </div>
                 </div>
