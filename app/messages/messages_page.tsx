@@ -261,15 +261,9 @@ export default async function MessagesPage({
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
-                    {(activeListing.status === "available" || activeListing.status === "active") && (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Available</span>
-                    )}
-                    {activeListing.status === "pending" && (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }}>Pending</span>
-                    )}
-                    {activeListing.status === "sold" && (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(107,114,128,0.15)", color: "#9ca3af", border: "1px solid rgba(107,114,128,0.3)" }}>Sold</span>
-                    )}
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.5)", whiteSpace: "nowrap" }}>
+                      {activeListing.status === "active" ? "Available" : activeListing.status === "available" ? "Available" : activeListing.status === "pending" ? "Pending" : activeListing.status === "sold" ? "Sold" : activeListing.status ?? "—"}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-2">
