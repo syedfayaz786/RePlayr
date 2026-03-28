@@ -261,8 +261,15 @@ export default async function MessagesPage({
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.5)", whiteSpace: "nowrap" }}>
-                      {activeListing.status === "active" ? "Available" : activeListing.status === "available" ? "Available" : activeListing.status === "pending" ? "Pending" : activeListing.status === "sold" ? "Sold" : activeListing.status ?? "—"}
+                    <span style={{
+                      marginLeft: "auto", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap",
+                      ...(activeListing.status === "pending"
+                        ? { background: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.5)" }
+                        : activeListing.status === "sold"
+                        ? { background: "rgba(107,114,128,0.2)", color: "#9ca3af", border: "1px solid rgba(107,114,128,0.5)" }
+                        : { background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.5)" })
+                    }}>
+                      {activeListing.status === "pending" ? "Pending" : activeListing.status === "sold" ? "Sold" : "Available"}
                     </span>
                   </div>
                 </div>
