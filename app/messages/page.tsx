@@ -261,16 +261,25 @@ export default async function MessagesPage({
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
-                    <span style={{
-                      marginLeft: "auto", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap",
-                      ...(activeListing.status === "pending"
-                        ? { background: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.5)" }
-                        : activeListing.status === "sold"
-                        ? { background: "rgba(107,114,128,0.2)", color: "#9ca3af", border: "1px solid rgba(107,114,128,0.5)" }
-                        : { background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.5)" })
-                    }}>
-                      {activeListing.status === "pending" ? "Pending" : activeListing.status === "sold" ? "Sold" : "Available"}
-                    </span>
+                    {(activeListing.status === "active" || activeListing.status === "available") && (
+                      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(15,23,42,0.8)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.4)", whiteSpace: "nowrap" }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80", flexShrink: 0, display: "inline-block" }} />
+                        Available
+                      </span>
+                    )}
+                    {activeListing.status === "pending" && (
+                      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.45)", whiteSpace: "nowrap" }}>
+                        ⏳ Pending
+                      </span>
+                    )}
+                    {activeListing.status === "sold" && (
+                      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.45)", whiteSpace: "nowrap" }}>
+                        <svg style={{ width: 12, height: 12, flexShrink: 0 }} viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                        </svg>
+                        Sold
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
