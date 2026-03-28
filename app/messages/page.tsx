@@ -125,7 +125,7 @@ export default async function MessagesPage({
   const activeListing = activeListingId
     ? await prisma.listing.findUnique({
         where: { id: activeListingId },
-        select: { id: true, title: true, price: true, platform: true, condition: true, location: true, edition: true, description: true, images: true, sellerId: true },
+        select: { id: true, title: true, price: true, platform: true, condition: true, location: true, edition: true, description: true, images: true, sellerId: true, status: true },
       })
     : null;
 
@@ -226,6 +226,7 @@ export default async function MessagesPage({
                 soldToBuyerId={activePartnerId}
                 soldToBuyerName={activePartner.name ?? "this buyer"}
                 alreadySold={!!(sale?.buyerId === activePartnerId)}
+                listingStatus={activeListing?.status ?? "available"}
                 sellerDisplayName={session.user.name ?? "You"}
                 buyerDisplayName={activePartner.name ?? "the buyer"}
               />
@@ -258,7 +259,12 @@ export default async function MessagesPage({
                   <Link href={`/listings/${activeListing.id}`} className="font-semibold text-white hover:text-brand-300 transition-colors leading-snug block">
                     {activeListing.title}
                   </Link>
-                  <p className="text-2xl font-bold text-brand-400 mt-1">${Number(activeListing.price).toFixed(2)}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-2xl font-bold text-brand-400">${Number(activeListing.price).toFixed(2)}</p>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.5)", whiteSpace: "nowrap" }}>
+                      {activeListing.status === "active" ? "Available" : activeListing.status === "available" ? "Available" : activeListing.status === "pending" ? "Pending" : activeListing.status === "sold" ? "Sold" : activeListing.status ?? "—"}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
