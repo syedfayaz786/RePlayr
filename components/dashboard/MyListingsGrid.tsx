@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Tag, CheckCircle2, Zap, Eye, ArrowUpDown, ChevronDown, Clock } from "lucide-react";
+import toast from "react-hot-toast";
 
 type ListingCardListing = Parameters<typeof ListingCard>[0]["listing"];
 type Listing = ListingCardListing & {
@@ -45,6 +46,99 @@ function normalise(f: string | null): Filter {
   if (f === "active") return "available";
   if (["all", "available", "pending", "sold", "views"].includes(f)) return f as Filter;
   return "all";
+}
+
+// ── Inline tile with status toggle ──────────────────────────────────────────
+function ListingTile({ listing }: { listing: Listing }) {
+  const [status, setStatus] = useState(
+    listing.status === "active" ? "available" : listing.status
+  );
+  const [toggling, setToggling] = useState(false);
+
+  const isSold    = status === "sold" || !!listing.sale;
+  const isPending = status === "pending";
+  const isAvail   = !isSold && !isPending;
+
+  const togglePending = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (toggling || isSold) return;
+    const newStatus = isPending ? "available" : "pending";
+    setToggling(true);
+    try {
+      const dbStatus = newStatus === "available" ? "active" : newStatus;
+      const res = await fetch(`/api/listings/${listing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: dbStatus }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus(newStatus);
+      toast.success(newStatus === "pending" ? "Marked as pending" : "Marked as available");
+    } catch {
+      toast.error("Failed to update status");
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <ListingCard listing={{ ...listing, status, isSeller: true, views: listing.views ?? 0 }} />
+
+      {/* Sold overlay */}
+      {isSold && (
+        <>
+          <div className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
+          <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-500/30 backdrop-blur-sm border border-gray-400/40 text-gray-300 shadow-lg">
+              Sold
+            </span>
+          </div>
+        </>
+      )}
+
+      {/* Pending overlay */}
+      {isPending && (
+        <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
+          <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/25 backdrop-blur-sm border border-amber-400/50 text-amber-300 shadow-lg">
+            Pending
+          </span>
+        </div>
+      )}
+
+      {/* Bottom action row */}
+      <div className="absolute bottom-[0.5rem] left-3 right-3 flex items-center justify-between gap-1">
+        {/* Pending toggle — not shown for sold */}
+        {!isSold && (
+          <button
+            onClick={togglePending}
+            disabled={toggling}
+            title={isPending ? "Mark as available" : "Mark as pending"}
+            className={`text-[10px] px-2 py-1 rounded-lg border transition-all disabled:opacity-50 font-medium flex items-center gap-1 ${
+              isPending
+                ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30"
+                : "bg-dark-800/90 border-dark-500 text-gray-400 hover:text-amber-300 hover:border-amber-500/40"
+            }`}
+          >
+            <Clock className="w-2.5 h-2.5" />
+            {isPending ? "Pending" : "Set Pending"}
+          </button>
+        )}
+        {isSold && <div />}
+
+        {/* Edit */}
+        <Link
+          href={`/listings/${listing.id}/edit`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all"
+        >
+          Edit
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[]; initialFilter?: Filter }) {
@@ -181,37 +275,7 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {sorted.map((listing) => (
-            <div key={listing.id} className="relative">
-              <ListingCard listing={{ ...listing, isSeller: true, views: listing.views ?? 0 }} />
-
-              {/* Sold overlay */}
-              {listing.status === "sold" && (
-                <>
-                  <div className="absolute inset-0 rounded-xl pointer-events-none"
-                    style={{ background: "rgba(10,12,28,0.55)", backdropFilter: "grayscale(60%)" }} />
-                  <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-500/30 backdrop-blur-sm border border-gray-400/40 text-gray-300 shadow-lg">
-                      Sold
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {/* Pending overlay */}
-              {listing.status === "pending" && (
-                <div className="absolute left-0 right-0 top-0 bottom-[3.5rem] flex items-center justify-center pointer-events-none">
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/25 backdrop-blur-sm border border-amber-400/50 text-amber-300 shadow-lg">
-                    Pending
-                  </span>
-                </div>
-              )}
-
-              {/* Edit button */}
-              <Link href={`/listings/${listing.id}/edit`}
-                className="absolute bottom-[4.5rem] right-3 text-xs px-2.5 py-1 rounded-lg bg-dark-800/90 border border-dark-500 text-gray-300 hover:text-white hover:border-brand-500 transition-all">
-                Edit
-              </Link>
-            </div>
+            <ListingTile key={listing.id} listing={listing} />
           ))}
         </div>
       )}

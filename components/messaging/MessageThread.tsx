@@ -8,6 +8,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
+import { PendingToBuyerButton } from "@/components/messaging/PendingToBuyerButton";
 import { ChatSafetyMenu } from "@/components/safety/ChatSafetyMenu";
 
 // Highlight matching text within a string
@@ -72,6 +73,7 @@ interface MessageThreadProps {
   soldToBuyerId?: string;
   soldToBuyerName?: string;
   alreadySold?: boolean;
+  listingStatus?: string;
   sellerDisplayName?: string;
   buyerDisplayName?: string;
   searchQuery?: string | null;
@@ -98,6 +100,7 @@ export function MessageThread({
   soldToBuyerId,
   soldToBuyerName,
   alreadySold,
+  listingStatus,
   sellerDisplayName,
   buyerDisplayName,
   searchQuery,
@@ -117,6 +120,9 @@ export function MessageThread({
   const [sending, setSending]           = useState(false);
   const [lastSeen, setLastSeen]         = useState(false);
   const [localSaleConfirmed, setLocalSaleConfirmed] = useState(saleConfirmed ?? false);
+  const [localListingStatus, setLocalListingStatus] = useState(
+    listingStatus === "active" ? "available" : (listingStatus ?? "available")
+  );
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedBy, setBlockedBy] = useState(false);
 
@@ -418,6 +424,16 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
               <span className="text-xs text-gray-400">{pinnedListing.platform}</span>
               <span className="text-xs text-gray-500">·</span>
               <span className="text-xs text-gray-400">{pinnedListing.condition}</span>
+              {/* Status pill */}
+              {localListingStatus === "available" && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-green-500/15 text-green-400 border border-green-500/25 leading-tight">Available</span>
+              )}
+              {localListingStatus === "pending" && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/25 leading-tight">Pending</span>
+              )}
+              {localListingStatus === "sold" && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-gray-500/15 text-gray-400 border border-gray-500/25 leading-tight">Sold</span>
+              )}
             </div>
           </div>
           <div className="flex-shrink-0 flex items-center gap-2">
@@ -428,6 +444,14 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
                 </svg>
                 <span className="text-xs font-semibold text-green-400">Sold</span>
               </div>
+            )}
+            {isSeller && soldToBuyerId && soldToListingId && !localSaleConfirmed && (
+              <PendingToBuyerButton
+                listingId={soldToListingId}
+                buyerName={soldToBuyerName ?? partnerName}
+                currentStatus={localListingStatus}
+                onStatusChange={setLocalListingStatus}
+              />
             )}
             {isSeller && soldToBuyerId && soldToListingId && (
               <SoldToBuyerButton
