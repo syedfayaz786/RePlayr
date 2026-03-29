@@ -137,7 +137,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
           onClick={() => setFilter("all")}
           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
             filter === "all"
-              ? "bg-brand-500 border-brand-500 text-white"
+              ? "bg-brand-700 border-brand-600 text-white"
               : "bg-dark-700 border-dark-600 text-gray-400 hover:text-white hover:border-dark-500"
           }`}
         >
@@ -147,14 +147,14 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
           onClick={() => setFilter("unread")}
           className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${
             filter === "unread"
-              ? "bg-brand-500 border-brand-500 text-white"
+              ? "bg-brand-700 border-brand-600 text-white"
               : "bg-dark-700 border-dark-600 text-gray-400 hover:text-white hover:border-dark-500"
           }`}
         >
           <Bell className="w-2.5 h-2.5" />
           Unread
           {totalUnread > 0 && (
-            <span className={`text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center ${filter === "unread" ? "bg-white text-brand-500" : "bg-brand-500 text-white"}`}>
+            <span className={`text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center ${filter === "unread" ? "bg-white text-brand-500" : "bg-brand-700 text-white"}`}>
               {totalUnread}
             </span>
           )}
@@ -243,7 +243,7 @@ export function MessagesSidebar({ conversations, activeKey }: MessagesSidebarPro
                   )}
                 </div>
                   {conv.unread > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-600 rounded-full text-xs flex items-center justify-center text-white font-bold">
                       {conv.unread > 9 ? "9+" : conv.unread}
                     </span>
                   )}

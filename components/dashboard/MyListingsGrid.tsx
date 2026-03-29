@@ -148,7 +148,7 @@ export function MyListingsGrid({ listings, initialFilter }: { listings: Listing[
   ];
 
   const activeStyle: Record<string, string> = {
-    brand: "bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/20",
+    brand: "bg-brand-700 border-brand-600 text-white shadow-lg shadow-brand-900/40",
     amber: "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20",
     green: "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20",
     sky:   "bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20",

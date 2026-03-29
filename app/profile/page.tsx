@@ -178,7 +178,7 @@ function AvatarCropModal({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-600 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />
             Apply

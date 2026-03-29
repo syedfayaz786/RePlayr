@@ -198,7 +198,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           disabled={loading}
           className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 z-10 ${
             wishlisted
-              ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
+              ? "bg-brand-700 text-white shadow-lg shadow-brand-900/40"
               : "bg-dark-800/80 text-slate-300 hover:bg-brand-500/20 hover:text-brand-400 backdrop-blur-sm"
           }`}
         >

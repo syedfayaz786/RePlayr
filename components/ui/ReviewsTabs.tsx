@@ -185,7 +185,7 @@ function ReviewList({ reviews }: { reviews: Review[] }) {
                   onClick={() => setPage(n as number)}
                   className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
                     page === n
-                      ? "bg-brand-500 text-white"
+                      ? "bg-brand-700 text-white"
                       : "bg-dark-700 border border-dark-600 text-gray-400 hover:text-white hover:border-dark-500"
                   }`}
                 >

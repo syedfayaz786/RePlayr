@@ -67,7 +67,7 @@ function PaginationBar({
               onClick={() => onPageChange(p)}
               className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all ${
                 p === page
-                  ? "bg-brand-500 text-white shadow-lg shadow-brand-500/25"
+                  ? "bg-brand-700 text-white shadow-lg shadow-brand-900/40"
                   : "bg-dark-700 border border-dark-500 text-gray-300 hover:border-brand-500/60 hover:text-brand-300"
               }`}
             >
@@ -242,7 +242,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   onClick={() => handlePerPage(size)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                     perPage === size
-                      ? "bg-brand-500 text-white"
+                      ? "bg-brand-700 text-white"
                       : "bg-dark-700 border border-dark-500 text-slate-300 hover:border-brand-500/50 hover:text-white"
                   }`}
                 >
@@ -296,7 +296,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
               onClick={clearAll}
               className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
                 activePlatforms.length === 0
-                  ? "bg-brand-500 border-brand-500 text-white font-semibold"
+                  ? "bg-brand-700 border-brand-600 text-white font-semibold"
                   : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
               }`}
             >
@@ -311,7 +311,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   onClick={() => toggle(value)}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-all ${
                     isActive
-                      ? "bg-brand-500 border-brand-500 text-white font-semibold"
+                      ? "bg-brand-700 border-brand-600 text-white font-semibold"
                       : "bg-dark-700 border-dark-500 hover:border-brand-500 hover:text-brand-400 text-gray-300"
                   }`}
                 >

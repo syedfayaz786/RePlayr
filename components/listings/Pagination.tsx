@@ -51,7 +51,7 @@ export function Pagination({ currentPage, totalPages, searchParams }: Pagination
             <Link key={p} href={buildUrl(searchParams, p)}
               className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all ${
                 p === currentPage
-                  ? "bg-brand-500 text-white shadow-lg shadow-brand-500/25"
+                  ? "bg-brand-700 text-white shadow-lg shadow-brand-900/40"
                   : "bg-dark-700 border border-dark-500 text-gray-300 hover:border-brand-500/60 hover:text-brand-300"
               }`}>
               {p}

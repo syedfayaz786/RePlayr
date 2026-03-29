@@ -345,7 +345,7 @@ export function SearchBar() {
                   onClick={() => setMinRating(val)}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     minRating === val
-                      ? "bg-brand-500 border-brand-500 text-white"
+                      ? "bg-brand-700 border-brand-600 text-white"
                       : "bg-dark-700 border-dark-600 text-gray-400 hover:border-brand-500/50 hover:text-white"
                   }`}
                 >

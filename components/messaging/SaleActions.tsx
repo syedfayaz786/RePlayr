@@ -145,7 +145,7 @@ export function SaleActions({
           <button
             onClick={markSold}
             disabled={marking}
-            className="px-2.5 py-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+            className="px-2.5 py-1 rounded-lg bg-brand-700 hover:bg-brand-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
           >
             {marking ? "Saving…" : "Confirm"}
           </button>

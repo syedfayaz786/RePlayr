@@ -13,16 +13,16 @@ module.exports = {
       },
       colors: {
         brand: {
-          50:  '#e0fffe',
-          100: '#b3fffe',
-          200: '#80fffe',
-          300: '#4dffff',
-          400: '#1af5ff',
-          500: '#00F0FF',  // accent cyan
-          600: '#00c4d4',
-          700: '#009aab',
-          800: '#007280',
-          900: '#004d57',
+          50:  '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',  // light teal — text on dark backgrounds
+          500: '#06b6d4',  // primary interactive — readable on dark
+          600: '#0891b2',  // hover states, gradients
+          700: '#0e7490',  // deeper — active/pressed
+          800: '#155e75',  // very dark teal
+          900: '#164e63',  // darkest — gradient end
         },
         violet: {
           400: '#a78bfa',

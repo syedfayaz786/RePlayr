@@ -701,8 +701,9 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
                 </div>
               ) : (
                 <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm transition-all ${
-                  isMe ? "bg-brand-500 text-white rounded-br-sm" : "bg-dark-700 text-gray-100 rounded-bl-sm"
-                } ${isCurrentMatch ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-dark-900" : msgMatches ? "ring-1 ring-amber-400/40" : ""}`}>
+                  isMe ? "text-white rounded-br-sm" : "bg-dark-700 text-gray-100 rounded-bl-sm"
+                } ${isCurrentMatch ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-dark-900" : msgMatches ? "ring-1 ring-amber-400/40" : ""}`}
+                style={isMe ? { background: "linear-gradient(135deg, #0891b2, #0e7490)" } : undefined}>
                   <p className="whitespace-pre-wrap leading-relaxed">
                     <HighlightText text={msg.content} query={searchQuery} />
                   </p>

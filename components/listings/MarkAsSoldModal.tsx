@@ -22,7 +22,7 @@ function StrengthPicker({ selected, onChange }: { selected: string[]; onChange: 
         <button key={s} type="button" onClick={() => toggle(s)}
           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
             selected.includes(s)
-              ? "bg-brand-500 border-brand-500 text-white"
+              ? "bg-brand-700 border-brand-600 text-white"
               : "bg-dark-700 border-dark-600 text-gray-400 hover:border-brand-500/50 hover:text-white"
           }`}
         >
