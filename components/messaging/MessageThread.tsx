@@ -395,8 +395,8 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
           <ChatSafetyMenu
             partnerId={partnerId}
             partnerName={partnerName}
+            listingId={listingId}
             onBlocked={() => setIsBlocked(true)}
-            deleteButton={deleteButton}
           />
         </div>
       </div>
