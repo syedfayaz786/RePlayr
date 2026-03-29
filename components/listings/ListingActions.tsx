@@ -197,43 +197,39 @@ export function ListingActions({
         <div className="card p-4 sm:p-6 space-y-3">
           <h3 className="font-semibold text-white text-sm">Your Listing</h3>
 
-          {/* Status pill */}
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {currentStatus === "sold" ? (
+          {/* Sold pill + buyer — only shown when sold */}
+          {currentStatus === "sold" && (
+            <div className="flex items-center justify-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-green-500/15 text-green-400 border-green-500/30">
                 <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                 </svg>
                 Sold
               </span>
-            ) : (
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.pill}`}>
-                {cfg.label}
-              </span>
-            )}
-            {currentStatus === "sold" && soldOutside && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
-                <Globe className="w-3 h-3" /> Outside RePlayr
-              </span>
-            )}
-            {currentStatus === "sold" && buyer && (
-              <>
-                <span className="text-xs text-gray-500">to</span>
-                <a href={`/users/${buyer.id}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
-                  {buyer.image ? (
-                    <Image src={buyer.image} alt={buyer.name ?? ""} width={18} height={18} className="rounded-full object-cover w-[18px] h-[18px] flex-shrink-0" />
-                  ) : (
-                    <div className="w-[18px] h-[18px] rounded-full bg-brand-500/30 flex items-center justify-center text-brand-300 text-[9px] font-bold flex-shrink-0">
-                      {buyer.name?.[0]?.toUpperCase() ?? "?"}
-                    </div>
-                  )}
-                  <span className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
-                    {buyer.name ?? "buyer"}
-                  </span>
-                </a>
-              </>
-            )}
-          </div>
+              {soldOutside && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-gray-200">
+                  <Globe className="w-3 h-3" /> Outside RePlayr
+                </span>
+              )}
+              {buyer && (
+                <>
+                  <span className="text-xs text-gray-500">to</span>
+                  <a href={`/users/${buyer.id}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                    {buyer.image ? (
+                      <Image src={buyer.image} alt={buyer.name ?? ""} width={18} height={18} className="rounded-full object-cover w-[18px] h-[18px] flex-shrink-0" />
+                    ) : (
+                      <div className="w-[18px] h-[18px] rounded-full bg-brand-500/30 flex items-center justify-center text-brand-300 text-[9px] font-bold flex-shrink-0">
+                        {buyer.name?.[0]?.toUpperCase() ?? "?"}
+                      </div>
+                    )}
+                    <span className="text-xs font-medium text-white hover:text-brand-400 transition-colors">
+                      {buyer.name ?? "buyer"}
+                    </span>
+                  </a>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Action buttons by status */}
           {currentStatus === "available" && (

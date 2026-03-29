@@ -123,9 +123,9 @@ export default async function DashboardPage({
   const statCards = [
     {
       icon: Tag,
-      label: "Active",
+      label: "Available",
       value: stats.active,
-      href: "/dashboard?filter=active",
+      href: "/dashboard?filter=available",
       color: "text-brand-400",
       hoverBorder: "hover:border-brand-500/50",
       hint: "View listings →",

@@ -33,13 +33,14 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked, deleteButton
       <style>{`
         .chat-menu-trigger {
           display: flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px; border-radius: 8px; border: none;
-          cursor: pointer; color: var(--text-muted); background: transparent;
-          transition: background 160ms ease, color 160ms ease, transform 150ms ease;
+          width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+          cursor: pointer; color: var(--text-secondary); background: rgba(255,255,255,0.04);
+          transition: background 160ms ease, color 160ms ease, transform 150ms ease, border-color 160ms ease;
           outline: none;
         }
         .chat-menu-trigger:hover, .chat-menu-trigger.is-open {
-          background: rgba(255,255,255,0.07); color: #fff; transform: scale(1.08);
+          background: rgba(255,255,255,0.12); color: #fff; transform: scale(1.08);
+          border-color: rgba(255,255,255,0.2);
         }
         .chat-menu-item {
           width: 100%; display: flex; align-items: center; gap: 10px;
@@ -113,10 +114,14 @@ export function ChatSafetyMenu({ partnerId, partnerName, onBlocked, deleteButton
             {deleteButton && (
               <>
                 <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
-                <div className="chat-menu-item chat-menu-item-delete" onClick={() => setOpen(false)}>
+                <button
+                  className="chat-menu-item chat-menu-item-delete"
+                  onClick={() => setOpen(false)}
+                  style={{ width: "100%", textAlign: "left" }}
+                >
                   <Trash2 className="w-3.5 h-3.5 menu-icon" style={{ color: "#ef4444" }} />
                   {deleteButton}
-                </div>
+                </button>
               </>
             )}
           </div>

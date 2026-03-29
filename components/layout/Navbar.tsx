@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { Gamepad2, Heart, MessageSquare, Plus, User, LogOut, Menu, X, ChevronDown, LayoutDashboard, ShieldOff } from "lucide-react";
+import { Gamepad2, Heart, MessageSquare, Plus, User, LogOut, Menu, X, ChevronDown, LayoutDashboard, ShieldOff, Home } from "lucide-react";
 import Image from "next/image";
 
 function useUnreadCount(enabled: boolean) {
@@ -57,7 +57,8 @@ export function Navbar() {
             ) : session ? (
               <>
                 {[
-                  { href:"/wishlist",  Icon:Heart,          label:"Wishlist" },
+                  { href:"/",          Icon:Home,           label:"Home"       },
+                  { href:"/wishlist",  Icon:Heart,          label:"Wishlist"   },
                   { href:"/dashboard", Icon:LayoutDashboard, label:"My Listings" },
                 ].map(({ href, Icon, label }) => (
                   <Link key={href} href={href} className="btn-ghost flex items-center gap-2 text-sm">
@@ -182,10 +183,11 @@ export function Navbar() {
                 <Plus className="w-4 h-4" />Sell a Game
               </Link>
               {[
-                { href:"/wishlist",  Icon:Heart,           label:"Wishlist" },
+                { href:"/",          Icon:Home,            label:"Home"        },
+                { href:"/wishlist",  Icon:Heart,           label:"Wishlist"    },
                 { href:"/messages",  Icon:MessageSquare,   label:"Messages",   badge:unread },
                 { href:"/dashboard", Icon:LayoutDashboard, label:"My Listings" },
-                { href:"/profile",   Icon:User,            label:"Profile" },
+                { href:"/profile",   Icon:User,            label:"Profile"     },
               ].map(({ href, Icon, label, badge }) => (
                 <Link key={href} href={href}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150"
