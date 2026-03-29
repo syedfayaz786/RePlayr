@@ -339,13 +339,6 @@ export function ListingActions({
   return (
     <>
       <div className="card p-4 sm:p-6 space-y-3">
-        {/* Status pill */}
-        <div className="flex items-center justify-center">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${buyerCfg.pill}`}>
-            {buyerCfg.label}
-          </span>
-        </div>
-
         {isSold ? (
           <div className="bg-dark-700 rounded-xl p-4 text-center text-gray-400 text-sm">
             This listing is no longer available
