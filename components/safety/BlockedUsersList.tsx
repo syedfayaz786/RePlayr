@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShieldOff, ShieldCheck, UserX } from "lucide-react";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import toast from "react-hot-toast";
 
 interface BlockedUser {
@@ -20,9 +21,11 @@ interface Props {
 export function BlockedUsersList({ initialUsers }: Props) {
   const [users, setUsers] = useState(initialUsers);
   const [unblocking, setUnblocking] = useState<string | null>(null);
+  const [unblockError, setUnblockError] = useState("");
 
   const handleUnblock = async (userId: string, userName: string | null) => {
     setUnblocking(userId);
+    setUnblockError("");
     try {
       const res = await fetch("/api/blocks", {
         method: "DELETE",
@@ -33,7 +36,7 @@ export function BlockedUsersList({ initialUsers }: Props) {
       setUsers(prev => prev.filter(u => u.id !== userId));
       toast.success(`${userName ?? "User"} unblocked`);
     } catch {
-      toast.error("Failed to unblock user");
+      setUnblockError("Failed to unblock user. Please try again.");
     } finally {
       setUnblocking(null);
     }
@@ -55,6 +58,11 @@ export function BlockedUsersList({ initialUsers }: Props) {
 
   return (
     <div className="space-y-2">
+      {unblockError && (
+        <div className="mb-2">
+          <ErrorBanner message={unblockError} onDismiss={() => setUnblockError("")} />
+        </div>
+      )}
       {users.map(user => (
         <div key={user.id}
           className="flex items-center gap-4 px-4 py-3 rounded-xl transition-colors duration-150"

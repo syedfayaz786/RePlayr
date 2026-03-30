@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, DollarSign, Loader2, Copy, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import { PLATFORMS } from "@/lib/utils";
 import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 
@@ -54,6 +55,8 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
   });
   const [images, setImages]   = useState<string[]>(initialImages);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
   const [imgIdx, setImgIdx]   = useState(0);
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -65,7 +68,7 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (images.length + files.length > 6) { toast.error("Max 6 images"); return; }
+    if (images.length + files.length > 6) { setError("Maximum 6 images allowed"); return; }
     for (const file of files) {
       const fd = new FormData();
       fd.append("file", file);
@@ -73,38 +76,35 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
         const res = await fetch("/api/upload", { method: "POST", body: fd });
         const { url } = await res.json();
         if (url) setImages((imgs) => [...imgs, url]);
-      } catch { toast.error("Upload failed"); }
+      } catch { setError("Image upload failed. Please try again."); }
     }
     e.target.value = "";
   };
 
   const submit = async () => {
-    if (!form.title.trim()) { toast.error("Title is required"); return; }
-    if (!form.price || isNaN(parseFloat(form.price))) { toast.error("Enter a valid price"); return; }
-    if (!form.platform) { toast.error("Select a platform"); return; }
-    if (!form.condition) { toast.error("Select a condition"); return; }
+    setFieldError("");
+    setError("");
+    if (!form.title.trim()) { setFieldError("Title is required"); return; }
+    if (!form.price || isNaN(parseFloat(form.price))) { setFieldError("Enter a valid price"); return; }
+    if (!form.platform) { setFieldError("Select a platform"); return; }
+    if (!form.condition) { setFieldError("Select a condition"); return; }
 
     setLoading(true);
     try {
       const res = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          price:  parseFloat(form.price),
-          images: images,
-        }),
+        body: JSON.stringify({ ...form, price: parseFloat(form.price), images }),
       });
       const data = await res.json();
       if (res.ok) {
         toast.success("Listing created!");
-        // Navigate first, onClose will unmount the modal naturally via parent re-render
         router.push(`/listings/${data.id}`);
         onClose();
       } else {
-        toast.error(data.error ?? "Failed to create listing");
+        setError(data.error ?? "Failed to create listing. Please try again.");
       }
-    } catch { toast.error("Something went wrong"); }
+    } catch { setError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
   };
 
@@ -245,6 +245,13 @@ export function RelistModal({ listingData, onClose }: RelistModalProps) {
           </div>
 
         </div>
+
+        {/* Inline errors */}
+        {(fieldError || error) && (
+          <div className="px-5 pb-2">
+            <ErrorBanner message={fieldError || error} onDismiss={() => { setFieldError(""); setError(""); }} />
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex gap-3 p-5 border-t border-dark-600 flex-shrink-0">

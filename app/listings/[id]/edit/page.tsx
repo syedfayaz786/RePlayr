@@ -1,7 +1,6 @@
 "use client";
 
 import { PhotoEditor } from "@/components/ui/PhotoEditor";
-
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
@@ -9,8 +8,9 @@ import { Navbar } from "@/components/layout/Navbar";
 import { LocationInput, LocationResult } from "@/components/ui/LocationInput";
 import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { PLATFORMS } from "@/lib/utils";
-import { Upload, X, DollarSign, Trash2, Gamepad2, Loader2 } from "lucide-react";
+import { Upload, X, DollarSign, Trash2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import { PageHeader } from "@/components/layout/PageHeader";
 import Link from "next/link";
 
@@ -25,7 +25,6 @@ export default function EditListingPage() {
   const params = useParams();
   const id = params.id as string;
 
-  // ALL hooks declared before any conditional returns — React rules of hooks
   const [fetching,          setFetching]          = useState(true);
   const [saving,            setSaving]            = useState(false);
   const [deleting,          setDeleting]          = useState(false);
@@ -34,6 +33,9 @@ export default function EditListingPage() {
   const [uploadingImages,   setUploadingImages]   = useState(false);
   const [editingPhoto,      setEditingPhoto]      = useState<string | null>(null);
   const [images,            setImages]            = useState<string[]>([]);
+  const [formError,         setFormError]         = useState("");
+  const [uploadError,       setUploadError]       = useState("");
+  const [deleteError,       setDeleteError]       = useState("");
   const [form, setForm] = useState({
     title: "", description: "", price: "", platform: "",
     edition: "", condition: "", location: "", latitude: "",
@@ -45,7 +47,7 @@ export default function EditListingPage() {
     fetch(`/api/listings/${id}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.error) { toast.error("Listing not found"); router.push("/"); return; }
+        if (data.error) { router.push("/"); return; }
         setForm({
           title:         data.title        ?? "",
           description:   data.description  ?? "",
@@ -60,11 +62,10 @@ export default function EditListingPage() {
         });
         try { setImages(JSON.parse(data.images ?? "[]")); } catch { setImages([]); }
       })
-      .catch(() => toast.error("Failed to load listing"))
+      .catch(() => setFormError("Failed to load listing. Please refresh."))
       .finally(() => setFetching(false));
   }, [id, router]);
 
-  // Conditional renders come AFTER all hooks
   if (status === "loading" || fetching) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -76,10 +77,7 @@ export default function EditListingPage() {
     );
   }
 
-  if (!session) {
-    router.push("/auth/login");
-    return null;
-  }
+  if (!session) { router.push("/auth/login"); return null; }
 
   const handleLocationChange = (display: string, result?: LocationResult) => {
     setLocationValid(!!result);
@@ -94,6 +92,7 @@ export default function EditListingPage() {
   const uploadEditedPhoto = async (dataUrl: string) => {
     setEditingPhoto(null);
     setUploadingImages(true);
+    setUploadError("");
     try {
       const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -108,13 +107,13 @@ export default function EditListingPage() {
           const url    = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
           setImages((prev) => [...prev, url]);
         } else {
-          toast.error("Image upload failed");
+          setUploadError("Image upload failed. Please try again.");
         }
       } else {
         setImages((prev) => [...prev, dataUrl]);
       }
     } catch {
-      toast.error("Failed to upload image");
+      setUploadError("Failed to upload image. Please try again.");
     } finally {
       setUploadingImages(false);
     }
@@ -129,44 +128,36 @@ export default function EditListingPage() {
       e.target.value = "";
       return;
     }
-    if (images.length + files.length > 6) { toast.error("Maximum 6 images"); return; }
-
+    if (images.length + files.length > 6) { setUploadError("Maximum 6 images allowed"); return; }
     setUploadingImages(true);
     const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
     try {
       for (const file of files) {
         if (cloudName && uploadPreset) {
-          // Upload directly from browser to Cloudinary — no server round-trip, full quality
           const fd = new FormData();
           fd.append("file", file);
           fd.append("upload_preset", uploadPreset);
           fd.append("folder", "replayr/listings");
-          const res = await fetch(
-            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-            { method: "POST", body: fd }
-          );
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: fd });
           if (res.ok) {
             const result = await res.json();
             const url = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
             setImages((prev) => [...prev, url]);
           } else {
-            toast.error("Image upload failed");
+            setUploadError("Image upload failed. Please try again.");
           }
         } else {
-          // Fallback to base64 if Cloudinary not configured
           const base64 = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onload = (ev) => resolve(ev.target?.result as string);
             reader.readAsDataURL(file);
           });
           setImages((prev) => [...prev, base64]);
-          toast.error("Cloudinary not configured — image stored locally (lower quality)");
         }
       }
     } catch {
-      toast.error("Failed to upload image");
+      setUploadError("Failed to upload image. Please try again.");
     } finally {
       setUploadingImages(false);
     }
@@ -174,10 +165,11 @@ export default function EditListingPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.platform)  { toast.error("Please select a platform"); return; }
-    if (!form.condition) { toast.error("Please select a condition"); return; }
+    setFormError("");
+    if (!form.platform)  { setFormError("Please select a platform"); return; }
+    if (!form.condition) { setFormError("Please select a condition"); return; }
     if (!form.location || !locationValid) {
-      toast.error("Please select a valid location from the suggestions");
+      setFormError("Please select a valid location from the suggestions");
       return;
     }
     setSaving(true);
@@ -192,7 +184,7 @@ export default function EditListingPage() {
       toast.success("Listing updated!");
       router.push(`/listings/${id}`);
     } catch (err: any) {
-      toast.error(err.message ?? "Failed to save changes");
+      setFormError(err.message ?? "Failed to save changes. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -200,28 +192,24 @@ export default function EditListingPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError("");
     try {
       const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       toast.success("Listing deleted");
       router.push("/dashboard");
     } catch {
-      toast.error("Failed to delete listing");
+      setDeleteError("Failed to delete listing. Please try again.");
       setDeleting(false);
     }
   };
 
   const selectedPlatformConfig = form.platform ? PLATFORM_CONFIG[form.platform] : null;
-  const PlatformLogo = selectedPlatformConfig?.Logo;
 
   return (
     <div className="min-h-screen flex flex-col">
       {editingPhoto && (
-        <PhotoEditor
-          src={editingPhoto}
-          onSave={uploadEditedPhoto}
-          onCancel={() => setEditingPhoto(null)}
-        />
+        <PhotoEditor src={editingPhoto} onSave={uploadEditedPhoto} onCancel={() => setEditingPhoto(null)} />
       )}
       <Navbar />
       <PageHeader crumbs={[{ label: "Edit Listing" }]} />
@@ -232,10 +220,8 @@ export default function EditListingPage() {
             <h1 className="font-display text-3xl font-bold text-white mb-1">Edit Listing</h1>
             <p className="text-gray-400 text-sm">Make changes and save to update your listing</p>
           </div>
-          <button
-            type="button" onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
-          >
+          <button type="button" onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium">
             <Trash2 className="w-4 h-4" /> Delete
           </button>
         </div>
@@ -247,6 +233,11 @@ export default function EditListingPage() {
             <h3 className="font-semibold text-white mb-4">
               Photos <span className="text-gray-500 font-normal text-sm ml-2">({images.length}/6)</span>
             </h3>
+            {uploadError && (
+              <div className="mb-3">
+                <ErrorBanner message={uploadError} onDismiss={() => setUploadError("")} />
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-3">
               {images.map((img, i) => (
                 <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-dark-700">
@@ -384,6 +375,10 @@ export default function EditListingPage() {
             </div>
           </div>
 
+          {formError && (
+            <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
+          )}
+
           <div className="flex gap-3 pb-10">
             <Link href={`/listings/${id}`} className="btn-secondary flex-1 text-center">Cancel</Link>
             <button type="submit" disabled={saving || !locationValid || uploadingImages}
@@ -401,9 +396,14 @@ export default function EditListingPage() {
               <Trash2 className="w-6 h-6 text-red-400" />
             </div>
             <h3 className="font-display font-bold text-white text-xl text-center mb-2">Delete listing?</h3>
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-gray-400 text-sm text-center mb-4">
               This will permanently remove <span className="text-white font-medium">{form.title}</span> and cannot be undone.
             </p>
+            {deleteError && (
+              <div className="mb-4">
+                <ErrorBanner message={deleteError} onDismiss={() => setDeleteError("")} />
+              </div>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary flex-1">Cancel</button>
               <button onClick={handleDelete} disabled={deleting}

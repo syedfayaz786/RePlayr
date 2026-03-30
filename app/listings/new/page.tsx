@@ -11,6 +11,7 @@ import { PLATFORMS } from "@/lib/utils";
 import { PLATFORM_CONFIG } from "@/components/ui/Badges";
 import { LocationInput, LocationResult } from "@/components/ui/LocationInput";
 import toast from "react-hot-toast";
+import { ErrorBanner, FieldError } from "@/components/ui/InlineError";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import dynamic from "next/dynamic";
@@ -65,16 +66,14 @@ export default function NewListingPage() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<string | null>(null); // raw file data URI pending edit
 
-  // Opens the photo editor for the first file; uploads happen after editing
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (images.length + files.length > 6) { toast.error("Maximum 6 images allowed"); return; }
-    // Load first file into editor; queue the rest for sequential editing
+    if (images.length + files.length > 6) { setUploadError("Maximum 6 images allowed"); return; }
     if (files.length > 0) {
       const reader = new FileReader();
       reader.onload = (ev) => setEditingPhoto(ev.target?.result as string);
       reader.readAsDataURL(files[0]);
-      e.target.value = ""; // reset input
+      e.target.value = "";
       return;
     }
 
@@ -85,7 +84,6 @@ export default function NewListingPage() {
     try {
       for (const file of files) {
         if (cloudName && uploadPreset) {
-          // Upload directly from browser to Cloudinary — no server roundtrip, zero quality loss
           const fd = new FormData();
           fd.append("file", file);
           fd.append("upload_preset", uploadPreset);
@@ -96,25 +94,22 @@ export default function NewListingPage() {
           );
           if (res.ok) {
             const result = await res.json();
-            // q_auto:best = highest quality, f_auto = best format for browser
             const url = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
             setImages((p) => [...p, url]);
           } else {
-            toast.error("Image upload failed");
+            setUploadError("Image upload failed. Please try again.");
           }
         } else {
-          // Fallback: base64 (lower quality, works without Cloudinary)
           const base64 = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onload = (ev) => resolve(ev.target?.result as string);
             reader.readAsDataURL(file);
           });
           setImages((p) => [...p, base64]);
-          toast.error("Cloudinary not configured — image stored locally (lower quality)");
         }
       }
     } catch {
-      toast.error("Failed to upload image");
+      setUploadError("Failed to upload image. Please try again.");
     } finally {
       setUploadingImages(false);
     }
@@ -122,6 +117,8 @@ export default function NewListingPage() {
 
   // true only when user picked a result from the dropdown (has real coords)
   const [locationValid, setLocationValid] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [uploadError, setUploadError] = useState("");
 
   const handleLocationChange = (display: string, result?: LocationResult) => {
     // Apply same fuzzy offset as server does (±500m), purely for preview
@@ -139,9 +136,10 @@ export default function NewListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.platform)  { toast.error("Please select a platform");  return; }
-    if (!form.condition) { toast.error("Please select a condition");  return; }
-    if (!form.location || !locationValid) { toast.error("Please select a valid location from the suggestions"); return; }
+    setFormError("");
+    if (!form.platform)  { setFormError("Please select a platform"); return; }
+    if (!form.condition) { setFormError("Please select a condition"); return; }
+    if (!form.location || !locationValid) { setFormError("Please select a valid location from the suggestions"); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/listings", {
@@ -154,7 +152,7 @@ export default function NewListingPage() {
       toast.success("Listing posted!");
       router.push(`/listings/${data.id}`);
     } catch (err: any) {
-      toast.error(err.message ?? "Failed to post listing");
+      setFormError(err.message ?? "Failed to post listing. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -164,7 +162,6 @@ export default function NewListingPage() {
   const PlatformLogo   = platformConfig?.Logo;
   const steps = ["Game Info", "Condition & Photos", "Price & Location"];
 
-  // Called when editor saves — uploads the cropped image
   const uploadEditedPhoto = async (dataUrl: string) => {
     setEditingPhoto(null);
     setUploadingImages(true);
@@ -182,13 +179,13 @@ export default function NewListingPage() {
           const url    = result.secure_url.replace("/upload/", "/upload/q_auto:best,f_auto/");
           setImages((prev) => [...prev, url]);
         } else {
-          toast.error("Image upload failed");
+          setUploadError("Image upload failed. Please try again.");
         }
       } else {
         setImages((prev) => [...prev, dataUrl]);
       }
     } catch {
-      toast.error("Failed to upload image");
+      setUploadError("Failed to upload image. Please try again.");
     } finally {
       setUploadingImages(false);
     }
@@ -269,9 +266,11 @@ export default function NewListingPage() {
                   placeholder="Describe condition, included DLC, reason for selling…" rows={4} className="input-base resize-none" />
               </div>
             </div>
+            {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
             <button type="button" onClick={() => {
-              if (!form.title) { toast.error("Please enter a game title"); return; }
-              if (!form.platform) { toast.error("Please select a platform"); return; }
+              setFormError("");
+              if (!form.title) { setFormError("Please enter a game title"); return; }
+              if (!form.platform) { setFormError("Please select a platform"); return; }
               setStep(2);
             }} className="btn-primary w-full">Continue →</button>
           </>)}
@@ -330,10 +329,14 @@ export default function NewListingPage() {
                 <p className="text-xs text-gray-500 mt-2">First photo will be the cover image shown in search.</p>
               </div>
             </div>
+            {(uploadError || formError) && (
+              <ErrorBanner message={uploadError || formError} onDismiss={() => { setUploadError(""); setFormError(""); }} />
+            )}
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">← Back</button>
               <button type="button" onClick={() => {
-                if (!form.condition) { toast.error("Please select a condition"); return; }
+                setFormError("");
+                if (!form.condition) { setFormError("Please select a condition"); return; }
                 setStep(3);
               }} className="btn-primary flex-[2]">Continue →</button>
             </div>
@@ -409,6 +412,7 @@ export default function NewListingPage() {
                 </div>
               )}
             </div>
+            {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
             <div className="flex gap-3 pb-10">
               <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
               <button type="submit" disabled={loading || !form.price || !form.location || !locationValid} className="btn-primary flex-[2]">

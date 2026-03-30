@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { User, MapPin, Save, Star, Camera, Loader2, X, Check, ZoomIn, ZoomOut } from "lucide-react";
 import toast from "react-hot-toast";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -198,6 +199,8 @@ export default function ProfilePage() {
   const [image, setImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [reviews, setReviews] = useState<any[]>([]);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -246,7 +249,7 @@ export default function ProfilePage() {
       setImage(url);
     } catch (err: any) {
       console.error("Avatar upload error:", err);
-      toast.error(err?.message ?? "Failed to upload photo");
+      setPhotoError(err?.message ?? "Failed to upload photo. Please try again.");
     } finally {
       setUploadingAvatar(false);
     }
@@ -254,6 +257,7 @@ export default function ProfilePage() {
 
   const saveProfile = async () => {
     setSaving(true);
+    setSaveError("");
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
@@ -263,7 +267,12 @@ export default function ProfilePage() {
       if (res.ok) {
         await update({ name, image });
         toast.success("Profile saved!");
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setSaveError(d?.error ?? "Failed to save profile. Please try again.");
       }
+    } catch {
+      setSaveError("Failed to save profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -395,6 +404,12 @@ export default function ProfilePage() {
                     className="input-base resize-none"
                   />
                 </div>
+                {(photoError || saveError) && (
+                  <ErrorBanner
+                    message={photoError || saveError}
+                    onDismiss={() => { setPhotoError(""); setSaveError(""); }}
+                  />
+                )}
                 <button
                   onClick={saveProfile}
                   disabled={saving || uploadingAvatar}

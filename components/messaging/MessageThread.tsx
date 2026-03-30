@@ -6,6 +6,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import { MutualRatingCard } from "@/components/messaging/MutualRatingCard";
 import { SoldToBuyerButton } from "@/components/messaging/SoldToBuyerButton";
 import { PendingToBuyerButton } from "@/components/messaging/PendingToBuyerButton";
@@ -124,6 +125,7 @@ export function MessageThread({
     listingStatus === "active" ? "available" : (listingStatus ?? "available")
   );
   const [isBlocked, setIsBlocked] = useState(false);
+  const [sendError, setSendError] = useState("");
   const [blockedBy, setBlockedBy] = useState(false);
 
   // Check block status on mount
@@ -361,7 +363,7 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
       const saved = await res.json();
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...saved, createdAt: saved.createdAt } : m));
     } catch {
-      toast.error("Failed to send");
+      setSendError("Failed to send message. Please try again.");
       setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
     } finally {
       setSending(false);
@@ -734,6 +736,11 @@ const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
 
       {/* ── Input ── */}
       <div className="p-3 border-t border-dark-600 flex-shrink-0 relative">
+        {sendError && (
+          <div className="mb-2">
+            <ErrorBanner message={sendError} onDismiss={() => setSendError("")} />
+          </div>
+        )}
         {(isBlocked || blockedBy) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 rounded-b-2xl"
             style={{background: "rgba(8,9,16,0.92)", backdropFilter: "blur(4px)"}}>
