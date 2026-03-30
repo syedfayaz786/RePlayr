@@ -16,6 +16,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  providers     String[]  @default([])   // e.g. ["email", "google", "facebook"]
   bio           String?
   location      String?
   createdAt     DateTime  @default(now())

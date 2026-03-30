@@ -14,15 +14,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
     if (existing) {
-      return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+      // Tell the frontend which providers this account already uses
+      const hasSocial = existing.providers.some((p) => p === "google" || p === "facebook");
+      const hasEmail  = existing.providers.includes("email");
+
+      if (hasSocial && !hasEmail) {
+        // Social-only — block email signup, surface provider list
+        const socialList = existing.providers
+          .filter((p) => p !== "email")
+          .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+          .join(" or ");
+        return NextResponse.json(
+          {
+            error:     `An account with this email already exists. Please sign in with ${socialList}.`,
+            code:      "SOCIAL_ACCOUNT_EXISTS",
+            providers: existing.providers,
+          },
+          { status: 409 }
+        );
+      }
+
+      // Email already registered
+      return NextResponse.json(
+        { error: "An account with this email already exists. Please sign in.", code: "EMAIL_EXISTS" },
+        { status: 409 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: {
+        name,
+        email:     normalizedEmail,
+        password:  hashedPassword,
+        providers: ["email"],
+      },
     });
 
     return NextResponse.json({ id: user.id, email: user.email, name: user.name });

@@ -2,14 +2,15 @@
 
 import { Navbar } from "@/components/layout/Navbar";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { User, MapPin, Save, Star, Camera, Loader2, X, Check, ZoomIn, ZoomOut } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { User, MapPin, Save, Star, Camera, Loader2, X, Check, ZoomIn, ZoomOut, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { ErrorBanner } from "@/components/ui/InlineError";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewsTabs } from "@/components/ui/ReviewsTabs";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AvatarPickerModal } from "@/components/ui/AvatarPickerModal";
+import { SetPasswordForm } from "@/components/ui/SetPasswordForm";
 import Image from "next/image";
 
 // ── Avatar Crop Modal ──────────────────────────────────────────────────────────
@@ -22,26 +23,23 @@ function AvatarCropModal({
   onConfirm: (croppedDataUrl: string) => void;
   onCancel: () => void;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const imgRef       = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [scale, setScale] = useState(1);
-  const [dragging, setDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [offset,        setOffset]        = useState({ x: 0, y: 0 });
+  const [scale,         setScale]         = useState(1);
+  const [dragging,      setDragging]      = useState(false);
+  const [dragStart,     setDragStart]     = useState({ x: 0, y: 0 });
+  const [imgLoaded,     setImgLoaded]     = useState(false);
 
-  const PREVIEW_SIZE = 280; // px — the circular viewport
+  const PREVIEW_SIZE = 280;
 
-  // Load image, compute initial scale to fill the circle
   useEffect(() => {
     const img = new window.Image();
     img.onload = () => {
       imgRef.current = img;
-      setImgNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
-      const shorter = Math.min(img.naturalWidth, img.naturalHeight);
+      const shorter      = Math.min(img.naturalWidth, img.naturalHeight);
       const initialScale = PREVIEW_SIZE / shorter;
       setScale(initialScale);
       setOffset({ x: 0, y: 0 });
@@ -50,20 +48,17 @@ function AvatarCropModal({
     img.src = src;
   }, [src]);
 
-  // Draw onto the preview canvas
   useEffect(() => {
     if (!imgLoaded || !imgRef.current || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d")!;
-    canvas.width = PREVIEW_SIZE;
+    const ctx    = canvas.getContext("2d")!;
+    canvas.width  = PREVIEW_SIZE;
     canvas.height = PREVIEW_SIZE;
-
-    const img = imgRef.current;
-    const drawW = img.naturalWidth * scale;
+    const img   = imgRef.current;
+    const drawW = img.naturalWidth  * scale;
     const drawH = img.naturalHeight * scale;
-    const x = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
-    const y = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
-
+    const x     = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
+    const y     = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
     ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
     ctx.drawImage(img, x, y, drawW, drawH);
   }, [imgLoaded, offset, scale]);
@@ -96,16 +91,15 @@ function AvatarCropModal({
 
   const handleConfirm = () => {
     if (!canvasRef.current) return;
-    // Render final 400×400 crop
     const out = document.createElement("canvas");
-    out.width = 400;
+    out.width  = 400;
     out.height = 400;
-    const ctx = out.getContext("2d")!;
-    const img = imgRef.current!;
-    const drawW = img.naturalWidth * scale;
+    const ctx   = out.getContext("2d")!;
+    const img   = imgRef.current!;
+    const drawW = img.naturalWidth  * scale;
     const drawH = img.naturalHeight * scale;
-    const x = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
-    const y = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
+    const x     = PREVIEW_SIZE / 2 - drawW / 2 + offset.x;
+    const y     = PREVIEW_SIZE / 2 - drawH / 2 + offset.y;
     const factor = 400 / PREVIEW_SIZE;
     ctx.drawImage(img, x * factor, y * factor, drawW * factor, drawH * factor);
     onConfirm(out.toDataURL("image/jpeg", 0.92));
@@ -120,10 +114,8 @@ function AvatarCropModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-
         <p className="text-xs text-gray-400 -mt-2">Drag to reposition · Scroll to zoom</p>
 
-        {/* Circular crop viewport */}
         <div
           ref={containerRef}
           className="relative select-none rounded-full ring-2 ring-brand-500/60 overflow-hidden"
@@ -137,15 +129,9 @@ function AvatarCropModal({
           onTouchEnd={() => setDragging(false)}
           onWheel={onWheel}
         >
-          <canvas
-            ref={canvasRef}
-            width={PREVIEW_SIZE}
-            height={PREVIEW_SIZE}
-            style={{ display: "block" }}
-          />
+          <canvas ref={canvasRef} width={PREVIEW_SIZE} height={PREVIEW_SIZE} style={{ display: "block" }} />
         </div>
 
-        {/* Zoom controls */}
         <div className="flex items-center gap-3 w-full">
           <button
             onClick={() => setScale((s) => Math.max(0.1, s - 0.1))}
@@ -154,11 +140,7 @@ function AvatarCropModal({
             <ZoomOut className="w-4 h-4" />
           </button>
           <input
-            type="range"
-            min={0.1}
-            max={5}
-            step={0.01}
-            value={scale}
+            type="range" min={0.1} max={5} step={0.01} value={scale}
             onChange={(e) => setScale(parseFloat(e.target.value))}
             className="flex-1 accent-brand-500"
           />
@@ -181,8 +163,7 @@ function AvatarCropModal({
             onClick={handleConfirm}
             className="flex-1 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-600 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
           >
-            <Check className="w-4 h-4" />
-            Apply
+            <Check className="w-4 h-4" /> Apply
           </button>
         </div>
       </div>
@@ -193,53 +174,53 @@ function AvatarCropModal({
 // ── Profile Page ───────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { data: session, update } = useSession();
-  const [name, setName] = useState(session?.user?.name ?? "");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
-  const [image, setImage] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+
+  const [name,            setName]            = useState(session?.user?.name ?? "");
+  const [bio,             setBio]             = useState("");
+  const [location,        setLocation]        = useState("");
+  const [image,           setImage]           = useState<string | null>(null);
+  const [hasPassword,     setHasPassword]     = useState(false);
+  const [saving,          setSaving]          = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [photoError, setPhotoError] = useState("");
-  const [saveError, setSaveError] = useState("");
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoError,      setPhotoError]      = useState("");
+  const [saveError,       setSaveError]       = useState("");
+  const [reviews,         setReviews]         = useState<any[]>([]);
+  const [cropSrc,         setCropSrc]         = useState<string | null>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (session) {
       fetch("/api/profile")
         .then((r) => r.json())
         .then((data) => {
-          setName(data.name ?? "");
-          setBio(data.bio ?? "");
+          setName(data.name         ?? "");
+          setBio(data.bio           ?? "");
           setLocation(data.location ?? "");
-          setImage(data.image ?? null);
+          setImage(data.image       ?? null);
+          setHasPassword(!!data.password);
           setReviews(data.reviewsReceived ?? []);
         });
     }
   }, [session]);
 
-  // Step 1: file picked → open crop modal
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => setCropSrc(reader.result as string);
     reader.readAsDataURL(file);
-    // reset so same file can be re-picked
     e.target.value = "";
   };
 
-  // Step 2: crop confirmed → upload cropped canvas data URL
   const handleCropConfirm = async (croppedDataUrl: string) => {
     setCropSrc(null);
     setUploadingAvatar(true);
     try {
       const res = await fetch("/api/upload", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: croppedDataUrl, filename: "avatar.jpg", folder: "replayr/avatars" }),
+        body:    JSON.stringify({ data: croppedDataUrl, filename: "avatar.jpg", folder: "replayr/avatars" }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -248,7 +229,6 @@ export default function ProfilePage() {
       const { url } = await res.json();
       setImage(url);
     } catch (err: any) {
-      console.error("Avatar upload error:", err);
       setPhotoError(err?.message ?? "Failed to upload photo. Please try again.");
     } finally {
       setUploadingAvatar(false);
@@ -260,9 +240,9 @@ export default function ProfilePage() {
     setSaveError("");
     try {
       const res = await fetch("/api/profile", {
-        method: "PATCH",
+        method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, bio, location, image }),
+        body:    JSON.stringify({ name, bio, location, image }),
       });
       if (res.ok) {
         await update({ name, image });
@@ -280,20 +260,19 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  const avgRating = reviews.length
+  const avgRating  = reviews.length
     ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length
     : 0;
-
   const displayImage = image ?? session.user?.image;
+
+  // Which providers are linked (from JWT)
+  const providers: string[] = (session.user as any)?.providers ?? [];
+  const hasSocial = providers.some((p) => p === "google" || p === "facebook");
 
   return (
     <div className="min-h-screen flex flex-col">
       {cropSrc && (
-        <AvatarCropModal
-          src={cropSrc}
-          onConfirm={handleCropConfirm}
-          onCancel={() => setCropSrc(null)}
-        />
+        <AvatarCropModal src={cropSrc} onConfirm={handleCropConfirm} onCancel={() => setCropSrc(null)} />
       )}
       {showAvatarPicker && (
         <AvatarPickerModal
@@ -302,127 +281,176 @@ export default function ProfilePage() {
           onClose={() => setShowAvatarPicker(false)}
         />
       )}
+
       <Navbar />
       <PageHeader crumbs={[{ label: "My Profile" }]} />
+
       <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-8 w-full py-8">
         <div className="flex flex-col gap-6">
-          {/* Profile card */}
-          <div className="space-y-4">
-            <div className="card p-6">
-              <div className="flex flex-col items-center text-center mb-6">
-                {/* Avatar with upload button */}
-                <div className="relative mb-3">
-                  {displayImage ? (
-                    displayImage.startsWith("data:") ? (
-                      <img src={displayImage} alt={name ?? ""} className="rounded-full object-cover w-20 h-20" />
-                    ) : (
-                      <Image
-                        src={displayImage}
-                        alt={name ?? ""}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover w-20 h-20"
-                      />
-                    )
+
+          {/* ── Profile info card ── */}
+          <div className="card p-6">
+            {/* Avatar */}
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="relative mb-3">
+                {displayImage ? (
+                  displayImage.startsWith("data:") ? (
+                    <img src={displayImage} alt={name ?? ""} className="rounded-full object-cover w-20 h-20" />
                   ) : (
-                    <div className="w-20 h-20 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-3xl">
-                      {name?.[0]?.toUpperCase() ?? "?"}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingAvatar}
-                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-500 hover:bg-brand-400 rounded-full flex items-center justify-center transition-colors shadow-lg"
-                    title="Upload photo"
-                  >
-                    {uploadingAvatar ? (
-                      <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                    ) : (
-                      <Camera className="w-3.5 h-3.5 text-white" />
-                    )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.avif"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
+                    <Image src={displayImage} alt={name ?? ""} width={80} height={80} className="rounded-full object-cover w-20 h-20" />
+                  )
+                ) : (
+                  <div className="w-20 h-20 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 font-bold text-3xl">
+                    {name?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                )}
                 <button
-                  onClick={() => setShowAvatarPicker(true)}
-                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors mt-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-500 hover:bg-brand-400 rounded-full flex items-center justify-center transition-colors shadow-lg"
+                  title="Upload photo"
                 >
-                  Choose avatar
+                  {uploadingAvatar
+                    ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                    : <Camera className="w-3.5 h-3.5 text-white" />}
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.avif"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+              <button
+                onClick={() => setShowAvatarPicker(true)}
+                className="text-xs text-brand-400 hover:text-brand-300 transition-colors mt-1"
+              >
+                Choose avatar
+              </button>
+              <h2 className="font-semibold text-white text-lg mt-2">{session.user?.name}</h2>
+              <p className="text-gray-400 text-sm">{session.user?.email}</p>
 
-                <h2 className="font-semibold text-white text-lg">{session.user?.name}</h2>
-                <p className="text-gray-400 text-sm">{session.user?.email}</p>
-                {reviews.length > 0 && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <StarRating rating={Math.round(avgRating)} size="sm" />
-                    <span className="text-xs text-gray-400">
-                      {avgRating.toFixed(1)} ({reviews.length})
+              {/* Connected providers pill */}
+              {providers.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
+                  {providers.map((p) => (
+                    <span
+                      key={p}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
+                      style={{
+                        background: p === "google"   ? "rgba(66,133,244,0.15)"
+                                  : p === "facebook" ? "rgba(24,119,242,0.15)"
+                                  : "rgba(6,182,212,0.12)",
+                        color:      p === "google"   ? "#4285F4"
+                                  : p === "facebook" ? "#1877F2"
+                                  : "var(--accent)",
+                        border: `1px solid ${
+                                    p === "google"   ? "rgba(66,133,244,0.3)"
+                                  : p === "facebook" ? "rgba(24,119,242,0.3)"
+                                  : "rgba(6,182,212,0.25)"
+                                }`,
+                      }}
+                    >
+                      {p}
                     </span>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <StarRating rating={Math.round(avgRating)} size="sm" />
+                  <span className="text-xs text-gray-400">
+                    {avgRating.toFixed(1)} ({reviews.length})
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Form fields */}
+            <div className="space-y-4">
+              <div>
+                <label className="label-base">Display Name</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="input-base pl-11"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="label-base">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. Toronto, ON"
+                    className="input-base pl-11"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="label-base">Bio</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Tell other gamers about yourself..."
+                  rows={3}
+                  className="input-base resize-none"
+                />
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="label-base">Display Name</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="input-base pl-11"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="label-base">Location</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="e.g. Toronto, ON"
-                      className="input-base pl-11"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="label-base">Bio</label>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell other gamers about yourself..."
-                    rows={3}
-                    className="input-base resize-none"
-                  />
-                </div>
-                {(photoError || saveError) && (
-                  <ErrorBanner
-                    message={photoError || saveError}
-                    onDismiss={() => { setPhotoError(""); setSaveError(""); }}
-                  />
-                )}
-                <button
-                  onClick={saveProfile}
-                  disabled={saving || uploadingAvatar}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {saving ? "Saving..." : "Save Profile"}
-                </button>
-              </div>
+              {(photoError || saveError) && (
+                <ErrorBanner
+                  message={photoError || saveError}
+                  onDismiss={() => { setPhotoError(""); setSaveError(""); }}
+                />
+              )}
+
+              <button
+                onClick={saveProfile}
+                disabled={saving || uploadingAvatar}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Saving..." : "Save Profile"}
+              </button>
             </div>
           </div>
 
-          {/* Reviews */}
+          {/* ── Password / Security card ── */}
+          <div className="card p-6">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: "rgba(6,182,212,0.12)", border: "1px solid rgba(6,182,212,0.2)" }}>
+                <Lock className="w-4 h-4" style={{ color: "var(--accent)" }} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm">
+                  {hasPassword ? "Change Password" : "Set a Password"}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  {hasPassword
+                    ? "Update your current password"
+                    : hasSocial
+                      ? "Add a password so you can also sign in with email"
+                      : "Set a password for your account"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <SetPasswordForm hasPassword={hasPassword} />
+            </div>
+          </div>
+
+          {/* ── Reviews ── */}
           <div>
             <h2 className="text-lg font-semibold text-white mb-4">
               Reviews ({reviews.length})
@@ -439,6 +467,7 @@ export default function ProfilePage() {
               }))} />
             )}
           </div>
+
         </div>
       </main>
     </div>
