@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
@@ -15,12 +14,6 @@ export const authOptions: NextAuthOptions = {
       clientId:     process.env.GOOGLE_CLIENT_ID     ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
       authorization: { params: { prompt: "select_account" } },
-    }),
-
-    FacebookProvider({
-      clientId:     process.env.FACEBOOK_CLIENT_ID     ?? "",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? "",
-      authorization: { params: { scope: "email,public_profile" } },
     }),
 
     CredentialsProvider({
@@ -58,19 +51,8 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (!account || account.provider === "credentials") return true;
 
-      const providerName = account.provider; // "google" | "facebook"
+      const providerName = account.provider; // "google"
       const email = user.email?.toLowerCase().trim();
-
-      // Facebook may return no email → redirect to email-capture page
-      if (providerName === "facebook" && !email) {
-        const params = new URLSearchParams({
-          provider:          "facebook",
-          providerAccountId: account.providerAccountId,
-          name:              user.name  ?? "",
-          image:             user.image ?? "",
-        });
-        return `/auth/facebook-email?${params.toString()}`;
-      }
 
       if (!email) return "/auth/login?error=OAuthNoEmail";
 

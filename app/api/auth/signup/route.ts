@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
     if (existing) {
       // Tell the frontend which providers this account already uses
-      const hasSocial = existing.providers.some((p) => p === "google" || p === "facebook");
+      const hasSocial = existing.providers.some((p) => p === "google");
       const hasEmail  = existing.providers.includes("email");
 
       if (hasSocial && !hasEmail) {

@@ -267,7 +267,7 @@ export default function ProfilePage() {
 
   // Which providers are linked (from JWT)
   const providers: string[] = (session.user as any)?.providers ?? [];
-  const hasSocial = providers.some((p) => p === "google" || p === "facebook");
+  const hasSocial = providers.some((p) => p === "google");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -339,17 +339,9 @@ export default function ProfilePage() {
                       key={p}
                       className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
                       style={{
-                        background: p === "google"   ? "rgba(66,133,244,0.15)"
-                                  : p === "facebook" ? "rgba(24,119,242,0.15)"
-                                  : "rgba(6,182,212,0.12)",
-                        color:      p === "google"   ? "#4285F4"
-                                  : p === "facebook" ? "#1877F2"
-                                  : "var(--accent)",
-                        border: `1px solid ${
-                                    p === "google"   ? "rgba(66,133,244,0.3)"
-                                  : p === "facebook" ? "rgba(24,119,242,0.3)"
-                                  : "rgba(6,182,212,0.25)"
-                                }`,
+                        background: p === "google" ? "rgba(66,133,244,0.15)" : "rgba(6,182,212,0.12)",
+                        color:      p === "google" ? "#4285F4" : "var(--accent)",
+                        border: `1px solid ${p === "google" ? "rgba(66,133,244,0.3)" : "rgba(6,182,212,0.25)"}`,
                       }}
                     >
                       {p}

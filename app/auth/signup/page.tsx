@@ -19,15 +19,6 @@ function GoogleIcon() {
   );
 }
 
-function FacebookIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-      <rect width="24" height="24" rx="6" fill="#1877F2" />
-      <path d="M16.5 8H14.5C13.948 8 13.5 8.448 13.5 9V11H16.5L16 14H13.5V22H10.5V14H8V11H10.5V9C10.5 6.791 12.291 5 14.5 5H16.5V8Z" fill="white" />
-    </svg>
-  );
-}
-
 export default function SignupPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -83,7 +74,7 @@ export default function SignupPage() {
     }
   };
 
-  const handleOAuthSignup = async (provider: "google" | "facebook") => {
+  const handleOAuthSignup = async (provider: "google") => {
     setError("");
     setLoading(true);
     await signIn(provider, { callbackUrl: "/" });
@@ -110,7 +101,7 @@ export default function SignupPage() {
           <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Join the local gamer community</p>
 
           {/* Social buttons */}
-          <div className="space-y-3 mb-6">
+          <div className="mb-6">
             <button
               onClick={() => handleOAuthSignup("google")}
               disabled={loading}
@@ -120,17 +111,6 @@ export default function SignupPage() {
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
             >
               <GoogleIcon /> Sign up with Google
-            </button>
-
-            <button
-              onClick={() => handleOAuthSignup("facebook")}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 rounded-xl px-4 py-3 font-medium text-sm transition-all duration-200 disabled:opacity-50"
-              style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
-            >
-              <FacebookIcon /> Sign up with Facebook
             </button>
           </div>
 
@@ -155,15 +135,6 @@ export default function SignupPage() {
                       style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
                     >
                       <GoogleIcon /> Sign in with Google
-                    </button>
-                  )}
-                  {socialHint.providers.includes("facebook") && (
-                    <button
-                      onClick={() => handleOAuthSignup("facebook")}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                      style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
-                    >
-                      <FacebookIcon /> Sign in with Facebook
                     </button>
                   )}
                 </div>

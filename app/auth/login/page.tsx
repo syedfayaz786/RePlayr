@@ -8,19 +8,6 @@ import { Gamepad2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { ErrorBanner } from "@/components/ui/InlineError";
 import toast from "react-hot-toast";
 
-// Facebook SVG icon
-function FacebookIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-      <rect width="24" height="24" rx="6" fill="#1877F2" />
-      <path
-        d="M16.5 8H14.5C13.948 8 13.5 8.448 13.5 9V11H16.5L16 14H13.5V22H10.5V14H8V11H10.5V9C10.5 6.791 12.291 5 14.5 5H16.5V8Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
-
 // Google SVG icon
 function GoogleIcon() {
   return (
@@ -42,7 +29,7 @@ function getOAuthErrorMessage(errorCode: string | null): string {
     OAuthNoEmail:
       "We couldn't retrieve your email from the provider. Please sign in with email/password or try a different provider.",
     NO_PASSWORD:
-      "This account was created with Google or Facebook. Use one of those buttons to sign in, or set a password from your profile.",
+      "This account was created with Google. Use the Google button to sign in, or set a password from your profile.",
     Callback:
       "There was a problem completing sign-in. Please try again.",
     Default:
@@ -80,7 +67,7 @@ function LoginContent() {
       if (result?.error) {
         if (result.error === "NO_PASSWORD") {
           setError(
-            "This account was created with Google or Facebook. Use one of those buttons to sign in, or set a password from your profile."
+            "This account was created with Google. Use the Google button to sign in, or set a password from your profile."
           );
         } else {
           setError("Incorrect email or password. Please try again.");
@@ -94,7 +81,7 @@ function LoginContent() {
     }
   };
 
-  const handleOAuthLogin = async (provider: "google" | "facebook") => {
+  const handleOAuthLogin = async (provider: "google") => {
     setError("");
     setLoading(true);
     await signIn(provider, { callbackUrl: "/" });
@@ -167,7 +154,7 @@ function LoginContent() {
           )}
 
           {/* Social buttons */}
-          <div className="space-y-3 mb-6">
+          <div className="mb-6">
             <button
               onClick={() => handleOAuthLogin("google")}
               disabled={loading}
@@ -182,22 +169,6 @@ function LoginContent() {
             >
               <GoogleIcon />
               Continue with Google
-            </button>
-
-            <button
-              onClick={() => handleOAuthLogin("facebook")}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 rounded-xl px-4 py-3 font-medium text-sm transition-all duration-200 disabled:opacity-50"
-              style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-primary)",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
-            >
-              <FacebookIcon />
-              Continue with Facebook
             </button>
           </div>
 
