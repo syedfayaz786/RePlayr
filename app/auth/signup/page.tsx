@@ -4,9 +4,38 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Gamepad2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
-import { ErrorBanner, FieldError } from "@/components/ui/InlineError";
+import { Gamepad2, Mail, Lock, User, Eye, EyeOff, Check, X } from "lucide-react";
+import { ErrorBanner } from "@/components/ui/InlineError";
 import toast from "react-hot-toast";
+
+// ─── Password rules ────────────────────────────────────────────────────────────
+
+const PASSWORD_RULES = [
+  { id: "length",  label: "At least 8 characters",       test: (p: string) => p.length >= 8               },
+  { id: "letter",  label: "Contains a letter",            test: (p: string) => /[a-zA-Z]/.test(p)         },
+  { id: "number",  label: "Contains a number",            test: (p: string) => /[0-9]/.test(p)            },
+  { id: "special", label: "Contains a special character", test: (p: string) => /[^a-zA-Z0-9\s]/.test(p)  },
+];
+
+function getPasswordErrors(password: string): string[] {
+  const trimmed = password.trim();
+  const errors: string[] = [];
+  if (trimmed.length === 0 && password.length > 0) {
+    errors.push("Password cannot be only spaces");
+    return errors;
+  }
+  if (trimmed.length < 8)                  errors.push("Password must be at least 8 characters");
+  if (!/[a-zA-Z]/.test(trimmed))           errors.push("Include at least one letter");
+  if (!/[0-9]/.test(trimmed))              errors.push("Include at least one number");
+  if (!/[^a-zA-Z0-9\s]/.test(trimmed))    errors.push("Include at least one special character");
+  return errors;
+}
+
+function isPasswordValid(password: string): boolean {
+  return getPasswordErrors(password).length === 0;
+}
+
+// ─── Google icon ───────────────────────────────────────────────────────────────
 
 function GoogleIcon() {
   return (
@@ -19,40 +48,119 @@ function GoogleIcon() {
   );
 }
 
+// ─── Password checklist ────────────────────────────────────────────────────────
+
+function PasswordChecklist({ password }: { password: string }) {
+  const trimmed = password.trim();
+  return (
+    <div
+      className="mt-2.5 rounded-xl px-4 py-3 space-y-1.5"
+      style={{ background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)" }}
+    >
+      {PASSWORD_RULES.map((rule) => {
+        const passed = rule.test(trimmed);
+        return (
+          <div key={rule.id} className="flex items-center gap-2">
+            <span
+              className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200"
+              style={{
+                background: passed ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${passed ? "rgba(34,197,94,0.5)" : "rgba(255,255,255,0.1)"}`,
+              }}
+            >
+              {passed
+                ? <Check className="w-2.5 h-2.5" style={{ color: "#22c55e" }} />
+                : <X    className="w-2.5 h-2.5" style={{ color: "var(--text-muted)" }} />
+              }
+            </span>
+            <span
+              className="text-xs transition-colors duration-200"
+              style={{ color: passed ? "#22c55e" : "var(--text-muted)" }}
+            >
+              {rule.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Field error ──────────────────────────────────────────────────────────────
+
+function FieldError({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#f87171" }}>
+      <X className="w-3 h-3 flex-shrink-0" />
+      {message}
+    </p>
+  );
+}
+
+// ─── Border style helper ───────────────────────────────────────────────────────
+
+function errorBorderStyle(hasError: boolean): React.CSSProperties {
+  if (!hasError) return {};
+  return {
+    borderColor: "rgba(239,68,68,0.7)",
+    boxShadow:   "0 0 0 3px rgba(239,68,68,0.1)",
+  };
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function SignupPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const [name,          setName]          = useState("");
-  const [email,         setEmail]         = useState("");
-  const [password,      setPassword]      = useState("");
-  const [showPassword,  setShowPassword]  = useState(false);
-  const [loading,       setLoading]       = useState(false);
-  const [error,         setError]         = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [name,         setName]         = useState("");
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState("");
 
-  // Hint shown when email already exists via social
+  // Track touched state per field — errors only show after first blur
+  const [nameTouched,     setNameTouched]     = useState(false);
+  const [emailTouched,    setEmailTouched]    = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
   const [socialHint, setSocialHint] = useState<{ providers: string[] } | null>(null);
 
   useEffect(() => { if (session) router.push("/"); }, [session, router]);
 
+  // ─── Derived errors ────────────────────────────────────────────────────────
+
+  const nameError  = nameTouched  && name.trim()  === "" ? "Please fill out Full Name"     : "";
+  const emailError = emailTouched && email.trim() === "" ? "Please fill out Email address" : "";
+
+  const pwErrors      = password.length > 0 ? getPasswordErrors(password) : [];
+  const pwValid       = isPasswordValid(password);
+  const showPwErrors  = passwordTouched && pwErrors.length > 0;
+  const showChecklist = passwordFocused || password.length > 0;
+
+  // ─── Submit ────────────────────────────────────────────────────────────────
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setPasswordError("");
     setSocialHint(null);
 
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-      return;
-    }
+    // Force-touch all fields to reveal any untouched errors
+    setNameTouched(true);
+    setEmailTouched(true);
+    setPasswordTouched(true);
+
+    if (name.trim() === "" || email.trim() === "" || !pwValid) return;
 
     setLoading(true);
     try {
       const res  = await fetch("/api/auth/signup", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name, email, password }),
+        body:    JSON.stringify({ name: name.trim(), email: email.trim(), password }),
       });
       const data = await res.json();
 
@@ -66,8 +174,7 @@ export default function SignupPage() {
         return;
       }
 
-      // Auto sign-in after successful registration
-      await signIn("credentials", { email, password, callbackUrl: "/" });
+      await signIn("credentials", { email: email.trim(), password, callbackUrl: "/" });
       toast.success("Welcome to RePlayr!");
     } finally {
       setLoading(false);
@@ -80,15 +187,21 @@ export default function SignupPage() {
     await signIn(provider, { callbackUrl: "/" });
   };
 
+  // ─── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen min-h-dvh flex items-center justify-center p-4 sm:p-6 py-8 sm:py-12"
-      style={{ background: "var(--bg-base)" }}>
+    <div
+      className="min-h-screen min-h-dvh flex items-center justify-center p-4 sm:p-6 py-8 sm:py-12"
+      style={{ background: "var(--bg-base)" }}
+    >
       <div className="w-full max-w-md">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #00F0FF, #7C3AED)", boxShadow: "0 0 10px rgba(0,240,255,0.15)" }}>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #00F0FF, #7C3AED)", boxShadow: "0 0 10px rgba(0,240,255,0.15)" }}
+          >
             <Gamepad2 className="w-5 h-5 text-white" />
           </div>
           <span className="font-display font-bold text-xl" style={{ color: "var(--text-primary)" }}>
@@ -96,11 +209,14 @@ export default function SignupPage() {
           </span>
         </Link>
 
-        <div className="rounded-2xl p-6 sm:p-8" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
+        <div
+          className="rounded-2xl p-6 sm:p-8"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+        >
           <h2 className="font-display text-3xl font-bold text-white mb-1">Create account</h2>
           <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Join the local gamer community</p>
 
-          {/* Social buttons */}
+          {/* Google */}
           <div className="mb-6">
             <button
               onClick={() => handleOAuthSignup("google")}
@@ -121,11 +237,10 @@ export default function SignupPage() {
             <div className="flex-1 h-px" style={{ background: "var(--border-default)" }} />
           </div>
 
-          {/* Error banner */}
+          {/* Top-level error banner */}
           {error && (
             <div className="mb-4">
               <ErrorBanner message={error} onDismiss={() => { setError(""); setSocialHint(null); }} />
-              {/* Quick-action buttons when social account conflict */}
               {socialHint && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {socialHint.providers.includes("google") && (
@@ -142,55 +257,76 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Email signup form */}
-          <form onSubmit={handleSignup} className="space-y-4">
+          {/* Form — noValidate disables browser default "Please fill out this field" popups */}
+          <form onSubmit={handleSignup} noValidate className="space-y-4">
+
+            {/* Full Name */}
             <div>
               <label className="label-base">Full Name</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: nameError ? "#f87171" : "var(--text-muted)" }}
+                />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onBlur={() => setNameTouched(true)}
                   placeholder="Your name"
-                  required
                   autoComplete="name"
                   className="input-base pl-11"
+                  style={errorBorderStyle(!!nameError)}
                 />
               </div>
+              <FieldError message={nameError} />
             </div>
 
+            {/* Email */}
             <div>
               <label className="label-base">Email address</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: emailError ? "#f87171" : "var(--text-muted)" }}
+                />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(""); setSocialHint(null); }}
+                  onBlur={() => setEmailTouched(true)}
                   placeholder="you@example.com"
-                  required
                   autoComplete="email"
                   className="input-base pl-11"
+                  style={errorBorderStyle(!!emailError)}
                 />
               </div>
+              <FieldError message={emailError} />
             </div>
 
+            {/* Password */}
             <div>
               <label className="label-base">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: showPwErrors ? "#f87171" : "var(--text-muted)" }}
+                />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => { setPasswordFocused(false); setPasswordTouched(true); }}
                   placeholder="Min. 8 characters"
-                  required
                   autoComplete="new-password"
-                  className={`input-base pl-11 pr-12 ${passwordError ? "border-red-500/50" : ""}`}
+                  maxLength={128}
+                  className="input-base pl-11 pr-12"
+                  style={errorBorderStyle(showPwErrors)}
                 />
                 <button
                   type="button"
+                  tabIndex={-1}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
                   style={{ color: "var(--text-muted)" }}
@@ -198,10 +334,19 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <FieldError message={passwordError} />
+
+              {/* Live checklist — visible while typing or after touch */}
+              {showChecklist && <PasswordChecklist password={password} />}
+
+              {/* First failing rule shown as inline error after blur */}
+              {showPwErrors && <FieldError message={pwErrors[0]} />}
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full mt-2"
+            >
               {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>
