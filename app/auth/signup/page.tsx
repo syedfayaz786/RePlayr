@@ -4,17 +4,17 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Gamepad2, Mail, Lock, User, Eye, EyeOff, Check, X } from "lucide-react";
+import { Gamepad2, Mail, Lock, User, Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
 import { ErrorBanner } from "@/components/ui/InlineError";
 import toast from "react-hot-toast";
 
 // ─── Password rules ────────────────────────────────────────────────────────────
 
 const PASSWORD_RULES = [
-  { id: "length",  label: "At least 8 characters",       test: (p: string) => p.length >= 8               },
-  { id: "letter",  label: "Contains a letter",            test: (p: string) => /[a-zA-Z]/.test(p)         },
-  { id: "number",  label: "Contains a number",            test: (p: string) => /[0-9]/.test(p)            },
-  { id: "special", label: "Contains a special character", test: (p: string) => /[^a-zA-Z0-9\s]/.test(p)  },
+  { id: "length",  label: "At least 8 characters",       test: (p: string) => p.length >= 8              },
+  { id: "letter",  label: "Contains a letter",            test: (p: string) => /[a-zA-Z]/.test(p)        },
+  { id: "number",  label: "Contains a number",            test: (p: string) => /[0-9]/.test(p)           },
+  { id: "special", label: "Contains a special character", test: (p: string) => /[^a-zA-Z0-9\s]/.test(p) },
 ];
 
 function getPasswordErrors(password: string): string[] {
@@ -24,10 +24,10 @@ function getPasswordErrors(password: string): string[] {
     errors.push("Password cannot be only spaces");
     return errors;
   }
-  if (trimmed.length < 8)                  errors.push("Password must be at least 8 characters");
-  if (!/[a-zA-Z]/.test(trimmed))           errors.push("Include at least one letter");
-  if (!/[0-9]/.test(trimmed))              errors.push("Include at least one number");
-  if (!/[^a-zA-Z0-9\s]/.test(trimmed))    errors.push("Include at least one special character");
+  if (trimmed.length < 8)                 errors.push("Password must be at least 8 characters");
+  if (!/[a-zA-Z]/.test(trimmed))          errors.push("Include at least one letter");
+  if (!/[0-9]/.test(trimmed))             errors.push("Include at least one number");
+  if (!/[^a-zA-Z0-9\s]/.test(trimmed))   errors.push("Include at least one special character");
   return errors;
 }
 
@@ -45,6 +45,18 @@ function GoogleIcon() {
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
     </svg>
+  );
+}
+
+// ─── Inline field error ────────────────────────────────────────────────────────
+
+function FieldError({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <div className="flex items-center gap-1.5 mt-2 px-1">
+      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#f87171" }} />
+      <p className="text-xs" style={{ color: "#f87171" }}>{message}</p>
+    </div>
   );
 }
 
@@ -70,7 +82,7 @@ function PasswordChecklist({ password }: { password: string }) {
             >
               {passed
                 ? <Check className="w-2.5 h-2.5" style={{ color: "#22c55e" }} />
-                : <X    className="w-2.5 h-2.5" style={{ color: "var(--text-muted)" }} />
+                : <X     className="w-2.5 h-2.5" style={{ color: "var(--text-muted)" }} />
               }
             </span>
             <span
@@ -86,25 +98,13 @@ function PasswordChecklist({ password }: { password: string }) {
   );
 }
 
-// ─── Field error ──────────────────────────────────────────────────────────────
+// ─── Error border helper ───────────────────────────────────────────────────────
 
-function FieldError({ message }: { message: string }) {
-  if (!message) return null;
-  return (
-    <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#f87171" }}>
-      <X className="w-3 h-3 flex-shrink-0" />
-      {message}
-    </p>
-  );
-}
-
-// ─── Border style helper ───────────────────────────────────────────────────────
-
-function errorBorderStyle(hasError: boolean): React.CSSProperties {
+function errorInputStyle(hasError: boolean): React.CSSProperties {
   if (!hasError) return {};
   return {
-    borderColor: "rgba(239,68,68,0.7)",
-    boxShadow:   "0 0 0 3px rgba(239,68,68,0.1)",
+    borderColor: "rgba(248,113,113,0.5)",
+    boxShadow: "0 0 0 3px rgba(248,113,113,0.07)",
   };
 }
 
@@ -121,25 +121,30 @@ export default function SignupPage() {
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
 
-  // Track touched state per field — errors only show after first blur
-  const [nameTouched,     setNameTouched]     = useState(false);
-  const [emailTouched,    setEmailTouched]    = useState(false);
-  const [passwordTouched, setPasswordTouched] = useState(false);
+  // Errors are only revealed after the first submit attempt
+  const [submitted,    setSubmitted]    = useState(false);
+  // Show checklist once the user starts typing in the password field
   const [passwordFocused, setPasswordFocused] = useState(false);
 
   const [socialHint, setSocialHint] = useState<{ providers: string[] } | null>(null);
 
   useEffect(() => { if (session) router.push("/"); }, [session, router]);
 
-  // ─── Derived errors ────────────────────────────────────────────────────────
+  // ─── Derived validation (computed, not stored) ─────────────────────────────
 
-  const nameError  = nameTouched  && name.trim()  === "" ? "Please fill out Full Name"     : "";
-  const emailError = emailTouched && email.trim() === "" ? "Please fill out Email address" : "";
+  const nameError  = submitted && name.trim()  === "" ? "Please fill out Full Name"     : "";
+  const emailError = submitted && email.trim() === "" ? "Please fill out Email address" : "";
 
-  const pwErrors      = password.length > 0 ? getPasswordErrors(password) : [];
-  const pwValid       = isPasswordValid(password);
-  const showPwErrors  = passwordTouched && pwErrors.length > 0;
+  const pwErrors     = getPasswordErrors(password);
+  const pwValid      = isPasswordValid(password);
+  const showPwErrors = submitted && pwErrors.length > 0;
+  // Checklist visible once user types or focuses the password field
   const showChecklist = passwordFocused || password.length > 0;
+
+  // Clear a field's error as soon as the user corrects it
+  const resolvedNameError  = nameError  && name.trim()  !== "" ? "" : nameError;
+  const resolvedEmailError = emailError && email.trim() !== "" ? "" : emailError;
+  const resolvedPwErrors   = showPwErrors && pwValid ? false : showPwErrors;
 
   // ─── Submit ────────────────────────────────────────────────────────────────
 
@@ -147,11 +152,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
     setSocialHint(null);
-
-    // Force-touch all fields to reveal any untouched errors
-    setNameTouched(true);
-    setEmailTouched(true);
-    setPasswordTouched(true);
+    setSubmitted(true);
 
     if (name.trim() === "" || email.trim() === "" || !pwValid) return;
 
@@ -257,7 +258,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Form — noValidate disables browser default "Please fill out this field" popups */}
+          {/* Form — noValidate kills browser default popups */}
           <form onSubmit={handleSignup} noValidate className="space-y-4">
 
             {/* Full Name */}
@@ -266,20 +267,19 @@ export default function SignupPage() {
               <div className="relative">
                 <User
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: nameError ? "#f87171" : "var(--text-muted)" }}
+                  style={{ color: resolvedNameError ? "#f87171" : "var(--text-muted)" }}
                 />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onBlur={() => setNameTouched(true)}
                   placeholder="Your name"
                   autoComplete="name"
                   className="input-base pl-11"
-                  style={errorBorderStyle(!!nameError)}
+                  style={errorInputStyle(!!resolvedNameError)}
                 />
               </div>
-              <FieldError message={nameError} />
+              <FieldError message={resolvedNameError} />
             </div>
 
             {/* Email */}
@@ -288,20 +288,19 @@ export default function SignupPage() {
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: emailError ? "#f87171" : "var(--text-muted)" }}
+                  style={{ color: resolvedEmailError ? "#f87171" : "var(--text-muted)" }}
                 />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(""); setSocialHint(null); }}
-                  onBlur={() => setEmailTouched(true)}
                   placeholder="you@example.com"
                   autoComplete="email"
                   className="input-base pl-11"
-                  style={errorBorderStyle(!!emailError)}
+                  style={errorInputStyle(!!resolvedEmailError)}
                 />
               </div>
-              <FieldError message={emailError} />
+              <FieldError message={resolvedEmailError} />
             </div>
 
             {/* Password */}
@@ -310,19 +309,19 @@ export default function SignupPage() {
               <div className="relative">
                 <Lock
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: showPwErrors ? "#f87171" : "var(--text-muted)" }}
+                  style={{ color: resolvedPwErrors ? "#f87171" : "var(--text-muted)" }}
                 />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => { setPasswordFocused(false); setPasswordTouched(true); }}
+                  onBlur={() => setPasswordFocused(false)}
                   placeholder="Min. 8 characters"
                   autoComplete="new-password"
                   maxLength={128}
                   className="input-base pl-11 pr-12"
-                  style={errorBorderStyle(showPwErrors)}
+                  style={errorInputStyle(!!resolvedPwErrors)}
                 />
                 <button
                   type="button"
@@ -335,11 +334,11 @@ export default function SignupPage() {
                 </button>
               </div>
 
-              {/* Live checklist — visible while typing or after touch */}
+              {/* Checklist — shown once user interacts with the field */}
               {showChecklist && <PasswordChecklist password={password} />}
 
-              {/* First failing rule shown as inline error after blur */}
-              {showPwErrors && <FieldError message={pwErrors[0]} />}
+              {/* Error message shown only after submit */}
+              {resolvedPwErrors && <FieldError message={pwErrors[0]} />}
             </div>
 
             <button
