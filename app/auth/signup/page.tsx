@@ -306,7 +306,11 @@ export default function SignupPage() {
             {/* Password */}
             <div>
               <label className="label-base">Password</label>
-              <div className="relative">
+
+              {/* Checklist — shown above the input so browser autofill never covers it */}
+              {showChecklist && <PasswordChecklist password={password} />}
+
+              <div className={`relative ${showChecklist ? "mt-2.5" : ""}`}>
                 <Lock
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
                   style={{ color: resolvedPwErrors ? "#f87171" : "var(--text-muted)" }}
@@ -333,9 +337,6 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-
-              {/* Checklist — shown once user interacts with the field */}
-              {showChecklist && <PasswordChecklist password={password} />}
 
               {/* Error message shown only after submit */}
               {resolvedPwErrors && <FieldError message={pwErrors[0]} />}
