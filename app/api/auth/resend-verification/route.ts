@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       headersList.get("x-real-ip") ??
       "unknown";
 
-    // Rate limit: 3 resend attempts per email per hour
     const rateLimit = checkRateLimit(`resend:${ip}`, { windowMs: 60 * 60 * 1000, maxHits: 3 });
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -41,6 +40,7 @@ export async function POST(req: Request) {
 
     // Always return success — never reveal whether the email exists (security)
     if (!user || user.emailVerified || !user.providers.includes("email")) {
+      console.log(`[resend-verification] No-op for ${normalizedEmail} — user not found, already verified, or social account`);
       return NextResponse.json({ success: true });
     }
 
@@ -52,13 +52,20 @@ export async function POST(req: Request) {
       data:  { verificationToken, verificationExpiry: tokenExpiry },
     });
 
-    sendVerificationEmail(normalizedEmail, user.name ?? "there", verificationToken).catch((err) => {
-      console.error("[ResendVerification] Email send failed:", err);
-    });
+    console.log(`[resend-verification] Sending to ${normalizedEmail}...`);
+    const result = await sendVerificationEmail(normalizedEmail, user.name ?? "there", verificationToken);
+
+    if (!result.success) {
+      console.error(`[resend-verification] Send failed: ${result.error}`);
+      // Still return success to avoid revealing account existence to attackers,
+      // but log it so you can investigate in Vercel logs.
+    } else {
+      console.log(`[resend-verification] Sent OK — messageId=${result.messageId}`);
+    }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[ResendVerification] Error:", error);
+  } catch (error: any) {
+    console.error("[resend-verification] Error:", error?.message ?? error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
