@@ -43,10 +43,10 @@ export function checkRateLimit(
 if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
-    for (const [key, entry] of store.entries()) {
+    Array.from(store.entries()).forEach(([key, entry]) => {
       if (now - entry.windowStart > 15 * 60 * 1000) {
         store.delete(key);
       }
-    }
+    });
   }, 10 * 60 * 1000);
 }
