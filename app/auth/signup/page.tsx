@@ -17,6 +17,14 @@ const PASSWORD_RULES = [
   { id: "special", label: "Contains a special character", test: (p: string) => /[^a-zA-Z0-9\s]/.test(p) },
 ];
 
+// ─── Email format validation (client-side, matches backend regex) ──────────────
+const EMAIL_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+\-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+
+function isValidEmailFormat(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  return normalized.length > 0 && normalized.length <= 254 && EMAIL_REGEX.test(normalized);
+}
+
 function getPasswordErrors(password: string): string[] {
   const trimmed = password.trim();
   const errors: string[] = [];
@@ -88,14 +96,22 @@ export default function SignupPage() {
   // Show checklist once the user starts typing in the password field
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  const [socialHint, setSocialHint] = useState<{ providers: string[] } | null>(null);
+  const [socialHint,        setSocialHint]        = useState<{ providers: string[] } | null>(null);
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [signedUpEmail,       setSignedUpEmail]       = useState("");
 
   useEffect(() => { if (session) router.push("/"); }, [session, router]);
 
   // ─── Derived validation (computed, not stored) ─────────────────────────────
 
-  const nameError  = submitted && name.trim()  === "" ? "Please fill out Full Name"     : "";
-  const emailError = submitted && email.trim() === "" ? "Please fill out Email address" : "";
+  const nameError  = submitted && name.trim()  === "" ? "Please fill out Full Name" : "";
+  const emailError = submitted
+    ? email.trim() === ""
+      ? "Please fill out Email address"
+      : !isValidEmailFormat(email)
+        ? "Enter a valid email address"
+        : ""
+    : "";
 
   const pwErrors     = getPasswordErrors(password);
   const pwValid      = isPasswordValid(password);
@@ -116,7 +132,7 @@ export default function SignupPage() {
     setSocialHint(null);
     setSubmitted(true);
 
-    if (name.trim() === "" || email.trim() === "" || !pwValid) return;
+    if (name.trim() === "" || email.trim() === "" || !isValidEmailFormat(email) || !pwValid) return;
 
     setLoading(true);
     try {
@@ -131,14 +147,19 @@ export default function SignupPage() {
         if (data.code === "SOCIAL_ACCOUNT_EXISTS") {
           setSocialHint({ providers: data.providers });
           setError(data.error);
+        } else if (data.code === "EMAIL_UNVERIFIED") {
+          // Account exists but unverified — redirect to verify page
+          setSignedUpEmail(email.trim());
+          setPendingVerification(true);
         } else {
           setError(data.error ?? "Something went wrong. Please try again.");
         }
         return;
       }
 
-      await signIn("credentials", { email: email.trim(), password, callbackUrl: "/" });
-      toast.success("Welcome to RePlayr!");
+      // Account created — user must verify email before logging in
+      setSignedUpEmail(email.trim());
+      setPendingVerification(true);
     } finally {
       setLoading(false);
     }
@@ -151,6 +172,51 @@ export default function SignupPage() {
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
+
+  // Show "check your email" screen after successful signup
+  if (pendingVerification) {
+    return (
+      <div className="min-h-screen min-h-dvh flex items-center justify-center p-4" style={{ background: "var(--bg-base)" }}>
+        <div className="w-full max-w-md">
+          <div className="flex justify-center mb-8">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00F0FF, #7C3AED)", boxShadow: "0 0 16px rgba(0,240,255,0.2)" }}>
+                <Gamepad2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-display font-bold text-xl gradient-text">RePlayr</span>
+            </Link>
+          </div>
+          <div className="rounded-2xl p-8 text-center" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(6,182,212,0.12)", border: "1px solid rgba(6,182,212,0.25)" }}>
+                <Mail className="w-8 h-8 text-brand-400" />
+              </div>
+            </div>
+            <h2 className="font-display text-2xl font-bold text-white mb-3" style={{ letterSpacing: "-0.03em" }}>Check your email</h2>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text-secondary)" }}>
+              We sent a verification link to{" "}
+              <strong className="text-white">{signedUpEmail}</strong>.
+              Click it to activate your account.
+            </p>
+            <div className="rounded-xl p-4 text-left text-sm mb-6" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)" }}>
+              <ul className="space-y-2" style={{ color: "var(--text-secondary)" }}>
+                <li className="flex items-start gap-2"><span className="text-brand-400">•</span>Check your spam or junk folder</li>
+                <li className="flex items-start gap-2"><span className="text-brand-400">•</span>The link expires in 30 minutes</li>
+                <li className="flex items-start gap-2"><span className="text-brand-400">•</span>Each link can only be used once</li>
+              </ul>
+            </div>
+            <Link href="/auth/verify" className="btn-secondary inline-flex items-center gap-2 text-sm">
+              Resend or troubleshoot →
+            </Link>
+            <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
+              Already verified?{" "}
+              <Link href="/auth/login" style={{ color: "var(--accent)" }} className="hover:underline">Sign in</Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

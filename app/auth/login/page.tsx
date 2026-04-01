@@ -4,7 +4,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { Gamepad2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Gamepad2, Mail, Lock, Eye, EyeOff, RefreshCw, CheckCircle } from "lucide-react";
 import { ErrorBanner } from "@/components/ui/InlineError";
 import toast from "react-hot-toast";
 
@@ -30,6 +30,8 @@ function getOAuthErrorMessage(errorCode: string | null): string {
       "We couldn't retrieve your email from the provider. Please sign in with email/password or try a different provider.",
     NO_PASSWORD:
       "This account was created with Google. Use the Google button to sign in, or set a password from your profile.",
+    NOT_VERIFIED:
+      "Please verify your email address before signing in. Check your inbox for the verification link.",
     Callback:
       "There was a problem completing sign-in. Please try again.",
     Default:
@@ -48,6 +50,9 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resending,    setResending]    = useState(false);
+  const [resendDone,   setResendDone]   = useState(false);
 
   // Redirect if already logged in
   useEffect(() => { if (session) router.push("/"); }, [session, router]);
@@ -65,11 +70,15 @@ function LoginContent() {
     try {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
-        if (result.error === "NO_PASSWORD") {
+        if (result.error === "NOT_VERIFIED") {
+          setIsUnverified(true);
+          setError("Please verify your email before signing in. Check your inbox for the verification link.");
+        } else if (result.error === "NO_PASSWORD") {
           setError(
             "This account was created with Google. Use the Google button to sign in, or set a password from your profile."
           );
         } else {
+          setIsUnverified(false);
           setError("Incorrect email or password. Please try again.");
         }
       } else {
@@ -78,6 +87,26 @@ function LoginContent() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email.trim()) { setError("Enter your email address first"); return; }
+    setResending(true);
+    try {
+      const res  = await fetch("/api/auth/resend-verification", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Failed to resend"); return; }
+      setResendDone(true);
+      setError("");
+    } catch {
+      setError("Failed to resend. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -146,10 +175,40 @@ function LoginContent() {
           <h2 className="font-display text-3xl font-bold text-white mb-1">Welcome back</h2>
           <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Sign in to your account to continue</p>
 
+          {/* Verified success banner */}
+          {searchParams.get("verified") === "true" && !error && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl p-4"
+              style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.22)" }}>
+              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "var(--success)" }} />
+              <p className="text-sm" style={{ color: "var(--success)" }}>
+                Email verified! You can now sign in.
+              </p>
+            </div>
+          )}
+
           {/* Error banner */}
           {error && (
             <div className="mb-5">
-              <ErrorBanner message={error} onDismiss={() => setError("")} />
+              <ErrorBanner message={error} onDismiss={() => { setError(""); setIsUnverified(false); setResendDone(false); }} />
+              {isUnverified && !resendDone && (
+                <button
+                  onClick={handleResendVerification}
+                  disabled={resending}
+                  className="mt-3 flex items-center gap-2 text-sm font-medium transition-colors"
+                  style={{ color: "var(--accent)" }}
+                >
+                  {resending
+                    ? <><span className="w-3.5 h-3.5 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />Sending&#8230;</>
+                    : <><RefreshCw className="w-3.5 h-3.5" />Resend verification email</>
+                  }
+                </button>
+              )}
+              {isUnverified && resendDone && (
+                <div className="mt-3 flex items-center gap-2 text-sm" style={{ color: "var(--success)" }}>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  New verification email sent! Check your inbox.
+                </div>
+              )}
             </div>
           )}
 

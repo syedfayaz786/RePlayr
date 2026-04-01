@@ -27,7 +27,9 @@
     "zustand": "^4.5.4",
     "date-fns": "^3.6.0",
     "react-hot-toast": "^2.4.1",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "nodemailer": "^6.9.14",
+    "rate-limiter-flexible": "^5.0.3"
   },
   "devDependencies": {
     "typescript": "^5",
@@ -41,6 +43,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "prisma": "^5.16.1",
-    "@types/leaflet": "^1.9.14"
+    "@types/leaflet": "^1.9.14",
+    "@types/nodemailer": "^6.4.15"
   }
 }
