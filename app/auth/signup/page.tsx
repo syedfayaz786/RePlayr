@@ -60,44 +60,6 @@ function FieldError({ message }: { message: string }) {
   );
 }
 
-// ─── Password checklist ────────────────────────────────────────────────────────
-
-function PasswordChecklist({ password }: { password: string }) {
-  const trimmed = password.trim();
-  return (
-    <div
-      className="mt-2.5 rounded-xl px-4 py-3 space-y-1.5"
-      style={{ background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)" }}
-    >
-      {PASSWORD_RULES.map((rule) => {
-        const passed = rule.test(trimmed);
-        return (
-          <div key={rule.id} className="flex items-center gap-2">
-            <span
-              className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200"
-              style={{
-                background: passed ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
-                border: `1px solid ${passed ? "rgba(34,197,94,0.5)" : "rgba(255,255,255,0.1)"}`,
-              }}
-            >
-              {passed
-                ? <Check className="w-2.5 h-2.5" style={{ color: "#22c55e" }} />
-                : <X     className="w-2.5 h-2.5" style={{ color: "var(--text-muted)" }} />
-              }
-            </span>
-            <span
-              className="text-xs transition-colors duration-200"
-              style={{ color: passed ? "#22c55e" : "var(--text-muted)" }}
-            >
-              {rule.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 // ─── Error border helper ───────────────────────────────────────────────────────
 
 function errorInputStyle(hasError: boolean): React.CSSProperties {
@@ -306,11 +268,7 @@ export default function SignupPage() {
             {/* Password */}
             <div>
               <label className="label-base">Password</label>
-
-              {/* Checklist — shown above the input so browser autofill never covers it */}
-              {showChecklist && <PasswordChecklist password={password} />}
-
-              <div className={`relative ${showChecklist ? "mt-2.5" : ""}`}>
+              <div className="relative">
                 <Lock
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
                   style={{ color: resolvedPwErrors ? "#f87171" : "var(--text-muted)" }}
@@ -336,6 +294,56 @@ export default function SignupPage() {
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+
+                {/* Tooltip popup — floats to the right of the input */}
+                {showChecklist && (
+                  <div
+                    className="absolute left-full top-0 ml-3 z-50 w-56 rounded-xl px-4 py-3 space-y-2"
+                    style={{
+                      background: "var(--bg-overlay)",
+                      border: "1px solid var(--border-default)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    }}
+                  >
+                    {/* Arrow pointing left toward the input */}
+                    <div
+                      className="absolute -left-[7px] top-4 w-3 h-3 rotate-45"
+                      style={{
+                        background: "var(--bg-overlay)",
+                        borderLeft: "1px solid var(--border-default)",
+                        borderBottom: "1px solid var(--border-default)",
+                      }}
+                    />
+                    <p className="text-xs font-semibold mb-1" style={{ color: "var(--text-muted)" }}>
+                      Password requirements
+                    </p>
+                    {PASSWORD_RULES.map((rule) => {
+                      const passed = rule.test(password.trim());
+                      return (
+                        <div key={rule.id} className="flex items-center gap-2">
+                          <span
+                            className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200"
+                            style={{
+                              background: passed ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
+                              border: `1px solid ${passed ? "rgba(34,197,94,0.5)" : "rgba(255,255,255,0.12)"}`,
+                            }}
+                          >
+                            {passed
+                              ? <Check className="w-2.5 h-2.5" style={{ color: "#22c55e" }} />
+                              : <X     className="w-2.5 h-2.5" style={{ color: "var(--text-muted)" }} />
+                            }
+                          </span>
+                          <span
+                            className="text-xs transition-colors duration-200"
+                            style={{ color: passed ? "#22c55e" : "var(--text-muted)" }}
+                          >
+                            {rule.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Error message shown only after submit */}
