@@ -211,7 +211,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
   return (
     <div ref={gridRef} className="scroll-mt-4">
       {/* Header row */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h2 className="section-title">
             {isSearching
@@ -226,7 +226,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {!isSearching && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <TrendingUp className="w-4 h-4 text-brand-400" />
@@ -319,8 +319,8 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                 </button>
               );
             })}
-            {/* Sort dropdown — right aligned */}
-            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            {/* Sort dropdown — pushes to new line on xs, right-aligned on sm+ */}
+            <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2 flex-shrink-0 mt-1 sm:mt-0">
               <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
               <select
                 value={searchParams.get("sort") ?? "newest"}
@@ -331,7 +331,7 @@ export function ListingsGrid({ isSearching }: { isSearching: boolean }) {
                   params.delete("page");
                   router.push(`/?${params.toString()}`, { scroll: false });
                 }}
-                className="bg-dark-700 border border-dark-500 text-gray-300 text-sm rounded-lg px-3 py-1.5 hover:border-brand-500/50 focus:outline-none focus:border-brand-500 transition-colors"
+                className="bg-dark-700 border border-dark-500 text-gray-300 text-sm rounded-lg px-3 py-1.5 hover:border-brand-500/50 focus:outline-none focus:border-brand-500 transition-colors flex-1 sm:flex-none"
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>

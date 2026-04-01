@@ -58,6 +58,18 @@
     -moz-osx-font-smoothing: grayscale;
     font-size: 14px;
     line-height: 1.6;
+    /* Prevent rubber-band scroll on iOS causing layout shifts */
+    overscroll-behavior-y: none;
+  }
+
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Improve touch targets — buttons & links min 44px tall on mobile */
+  button, a, [role="button"] {
+    touch-action: manipulation;
   }
 
   /* Noise grain */

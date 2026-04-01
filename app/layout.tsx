@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -14,6 +14,14 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-body",
   weight: ["300", "400", "500", "600", "700"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#05070A",
+};
 
 export const metadata: Metadata = {
   title: "RePlayr — Trade Game Discs Locally",

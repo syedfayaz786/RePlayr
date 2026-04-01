@@ -346,7 +346,7 @@ export default function NewListingPage() {
           {step === 3 && (<>
             <div className="card p-6 space-y-5">
               <h3 className="font-semibold text-white text-lg">Price & Location</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-base">Asking Price (CAD) *</label>
                   <div className="relative">
@@ -356,7 +356,7 @@ export default function NewListingPage() {
                       placeholder="0.00" min="0" step="0.01" required className="input-base pl-11" />
                   </div>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div>
                   <label className="label-base">
                     Your General Location *
                     <span className="text-gray-500 font-normal ml-1 text-xs">(city or postal code only)</span>
