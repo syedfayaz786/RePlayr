@@ -9,7 +9,7 @@ import {
   validateEmailDomain,
 } from "@/lib/email-validation";
 import { sendVerificationEmail } from "@/lib/email-sender";
-import { checkRateLimit }        from "@/lib/rate-limit";
+// import { checkRateLimit }        from "@/lib/rate-limit"; // RATE LIMITING ON HOLD — re-enable after testing
 import { headers }               from "next/headers";
 
 // ─── Password validation ──────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   console.log("[signup] ── New request ──────────────────────────────────────");
 
   try {
-    // ── Rate limiting ───────────────────────────────────────────────────────
+    // ── Rate limiting — ON HOLD FOR TESTING, re-enable when done ──────────
     const headersList = headers();
     const ip =
       headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -46,15 +46,15 @@ export async function POST(req: Request) {
 
     console.log(`[signup] IP: ${ip}`);
 
-    const rateLimit = checkRateLimit(`signup:${ip}`, { windowMs: 15 * 60 * 1000, maxHits: 5 });
-    if (!rateLimit.allowed) {
-      const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
-      console.warn(`[signup] Rate limited — ip=${ip}`);
-      return NextResponse.json(
-        { error: `Too many signup attempts. Please try again in ${Math.ceil(retryAfterSec / 60)} minutes.`, code: "RATE_LIMITED" },
-        { status: 429, headers: { "Retry-After": String(retryAfterSec) } }
-      );
-    }
+    // const rateLimit = checkRateLimit(`signup:${ip}`, { windowMs: 15 * 60 * 1000, maxHits: 5 });
+    // if (!rateLimit.allowed) {
+    //   const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
+    //   console.warn(`[signup] Rate limited — ip=${ip}`);
+    //   return NextResponse.json(
+    //     { error: `Too many signup attempts. Please try again in ${Math.ceil(retryAfterSec / 60)} minutes.`, code: "RATE_LIMITED" },
+    //     { status: 429, headers: { "Retry-After": String(retryAfterSec) } }
+    //   );
+    // }
 
     // ── Parse body ──────────────────────────────────────────────────────────
     let body: { name?: string; email?: string; password?: string };
