@@ -87,7 +87,9 @@ export default function SignupPage() {
   const [name,         setName]         = useState("");
   const [email,        setEmail]        = useState("");
   const [password,     setPassword]     = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword,        setShowPassword]        = useState(false);
+  const [confirmPassword,     setConfirmPassword]     = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
 
@@ -128,6 +130,12 @@ export default function SignupPage() {
     : emailError;
   const resolvedPwErrors   = showPwErrors && pwValid ? false : showPwErrors;
 
+  const confirmError = submitted && pwValid && confirmPassword !== password
+    ? "Passwords do not match"
+    : "";
+  // Clear confirm error once the user fixes the mismatch
+  const resolvedConfirmError = confirmError && confirmPassword === password ? "" : confirmError;
+
   // ─── Submit ────────────────────────────────────────────────────────────────
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -136,7 +144,7 @@ export default function SignupPage() {
     setSocialHint(null);
     setSubmitted(true);
 
-    if (name.trim() === "" || email.trim() === "" || !isValidEmailFormat(email) || !pwValid) return;
+    if (name.trim() === "" || email.trim() === "" || !isValidEmailFormat(email) || !pwValid || password !== confirmPassword) return;
 
     setLoading(true);
     try {
@@ -418,6 +426,37 @@ export default function SignupPage() {
 
               {/* Error message shown only after submit */}
               {resolvedPwErrors && <FieldError message={pwErrors[0]} />}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="label-base">Confirm Password</label>
+              <div className="relative">
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: resolvedConfirmError ? "#f87171" : "var(--text-muted)" }}
+                />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  autoComplete="new-password"
+                  maxLength={128}
+                  className="input-base pl-11 pr-12"
+                  style={errorInputStyle(!!resolvedConfirmError)}
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {resolvedConfirmError && <FieldError message={resolvedConfirmError} />}
             </div>
 
             <button
