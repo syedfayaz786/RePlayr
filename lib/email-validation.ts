@@ -1,4 +1,5 @@
 import dns from "dns/promises";
+import type { MxRecord } from "dns";
 
 // ─── 1. FORMAT VALIDATION ─────────────────────────────────────────────────────
 // RFC 5322-aligned regex — covers 99.9% of real-world email addresses.
@@ -126,7 +127,7 @@ const DEFINITIVE_FAIL_CODES = new Set(["ENOTFOUND", "ENODATA", "ESERVFAIL", "ERE
 const TRANSIENT_FAIL_CODES = new Set(["ETIMEOUT", "ECONNREFUSED", "EAI_AGAIN"]);
 
 export type DomainValidationResult =
-  | { valid: true;  mxRecords: dns.MxRecord[] }
+  | { valid: true;  mxRecords: MxRecord[] }
   | { valid: false; reason: "NO_MX_RECORDS" | "DOMAIN_NOT_FOUND" | "LOOKUP_FAILED"; error?: string };
 
 /**
@@ -153,7 +154,7 @@ export async function validateEmailDomain(domain: string): Promise<DomainValidat
   // Race the DNS lookup against a 2500ms hard timeout
   const TIMEOUT_MS = 2500;
 
-  let records: dns.MxRecord[];
+  let records: MxRecord[];
 
   try {
     records = await Promise.race([
