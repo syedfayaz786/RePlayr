@@ -121,7 +121,11 @@ export default function SignupPage() {
 
   // Clear a field's error as soon as the user corrects it
   const resolvedNameError  = nameError  && name.trim()  !== "" ? "" : nameError;
-  const resolvedEmailError = emailError && email.trim() !== "" ? "" : emailError;
+  // For email: only clear the "empty" error once they start typing.
+  // Keep the format error visible until the email is actually valid.
+  const resolvedEmailError = emailError === "Please fill out Email address" && email.trim() !== ""
+    ? ""
+    : emailError;
   const resolvedPwErrors   = showPwErrors && pwValid ? false : showPwErrors;
 
   // ─── Submit ────────────────────────────────────────────────────────────────
