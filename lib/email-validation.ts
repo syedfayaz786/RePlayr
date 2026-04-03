@@ -1,7 +1,7 @@
 import dns from "dns/promises";
 
 // ─── 1. FORMAT VALIDATION ─────────────────────────────────────────────────────
-// RFC 5322-aligned regex — covers 99.9% of real-world addresses.
+// RFC 5322-aligned regex — covers 99.9% of real-world email addresses.
 // - Local part: letters, numbers, dots, +, -, _, % (no leading/trailing dots)
 // - Domain: at least one dot, valid TLD (2+ chars), no double-dots
 const EMAIL_REGEX =
@@ -19,8 +19,6 @@ export function isValidEmailFormat(email: string): boolean {
 }
 
 // ─── 2. DISPOSABLE EMAIL BLOCKLIST ───────────────────────────────────────────
-// This is a curated, production-ready list of the most common disposable/
-// temporary email providers. Extend as needed.
 const DISPOSABLE_DOMAINS = new Set([
   // Mailinator family
   "mailinator.com", "mailinator2.com", "mailinator.net",
@@ -43,14 +41,13 @@ const DISPOSABLE_DOMAINS = new Set([
   // Dispostable
   "dispostable.com", "discard.email",
   // Sharklasers / Guerrilla variants
-  "sharklasers.com", "guerrillamail.info", "grr.la", "guerrillamail.biz",
-  "spam4.me", "guerrillamail.de", "guerrillamail.net",
+  "sharklasers.com", "spam4.me",
   // Fakeinbox
   "fakeinbox.com", "fakeinbox.net",
   // Mailnull / Spam-free
   "mailnull.com", "spamgourmet.com", "spamgourmet.net",
   // Throwaway
-  "throwaway.email", "throwam.com",
+  "throwaway.email",
   // Nada / Inboxalias
   "nada.email", "inboxalias.com",
   // Maildrop
@@ -58,8 +55,7 @@ const DISPOSABLE_DOMAINS = new Set([
   // Burner email
   "burnermail.io", "mohmal.com",
   // Others commonly seen in abuse patterns
-  "mailnesia.com", "mailnull.com", "spamgourmet.com",
-  "spam.la", "binkmail.com", "bob.email", "mailin8r.com",
+  "mailnesia.com", "spam.la", "binkmail.com", "bob.email", "mailin8r.com",
   "mailzilla.org", "meltmail.com", "neomailbox.com",
   "notmailinator.com", "proxymail.eu", "rcpt.at", "s0ny.net",
   "spamavert.com", "spamcorpse.com", "spamex.com",
@@ -69,9 +65,8 @@ const DISPOSABLE_DOMAINS = new Set([
   "spamoff.de", "spamobox.com", "spamspot.com",
   "spamthis.co.uk", "spamtroll.net", "temporaryemail.net",
   "temporaryforwarding.com", "tempskmail.com", "tempr.email",
-  "thanks.com", "tilien.com", "tm.in.th", "toomail.biz",
+  "thanks.com", "tilien.com", "toomail.biz",
   "trashdevil.com", "trashemail.de", "trashimail.com",
-  "trashmail.at", "trashmail.me", "trashmail.net",
   "trashmailer.com", "trbvm.com", "turual.com", "twinmail.de",
   "tyldd.com", "uggsrock.com", "umail.net",
   "upliftnow.com", "uplipht.com", "veryrealemail.com",
@@ -80,41 +75,38 @@ const DISPOSABLE_DOMAINS = new Set([
   "wilemail.com", "wmail.cf", "wolfsmail.tk", "writeme.us",
   "wronghead.com", "wuzupmail.net", "xemaps.com", "xents.com",
   "xmail.net", "xmaily.com", "xoxy.net", "xpectmore.com",
-  "xzing.net", "ya.yomail.info", "yapped.net", "yellowdogtraining.com",
+  "xzing.net", "yapped.net", "yellowdogtraining.com",
   "yep.it", "yogamaven.com", "yomail.info", "yuurok.com",
   "z1p.biz", "za.com", "zed.mb.ca", "zemail.me",
   "zoemail.org", "zomg.info", "zxcv.com", "zzsmail.com",
-  // Newer disposable services
   "getairmail.com", "goemailgo.com", "gotmail.com", "gotmail.net",
-  "gotmail.org", "h.mintemail.com", "h8s.org", "hailmail.net",
+  "gotmail.org", "h8s.org", "hailmail.net",
   "harakirimail.com", "hat-stuff.com", "hatespam.org", "herp.in",
   "hidemail.de", "hidzz.com", "hmamail.com", "hopemail.biz",
   "ieatspam.eu", "ieatspam.info", "ieh-mail.de", "imail1.net",
   "inboxclean.com", "inboxclean.org", "inoutmail.de", "inoutmail.eu",
   "inoutmail.info", "inoutmail.net", "insorg-mail.info",
   "instant-mail.de", "ipoo.org", "irish2me.com", "iwi.net",
-  "jetable.com", "jetable.fr.nf", "jetable.net", "jetable.org",
+  "jetable.com", "jetable.net", "jetable.org",
   "jnxjn.com", "jourrapide.com", "jsrsolutions.com", "junglefights.net",
   "klassmaster.com", "klzlk.com", "koszmail.pl", "kurzepost.de",
   "lifebyfood.com", "link2mail.net", "litedrop.com", "lkgn.se",
-  "lol.ovpn.to", "lolfreak.net", "lookugly.com", "lortemail.dk",
+  "lolfreak.net", "lookugly.com", "lortemail.dk",
   "lucky-email.com", "lyricspad.net", "m21.cc", "mail-filter.com",
-  "mail-temporaire.fr", "mail.mezimages.net", "mail.zinvestigators.com",
-  "mail1a.de", "mail21.cc", "mail2rss.org", "mail333.com",
+  "mail-temporaire.fr", "mail1a.de", "mail21.cc", "mail2rss.org", "mail333.com",
   "mailbidon.com", "mailbiz.biz", "mailblocks.com", "mailbucket.org",
-  "mailcat.biz", "mailcatch.com", "maildrop.cc", "maileater.com",
+  "mailcat.biz", "mailcatch.com", "maileater.com",
   "maileimer.de", "mailexpire.com", "mailfa.tk", "mailforspam.com",
-  "mailfreeonline.com", "mailguard.me", "mailin8r.com",
+  "mailfreeonline.com", "mailguard.me",
 ]);
 
 export function isDisposableEmail(email: string): boolean {
   const domain = email.split("@")[1]?.toLowerCase();
   if (!domain) return false;
 
-  // Check exact match
   if (DISPOSABLE_DOMAINS.has(domain)) return true;
 
-  // Check parent domain (e.g. sub.mailinator.com)
+  // Check parent domain (e.g. sub.mailinator.com → mailinator.com)
   const parts = domain.split(".");
   for (let i = 1; i < parts.length - 1; i++) {
     const parent = parts.slice(i).join(".");
@@ -124,42 +116,105 @@ export function isDisposableEmail(email: string): boolean {
   return false;
 }
 
-// ─── 3. DNS / MX RECORD CHECK ────────────────────────────────────────────────
-// Verifies the domain actually has mail servers configured.
-// Falls back gracefully — if DNS times out we don't block the signup.
-export async function hasMxRecord(email: string): Promise<boolean> {
-  const domain = email.split("@")[1];
-  if (!domain) return false;
+// ─── 3. DNS MX RECORD VALIDATION ─────────────────────────────────────────────
+// DNS error codes we treat as definitive proof the domain is invalid.
+// These mean the domain simply does not exist in DNS — safe to reject.
+const DEFINITIVE_FAIL_CODES = new Set(["ENOTFOUND", "ENODATA", "ESERVFAIL", "EREFUSED"]);
+
+// NETWORK_FAIL_CODES — transient infrastructure issues; we fail open (allow signup).
+// ETIMEOUT and our manual timeout both fall into this category.
+const TRANSIENT_FAIL_CODES = new Set(["ETIMEOUT", "ECONNREFUSED", "EAI_AGAIN"]);
+
+export type DomainValidationResult =
+  | { valid: true;  mxRecords: dns.MxRecord[] }
+  | { valid: false; reason: "NO_MX_RECORDS" | "DOMAIN_NOT_FOUND" | "LOOKUP_FAILED"; error?: string };
+
+/**
+ * validateEmailDomain(domain)
+ *
+ * Performs a DNS MX lookup on the given domain with a 2.5-second timeout.
+ *
+ * Behaviour:
+ *  - Domain has MX records          → valid: true
+ *  - Domain exists but has no MX    → valid: false, reason: NO_MX_RECORDS   (reject)
+ *  - Domain does not exist in DNS   → valid: false, reason: DOMAIN_NOT_FOUND (reject)
+ *  - Transient network/timeout err  → valid: true,  reason: LOOKUP_FAILED    (fail open)
+ *
+ * @param domain  The email domain, e.g. "gmail.com". Must already be lowercase/trimmed.
+ */
+export async function validateEmailDomain(domain: string): Promise<DomainValidationResult> {
+  console.log(`[dns-mx] Checking domain: "${domain}"`);
+
+  if (!domain || !domain.includes(".")) {
+    console.warn(`[dns-mx] Domain "${domain}" is malformed — rejecting`);
+    return { valid: false, reason: "DOMAIN_NOT_FOUND" };
+  }
+
+  // Race the DNS lookup against a 2500ms hard timeout
+  const TIMEOUT_MS = 2500;
+
+  let records: dns.MxRecord[];
 
   try {
-    const records = await Promise.race([
+    records = await Promise.race([
       dns.resolveMx(domain),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("DNS timeout")), 4000)
+        setTimeout(
+          () => reject(Object.assign(new Error("DNS_TIMEOUT"), { code: "ETIMEOUT" })),
+          TIMEOUT_MS
+        )
       ),
     ]);
-    return Array.isArray(records) && records.length > 0;
-  } catch {
-    // DNS lookup failed or timed out — fail open (don't block signup)
-    // This prevents false positives on DNS hiccups
-    return true;
+  } catch (err: any) {
+    const code: string = err?.code ?? "UNKNOWN";
+
+    if (DEFINITIVE_FAIL_CODES.has(code)) {
+      // Domain confirmed non-existent or has no DNS records at all → reject
+      console.warn(`[dns-mx] Domain "${domain}" rejected — DNS error code: ${code}`);
+      return { valid: false, reason: "DOMAIN_NOT_FOUND", error: code };
+    }
+
+    if (TRANSIENT_FAIL_CODES.has(code) || code === "DNS_TIMEOUT") {
+      // Transient network hiccup or our manual timeout → fail open
+      console.warn(`[dns-mx] DNS lookup for "${domain}" timed out or had a transient error (${code}) — failing open`);
+      return { valid: true, mxRecords: [] };
+    }
+
+    // Unknown error codes → log and fail open (don't block legitimate users)
+    console.warn(`[dns-mx] Unknown DNS error for "${domain}" (code=${code}, message=${err?.message}) — failing open`);
+    return { valid: true, mxRecords: [] };
   }
+
+  // Lookup succeeded — check whether any MX records were returned
+  if (!Array.isArray(records) || records.length === 0) {
+    console.warn(`[dns-mx] Domain "${domain}" has no MX records — rejecting`);
+    return { valid: false, reason: "NO_MX_RECORDS" };
+  }
+
+  // Log the records for visibility in Vercel logs
+  const summary = records
+    .sort((a, b) => a.priority - b.priority)
+    .map((r) => `${r.exchange} (priority ${r.priority})`)
+    .join(", ");
+  console.log(`[dns-mx] Domain "${domain}" — ${records.length} MX record(s): ${summary}`);
+
+  return { valid: true, mxRecords: records };
 }
 
-// ─── 4. COMBINED VALIDATOR (use in API route) ─────────────────────────────────
+// ─── 4. COMBINED VALIDATOR ────────────────────────────────────────────────────
 export type EmailValidationResult =
-  | { valid: true; email: string }
+  | { valid: true;  email: string }
   | { valid: false; error: string; code: string };
 
 export async function validateEmailFull(raw: string): Promise<EmailValidationResult> {
   const email = normalizeEmail(raw);
 
-  // Step 1 — Format
+  // Step 1 — Format check (synchronous, cheap)
   if (!isValidEmailFormat(email)) {
     return { valid: false, error: "Enter a valid email address", code: "INVALID_FORMAT" };
   }
 
-  // Step 2 — Disposable
+  // Step 2 — Disposable domain blocklist (synchronous, cheap)
   if (isDisposableEmail(email)) {
     return {
       valid: false,
@@ -168,10 +223,16 @@ export async function validateEmailFull(raw: string): Promise<EmailValidationRes
     };
   }
 
-  // Step 3 — MX record (async, last to avoid unnecessary DNS lookups)
-  const hasMx = await hasMxRecord(email);
-  if (!hasMx) {
-    return { valid: false, error: "Email domain does not appear to be valid", code: "INVALID_DOMAIN" };
+  // Step 3 — DNS MX lookup (async, most expensive — done last)
+  const domain = email.split("@")[1]; // already normalized via normalizeEmail()
+  const domainResult = await validateEmailDomain(domain);
+
+  if (!domainResult.valid) {
+    return {
+      valid: false,
+      error: "Email domain is not valid",
+      code: "INVALID_DOMAIN",
+    };
   }
 
   return { valid: true, email };
